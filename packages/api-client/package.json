@@ -1,0 +1,18 @@
+{
+  "name": "@homa/api-client",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "bun ../../apps/server/src/openapi-dump.ts > openapi.json && openapi-typescript openapi.json -o src/schema.d.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  }
+}
