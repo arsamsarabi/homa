@@ -1,0 +1,3 @@
+- [product-definition.md](./docs/product/product-definition.md) what Homa is and its features.
+- [architecture.md](./docs/product/architecture.md) the stack and overall architecture.
+- [implementation-plan.md](./docs/product/implementation-plan.md) the delivery phases.
