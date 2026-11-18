@@ -30,6 +30,7 @@ Same as Linkdean:
 
 - `homa` (this repo): the app. Source-available under PolyForm Noncommercial 1.0.0, self-hostable with Docker Compose.
 - `homa-infra` (private): the hosted instance, marketing site, docs site, brand kit and operator docs.
+- Domain `homa.day`: landing page on the apex and `www`, docs on `docs.homa.day`, the hosted app on `app.homa.day`.
 - Self-hosting is free. A paid hosted instance may follow later; billing is not in v1.
 
 ## v1 hero
@@ -170,6 +171,5 @@ Draft → open → deadline reached or closed early → finalized. Finalizing cr
 ## Open questions
 
 1. Poll UI: which of the calendar and Gantt views is the default, and how they switch. To be settled in design.
-2. Which domain becomes canonical (Arsam is choosing on Namecheap; `homacal.com`, `homacal.app` and `homa.day` were free on 2026-11-18).
-3. Mitra import: depends on Mitra's export format; check before promising it.
-4. Google OAuth app verification for hosted use: required scopes for two-way calendar access are sensitive and need Google review.
+2. Mitra import: depends on Mitra's export format; check before promising it.
+3. Google OAuth app verification for hosted use: required scopes for two-way calendar access are sensitive and need Google review.

@@ -4,6 +4,10 @@ Status: draft, 2026-11-18. High-level phases only; each phase gets its own detai
 
 Each phase ends with something usable, tests in CI, and docs updated.
 
+## Phase 0: landing page and docs site
+
+Lives in `homa-infra`: brand starter, landing page on `homa.day`, docs site on `docs.homa.day`, both on Cloudflare Pages with Cloudflare managed by OpenTofu. Plan: `homa-infra/docs/ops/phase-0-sites.md`.
+
 ## Phase 1: scaffolding
 
 - Bun workspace with `apps/web`, `apps/server` and the `packages/*` from the architecture doc.
