@@ -26,10 +26,10 @@ The launch audience is narrow, but nothing in the design may assume a single use
 
 ## Delivery model
 
-Same as Linkdean:
+Two repositories, split by audience:
 
-- `homa` (this repo): the app. Source-available under PolyForm Noncommercial 1.0.0, self-hostable with Docker Compose.
-- `homa-infra` (private): the hosted instance, marketing site, docs site, brand kit and operator docs.
+- `homa` (this repo): the app. Source-available under PolyForm Noncommercial 1.0.0, self-hostable with Docker Compose. It holds everything a self-hoster or contributor needs, and nothing that is only about running the hosted instance.
+- `homa-infra` (private): the hosted instance, marketing site, docs site, brand kit and operator docs. Hosting secrets, deploy scripts and marketing work stay out of the public history, and changing them never touches the app.
 - Domain `homa.day`: landing page on the apex and `www`, docs on `docs.homa.day`, the hosted app on `app.homa.day`.
 - Self-hosting is free. A paid hosted instance may follow later; billing is not in v1.
 
@@ -143,7 +143,7 @@ Draft → open → deadline reached or closed early → finalized. Finalizing cr
 
 ### 9. Integrations and API
 
-- REST API with an OpenAPI spec, authenticated by per-account API keys (like Linkdean).
+- REST API with an OpenAPI spec, authenticated by per-account API keys, so scripts and other tools can use Homa without a browser session.
 - MCP server so AI assistants (Claude and others) can read and plan the user's calendar, tasks and routines.
 - Imports: ICS files, Todoist, and a Mitra-compatible import where feasible. Full JSON export for backup and migration.
 

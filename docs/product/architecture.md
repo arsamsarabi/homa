@@ -10,14 +10,14 @@ Status: draft, 2026-11-18. Source: architecture interview with Arsam Sarabi (tec
 | API | Hono + `@hono/zod-openapi` | REST with an OpenAPI spec generated from zod schemas. One spec feeds the web client, the future Expo app, API-key users and MCP tools |
 | DB | Postgres + Drizzle (drizzle-kit migrations) | SQL-shaped schema; raw SQL stays easy for range queries (`tstzrange`, GiST indexes) |
 | Jobs | pg-boss | Postgres-backed queue and cron. No Redis, so self-host stays app + Postgres |
-| Auth | Better Auth (Drizzle adapter) | Password, OIDC, passkeys, 2FA, sessions and API keys. Linkdean's policies (email verification, rate limits, first user is admin) sit on top |
+| Auth | Better Auth (Drizzle adapter) | Password, OIDC, passkeys, 2FA, sessions and API keys. Homa adds its own policies on top: email verification, rate limits, first user is admin |
 | Search | Postgres full-text (`tsvector`, `pg_trgm`) | No extra service; Meilisearch can come later if needed |
-| Web | Vite, React 19, TypeScript, TanStack Router and Query, Mantine, Zustand, `vite-plugin-pwa` | Same as Linkdean |
+| Web | Vite, React 19, TypeScript, TanStack Router and Query, Mantine, Zustand, `vite-plugin-pwa` | A plain SPA: the app sits behind sign-in, so it needs no server rendering. Mantine gives accessible components with RTL support, and the PWA plugin makes it installable with web push |
 | Calendar views | Custom, on headless libraries | `@dnd-kit` for drag, TanStack Virtual for long ranges, Temporal polyfill for date math. No FullCalendar: its timeline views are paid |
 | Recurrence | `rrule` + `ical.js` (to be confirmed in the phase 1 spike) | RFC 5545 parsing, expansion and serialization |
 | Tests | `bun test` (unit and integration on a throwaway Postgres) + Playwright (e2e, `@smoke` subset) | CalDAV conformance runs against a Radicale container |
 | Monorepo | Bun workspaces | |
-| License | PolyForm Noncommercial 1.0.0 | Same as Linkdean |
+| License | PolyForm Noncommercial 1.0.0 | Anyone can read, run and self-host the code; commercial hosting of it by others is not allowed |
 
 ## Repo layout
 
@@ -35,7 +35,7 @@ homa/
   docs/                # product/, self-hosting/, guides/
 ```
 
-`homa-infra` (private) mirrors `linkdean-infra`: `apps/site` (Astro marketing site), `apps/docs` (docs site fed from `homa/docs`), `brand/`, `deploy/` and `docs/ops/`.
+`homa-infra` (private) holds what only the hosted instance needs: `apps/site` (Astro marketing site), `apps/docs` (docs site fed from `homa/docs`), `brand/`, `deploy/` and `docs/ops/`.
 
 ## Runtime shape
 
