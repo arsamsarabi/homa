@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { schema } from '@homa/db';
-import { createApp } from '../http';
-import { freshDb, testDatabaseUrl } from '../testing';
+import { createApp } from '@/http';
+import { freshDb, testDatabaseUrl } from '@/testing';
 import { createAuth } from './auth';
 import { purgeExpiredAuth } from './maintenance';
 

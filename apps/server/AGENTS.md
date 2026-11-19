@@ -204,6 +204,13 @@ bun run typecheck
 - No grab-bag `utils.ts` / `helpers.ts` — name by purpose (`recurrence`, `time-zone`, `errors`)
 - Mirror domain language from `docs/product/architecture.md` (series, occurrence, override, recurrence id, horizon)
 
+### Imports (mandatory)
+
+- Import server code from another folder through the `@/` alias (`@` → `apps/server/src/`): `@/auth`, `@/http/openapi`. No `../` chains; Biome's `noRestrictedImports` rejects them
+- Relative imports are same-folder only (`./calendars-service`, colocated tests)
+- Other packages by name (`@homa/core`, `@homa/db`), never by path
+- The alias lives in `apps/server/tsconfig.json` (`paths`); Bun reads it at runtime too, so the Docker image ships that file and `tsconfig.base.json`
+
 ### Folder layout (mandatory)
 
 - Keep related modules in **domain subfolders**, not flat grab-bags of sibling files

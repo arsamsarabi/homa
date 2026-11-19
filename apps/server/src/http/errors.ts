@@ -3,7 +3,7 @@
 import { NotFoundError, ValidationError } from '@homa/core';
 import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { errorFields, log } from '../log';
+import { errorFields, log } from '@/log';
 
 export function handleError(err: Error, c: Context): Response {
   if (err instanceof NotFoundError) return c.json({ error: 'Not found' }, 404);

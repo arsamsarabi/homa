@@ -1,9 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import { HORIZON_DAYS } from '@homa/core';
 import { schema } from '@homa/db';
-import { createAuth } from '../auth';
-import { createApp } from '../http';
-import { freshDb, testDatabaseUrl } from '../testing';
+import { createAuth } from '@/auth';
+import { createApp } from '@/http';
+import { freshDb, testDatabaseUrl } from '@/testing';
 import { extendHorizon } from './instance-cache';
 
 type Json = Record<string, unknown>;

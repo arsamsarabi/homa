@@ -4,7 +4,7 @@ import { type Db, repo, schema } from '@homa/db';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin } from 'better-auth/plugins';
-import { createCalendar } from '../calendar/calendars-service';
+import { createCalendar } from '@/calendar/calendars-service';
 
 type AuthOptions = { secret: string; baseURL: string };
 

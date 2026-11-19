@@ -2,8 +2,8 @@
 // only validate (the schemas do it), call a service and map the result.
 import type { Db } from '@homa/db';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
-import { type Auth, requireUser, type UserVars } from '../auth';
-import { errorResponses as errors, jsonBody, jsonContent, newApi } from '../http/openapi';
+import { type Auth, requireUser, type UserVars } from '@/auth';
+import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
 import * as calendars from './calendars-service';
 import * as events from './events-service';
 import { listOccurrences } from './occurrences-service';

@@ -1,9 +1,9 @@
 // Scheduled jobs on pg-boss. Each handler calls a service and logs counts.
 import type { Db } from '@homa/db';
 import { PgBoss } from 'pg-boss';
-import { purgeExpiredAuth } from '../auth';
-import { extendHorizon } from '../calendar';
-import { errorFields, log } from '../log';
+import { purgeExpiredAuth } from '@/auth';
+import { extendHorizon } from '@/calendar';
+import { errorFields, log } from '@/log';
 
 export const PURGE_AUTH = 'maintenance.purge-auth';
 export const EXTEND_HORIZON = 'calendar.extend-horizon';
