@@ -12,7 +12,7 @@ export type GridDrag = {
   beginResize: (e: ReactPointerEvent, o: Occurrence) => void;
 };
 
-export function useGridDrag(days: readonly Date[], onDone: (outcome: DragOutcome) => void): GridDrag {
+export function useGridDrag(days: readonly Date[], tz: string, onDone: (outcome: DragOutcome) => void): GridDrag {
   const colsRef = useRef<HTMLDivElement>(null);
   const live = useRef<Drag>(undefined);
   const [drag, setDrag] = useState<Drag>();
@@ -39,7 +39,7 @@ export function useGridDrag(days: readonly Date[], onDone: (outcome: DragOutcome
       window.removeEventListener('pointercancel', cancel);
       const d = live.current;
       update(undefined);
-      const outcome = commit && d ? dragOutcome(d, days) : undefined;
+      const outcome = commit && d ? dragOutcome(d, days, tz) : undefined;
       if (outcome) onDone(outcome);
     };
     const up = end(true);

@@ -48,6 +48,19 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             required
           />
         </Group>
+        {!f.allDay && (
+          <Select
+            label={t('editor.timeZone')}
+            data={f.zones}
+            value={f.tz}
+            onChange={(v: string | null): void => {
+              if (v) f.setTz(v);
+            }}
+            searchable
+            allowDeselect={false}
+            limit={50}
+          />
+        )}
         <Select
           label={t('editor.calendar')}
           data={f.calendarOptions}

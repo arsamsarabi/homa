@@ -1,13 +1,15 @@
 // The event drawer's form: starting values for a draft, and turning what was entered into an API
 // create body or patch. All-day end dates are inclusive in the form and exclusive in the API.
+// Timed values in the form are wall times in the event's zone (the form's zone field).
 import type { EventInput, EventPatch } from '@/api';
 import type { Occurrence } from '@/schemas';
-import { addDays, isoDate, isoLocal, localSpan, parseIsoDate, type Span, utcMidnight } from '@/services/dates';
+import { addDays, isoDate, isoLocal, parseIsoDate, parseIsoLocal, type Span, wallSpan } from '@/services/dates';
+import { instantOf, wallOf } from '@/services/zones';
 
 export const REPEATS = ['none', 'daily', 'weekly', 'monthly', 'yearly', 'custom'] as const;
 export type Repeat = (typeof REPEATS)[number];
 
-/** What the drawer is open for. */
+/** What the drawer is open for. Create times are instants. */
 export type Draft =
   | { kind: 'create'; start: Date; end: Date; allDay: boolean }
   | { kind: 'edit'; occurrence: Occurrence };
@@ -24,6 +26,8 @@ export type FormInput = {
   start: string;
   end: string;
   allDay: boolean;
+  /** The event's zone, for timed events. */
+  tz: string;
   calendarId: string;
   /** The repeat picked in the form, or undefined if untouched. */
   repeat: Repeat | undefined;
@@ -40,12 +44,20 @@ export function repeatOf(rrule: string | null | undefined): Repeat {
 export const rruleOf = (repeat: Repeat, current: string | null): string | null =>
   repeat === 'none' ? null : repeat === 'custom' ? current : `FREQ=${repeat.toUpperCase()}`;
 
-const draftSpan = (draft: Draft): Span => (draft.kind === 'edit' ? localSpan(draft.occurrence) : draft);
+/** The draft's times as wall times in `tz` (all-day dates stay as they are). */
+function draftSpan(draft: Draft, tz: string): Span {
+  if (draft.kind === 'edit') return wallSpan(draft.occurrence, tz);
+  return draft.allDay ? draft : { start: wallOf(draft.start, tz), end: wallOf(draft.end, tz) };
+}
 export const draftAllDay = (draft: Draft): boolean => (draft.kind === 'edit' ? draft.occurrence.allDay : draft.allDay);
 
-/** The start and end input values for a draft, shown as all-day (dates) or timed. */
-export function formTimes(draft: Draft, allDay: boolean): { start: string; end: string } {
-  const span = draftSpan(draft);
+/** The zone the form starts with: a timed event's own zone, else the zone being viewed. */
+export const draftZone = (draft: Draft, viewTz: string): string =>
+  draft.kind === 'edit' && !draft.occurrence.allDay ? draft.occurrence.tz : viewTz;
+
+/** The start and end input values for a draft in zone `tz`, shown as all-day (dates) or timed. */
+export function formTimes(draft: Draft, allDay: boolean, tz: string): { start: string; end: string } {
+  const span = draftSpan(draft, tz);
   const wasAllDay = draftAllDay(draft);
   if (allDay) return { start: isoDate(span.start), end: isoDate(wasAllDay ? addDays(span.end, -1) : span.end) };
   return {
@@ -58,11 +70,19 @@ export function formTimes(draft: Draft, allDay: boolean): { start: string; end: 
 export const shownRepeat = (draft: Draft, picked: Repeat | undefined, seriesRrule: string | null | undefined): Repeat =>
   picked ?? (draft.kind === 'edit' && draft.occurrence.recurring ? repeatOf(seriesRrule) : 'none');
 
-/** The times entered, as instants; undefined if the end isn't after the start. */
-export function parseFormTimes(allDay: boolean, start: string, end: string): Span | undefined {
-  const span = allDay
-    ? { start: utcMidnight(parseIsoDate(start)), end: utcMidnight(addDays(parseIsoDate(end), 1)) }
-    : { start: new Date(start), end: new Date(end) };
+const INVALID = new Date(Number.NaN);
+
+/** The times entered (timed ones in zone `tz`), as instants; undefined if missing or not in order. */
+export function parseFormTimes(allDay: boolean, start: string, end: string, tz: string): Span | undefined {
+  let span: Span;
+  if (allDay) {
+    span = { start: parseIsoDate(start, INVALID), end: addDays(parseIsoDate(end, INVALID), 1) };
+  } else {
+    const s = parseIsoLocal(start);
+    const e = parseIsoLocal(end);
+    if (!s || !e) return undefined;
+    span = { start: instantOf(s, tz), end: instantOf(e, tz) };
+  }
   return span.end > span.start ? span : undefined;
 }
 
@@ -73,9 +93,9 @@ export function parseFormTimes(allDay: boolean, start: string, end: string): Spa
 export function buildEditorResult(
   draft: Draft,
   input: FormInput,
-  ctx: { seriesRrule: string | null | undefined; tz: string },
+  ctx: { seriesRrule: string | null | undefined },
 ): EditorResult | 'endBeforeStart' {
-  const span = parseFormTimes(input.allDay, input.start, input.end);
+  const span = parseFormTimes(input.allDay, input.start, input.end, input.tz);
   if (!span) return 'endBeforeStart';
   const common = {
     summary: input.summary,
@@ -84,7 +104,7 @@ export function buildEditorResult(
     start: span.start.toISOString(),
     end: span.end.toISOString(),
   };
-  const tz = input.allDay ? 'UTC' : ctx.tz;
+  const tz = input.allDay ? 'UTC' : input.tz;
   if (draft.kind === 'create') {
     const rrule = rruleOf(shownRepeat(draft, input.repeat, null), null);
     return { kind: 'create', body: { ...common, calendarId: input.calendarId, allDay: input.allDay, tz, rrule } };
@@ -96,8 +116,8 @@ export function buildEditorResult(
     patch.calendarId = input.calendarId;
     seriesChanged = true;
   }
-  if (input.allDay !== o.allDay) {
-    patch.allDay = input.allDay;
+  if (input.allDay !== o.allDay) patch.allDay = input.allDay;
+  if (input.allDay !== o.allDay || tz !== o.tz) {
     patch.tz = tz;
     seriesChanged = true;
   }
@@ -108,9 +128,8 @@ export function buildEditorResult(
   return { kind: 'edit', occurrence: o, patch, seriesChanged };
 }
 
-/** The slot "New event" starts with: the next whole hour on `date`, an hour long. */
-export function newEventSlot(date: Date, now: Date): { start: Date; end: Date } {
-  const start = new Date(date);
-  start.setHours(now.getHours() + 1, 0, 0, 0);
+/** The slot "New event" starts with: the next whole hour on `date`, an hour long. Wall times in, wall times out. */
+export function newEventSlot(date: Date, now: Date): Span {
+  const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), now.getUTCHours() + 1));
   return { start, end: new Date(start.getTime() + 3_600_000) };
 }

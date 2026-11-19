@@ -9,9 +9,8 @@ import { useAgendaView } from './useAgendaView';
 
 export function AgendaView(): JSX.Element {
   const { t } = useTranslation();
-  const { formats, colors } = useCalendarPageModel();
-  const { groups, open } = useAgendaView();
-  const today = new Date();
+  const { formats, colors, secondary, today } = useCalendarPageModel();
+  const { groups, open, span, occasions } = useAgendaView();
 
   if (!groups.length) return <Text c="dimmed">{t('calendar.agendaEmpty')}</Text>;
   return (
@@ -20,6 +19,16 @@ export function AgendaView(): JSX.Element {
         <section key={day.toISOString()}>
           <Title order={3} size="h4" mb={6} aria-current={sameDay(day, today) ? 'date' : undefined}>
             {formats.weekdayLong.format(day)}
+            {secondary === 'jalali' && (
+              <Text component="span" c="dimmed" fw={400} ms="xs" size="sm">
+                {formats.jalaliDayMonth.format(day)}
+              </Text>
+            )}
+            {occasions(day).map((o) => (
+              <Text key={o} component="span" fw={500} ms="xs" size="sm">
+                {t(`occasions.${o}`)}
+              </Text>
+            ))}
           </Title>
           <Stack gap={4}>
             {items.map((o) => (
@@ -32,7 +41,7 @@ export function AgendaView(): JSX.Element {
                 <span className={classes.time}>
                   {o.allDay
                     ? t('calendar.allDay')
-                    : `${formats.time.format(new Date(o.start))} – ${formats.time.format(new Date(o.end))}`}
+                    : `${formats.time.format(span(o).start)} – ${formats.time.format(span(o).end)}`}
                 </span>
                 <span className={classes.title}>{o.summary || t('calendar.untitled')}</span>
                 {o.location && <span className={classes.location}>{o.location}</span>}

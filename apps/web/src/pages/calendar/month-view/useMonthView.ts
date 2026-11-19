@@ -3,8 +3,10 @@ import { type PointerEvent as ReactPointerEvent, useMemo, useRef, useState } fro
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { monthCellItems } from '@/services/calendar-layout';
-import { isoDate, startOfDay } from '@/services/dates';
+import { isoDate, type Span, wallSpan } from '@/services/dates';
+import { type Occasion, occasionsOn } from '@/services/jalali';
 import { moveToDay } from '@/services/month-drag';
+import { instantOf } from '@/services/zones';
 
 export const SHOWN_PER_DAY = 3;
 
@@ -12,6 +14,10 @@ export type MonthViewModel = {
   days: Date[];
   month: number;
   cells: Occurrence[][];
+  /** Persian occasions per day, when the Jalali calendar is on. */
+  occasions: Occasion[][];
+  /** An occurrence's times as wall times in the viewed zone. */
+  span: (o: Occurrence) => Span;
   /** The cell a dragged event is over. */
   over: string | undefined;
   beginDrag: (e: ReactPointerEvent, o: Occurrence, day: Date) => void;
@@ -24,9 +30,13 @@ const cellAt = (x: number, y: number): string | undefined =>
   (document.elementFromPoint(x, y)?.closest('[data-date]') as HTMLElement | null)?.dataset.date;
 
 export function useMonthView(): MonthViewModel {
-  const { range, date, occurrences, drawer, actions, pickDay } = useCalendarPageModel();
+  const { range, date, tz, secondary, occurrences, drawer, actions, pickDay } = useCalendarPageModel();
   const occ = occurrences.data;
-  const cells = useMemo((): Occurrence[][] => monthCellItems(range.days, occ ?? []), [range.days, occ]);
+  const cells = useMemo((): Occurrence[][] => monthCellItems(range.days, occ ?? [], tz), [range.days, occ, tz]);
+  const occasions = useMemo(
+    (): Occasion[][] => range.days.map((d) => (secondary === 'jalali' ? occasionsOn(d) : [])),
+    [range.days, secondary],
+  );
   const [over, setOver] = useState<string>();
   const grab = useRef<{ o: Occurrence; from: string; moved: boolean }>(undefined);
 
@@ -53,7 +63,7 @@ export function useMonthView(): MonthViewModel {
         drawer.openEdit(g.o);
         return;
       }
-      const { start, end } = moveToDay(g.o, g.from, at);
+      const { start, end } = moveToDay(g.o, g.from, at, tz);
       actions.move(g.o, start, end);
     };
     window.addEventListener('pointermove', move);
@@ -62,13 +72,15 @@ export function useMonthView(): MonthViewModel {
 
   return {
     days: range.days,
-    month: date.getMonth(),
+    month: date.getUTCMonth(),
     cells,
+    occasions,
+    span: (o: Occurrence): Span => wallSpan(o, tz),
     over,
     beginDrag,
     createAt: (day: Date): void => {
-      const start = startOfDay(day);
-      start.setHours(9);
+      // 09:00 on that day in the viewed zone, an hour long.
+      const start = instantOf(new Date(day.getTime() + 9 * 3_600_000), tz);
       drawer.openCreate(start, new Date(start.getTime() + 3_600_000), false);
     },
     open: drawer.openEdit,

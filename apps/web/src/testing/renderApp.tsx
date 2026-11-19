@@ -12,27 +12,34 @@ export type FakeApi = (url: URL, req: Request) => Response | Promise<Response>;
 export const json = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
-export const signedIn: FakeApi = (url) =>
-  url.pathname === '/api/auth/get-session'
-    ? json({
-        user: {
-          id: 'u1',
-          name: 'Ada',
-          email: 'ada@example.com',
-          emailVerified: false,
-          createdAt: '2026-11-01T00:00:00Z',
-          updatedAt: '2026-11-01T00:00:00Z',
-        },
-        session: {
-          id: 's1',
-          userId: 'u1',
-          token: 't',
-          expiresAt: '2099-01-01T00:00:00Z',
-          createdAt: '2026-11-01T00:00:00Z',
-          updatedAt: '2026-11-01T00:00:00Z',
-        },
-      })
-    : json({ error: `unexpected ${url.pathname}` }, 404);
+/** Signed in as Ada, with `settings` (default: the browser's zone, no second calendar). */
+export const signedInWith =
+  (settings: { homeTz: string | null; secondaryCalendar: string }): FakeApi =>
+  (url) =>
+    url.pathname === '/api/settings'
+      ? json(settings)
+      : url.pathname === '/api/auth/get-session'
+        ? json({
+            user: {
+              id: 'u1',
+              name: 'Ada',
+              email: 'ada@example.com',
+              emailVerified: false,
+              createdAt: '2026-11-01T00:00:00Z',
+              updatedAt: '2026-11-01T00:00:00Z',
+            },
+            session: {
+              id: 's1',
+              userId: 'u1',
+              token: 't',
+              expiresAt: '2099-01-01T00:00:00Z',
+              createdAt: '2026-11-01T00:00:00Z',
+              updatedAt: '2026-11-01T00:00:00Z',
+            },
+          })
+        : json({ error: `unexpected ${url.pathname}` }, 404);
+
+export const signedIn: FakeApi = signedInWith({ homeTz: null, secondaryCalendar: 'none' });
 
 export function renderApp(path: string, api: FakeApi): RenderResult {
   const fake = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {

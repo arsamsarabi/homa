@@ -15,7 +15,7 @@ test('sign up, onboard, see the calendar, switch to Farsi, sign out @smoke', asy
   await page.getByRole('button', { name: 'Create account' }).click();
 
   await expect(page.getByRole('heading', { name: 'Welcome to Homa, Smoke' })).toBeVisible();
-  await page.getByRole('link', { name: 'Go to my calendar' }).click();
+  await page.getByRole('button', { name: 'Go to my calendar' }).click();
   await expect(page.locator('[aria-current=date]')).toBeVisible();
 
   await page.getByRole('button', { name: 'Language' }).click();

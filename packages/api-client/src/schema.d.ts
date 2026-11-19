@@ -116,6 +116,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your settings */
+        get: operations["getSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change your settings */
+        patch: operations["updateSettings"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -216,6 +234,30 @@ export interface components {
             tz: string;
             recurring: boolean;
             overridden: boolean;
+        };
+        Settings: {
+            /**
+             * @description The zone the calendar is shown in; null uses the browser's
+             * @example Asia/Tehran
+             */
+            homeTz: string | null;
+            /**
+             * @description A second calendar shown beside the Gregorian one
+             * @enum {string}
+             */
+            secondaryCalendar: "none" | "jalali";
+        };
+        SettingsPatch: {
+            /**
+             * @description The zone the calendar is shown in; null uses the browser's
+             * @example Asia/Tehran
+             */
+            homeTz?: string | null;
+            /**
+             * @description A second calendar shown beside the Gregorian one
+             * @enum {string}
+             */
+            secondaryCalendar?: "none" | "jalali";
         };
     };
     responses: never;
@@ -621,6 +663,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Occurrence"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Settings"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsPatch"];
+            };
+        };
+        responses: {
+            /** @description The settings after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Settings"];
                 };
             };
             /** @description Invalid request */

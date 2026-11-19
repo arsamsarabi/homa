@@ -16,7 +16,7 @@ const HOURS = Array.from({ length: 23 }, (_, i) => i + 1);
 
 export function TimeGrid(): JSX.Element {
   const { t } = useTranslation();
-  const { view, formats, colors } = useCalendarPageModel();
+  const { view, formats, colors, secondary } = useCalendarPageModel();
   const grid = useTimeGrid();
 
   return (
@@ -27,7 +27,7 @@ export function TimeGrid(): JSX.Element {
     >
       <div className={classes.head}>
         <div />
-        {grid.days.map((d) => (
+        {grid.days.map((d, i) => (
           <UnstyledButton
             key={d.toISOString()}
             className={classes.dayHead}
@@ -35,6 +35,12 @@ export function TimeGrid(): JSX.Element {
             aria-current={sameDay(d, grid.now) ? 'date' : undefined}
           >
             {formats.dayHeader.format(d)}
+            {secondary === 'jalali' && <span className={classes.jalali}>{formats.jalaliDayMonth.format(d)}</span>}
+            {grid.occasions[i]?.map((o) => (
+              <span key={o} className={classes.occasion}>
+                {t(`occasions.${o}`)}
+              </span>
+            ))}
           </UnstyledButton>
         ))}
       </div>

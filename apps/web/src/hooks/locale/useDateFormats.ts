@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { CalendarLocale } from '@/services/locale';
 
 export type DateFormats = {
   time: Intl.DateTimeFormat;
@@ -13,12 +14,20 @@ export type DateFormats = {
   fullDate: Intl.DateTimeFormat;
   dayMonth: Intl.DateTimeFormat;
   shortDayMonth: Intl.DateTimeFormat;
+  /** Solar Hijri: "28 Aban", "Aban 1405" and "28 Aban 1405". */
+  jalaliDayMonth: Intl.DateTimeFormat;
+  jalaliMonthYear: Intl.DateTimeFormat;
+  jalaliFullDate: Intl.DateTimeFormat;
 };
 
-/** Date formatters for `locale`, built once per locale. */
-export function useDateFormats(locale: string): DateFormats {
+/**
+ * Date formatters for a calendar locale, built once per locale. They format wall times (see
+ * @/services/zones), so they all read the date in UTC.
+ */
+export function useDateFormats({ locale, jalaliLocale }: CalendarLocale): DateFormats {
   return useMemo((): DateFormats => {
-    const f = (o: Intl.DateTimeFormatOptions): Intl.DateTimeFormat => new Intl.DateTimeFormat(locale, o);
+    const f = (o: Intl.DateTimeFormatOptions, l = locale): Intl.DateTimeFormat =>
+      new Intl.DateTimeFormat(l, { ...o, timeZone: 'UTC' });
     return {
       time: f({ hour: 'numeric', minute: '2-digit' }),
       weekdayShort: f({ weekday: 'short' }),
@@ -32,6 +41,9 @@ export function useDateFormats(locale: string): DateFormats {
       fullDate: f({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
       dayMonth: f({ day: 'numeric', month: 'long' }),
       shortDayMonth: f({ day: 'numeric', month: 'short' }),
+      jalaliDayMonth: f({ day: 'numeric', month: 'short' }, jalaliLocale),
+      jalaliMonthYear: f({ month: 'long', year: 'numeric' }, jalaliLocale),
+      jalaliFullDate: f({ day: 'numeric', month: 'long', year: 'numeric' }, jalaliLocale),
     };
-  }, [locale]);
+  }, [locale, jalaliLocale]);
 }

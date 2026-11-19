@@ -8,7 +8,8 @@
     "signOut": "خروج",
     "language": "زبان",
     "theme": "تغییر پوسته روشن یا تیره",
-    "signOutFailed": "خروج انجام نشد: {{message}}"
+    "signOutFailed": "خروج انجام نشد: {{message}}",
+    "settings": "تنظیمات"
   },
   "auth": {
     "signInTitle": "ورود",
@@ -58,7 +59,8 @@
       "saved": "رویداد ذخیره شد",
       "moved": "رویداد جابه‌جا شد",
       "deleted": "رویداد حذف شد"
-    }
+    },
+    "timeZone": "منطقهٔ زمانی"
   },
   "common": {
     "cancel": "لغو",
@@ -78,7 +80,8 @@
     "delete": "حذف",
     "endBeforeStart": "پایان باید بعد از شروع باشد.",
     "newTitle": "رویداد تازه",
-    "editTitle": "ویرایش رویداد"
+    "editTitle": "ویرایش رویداد",
+    "timeZone": "منطقهٔ زمانی"
   },
   "repeat": {
     "none": "تکرار نمی‌شود",
@@ -95,5 +98,25 @@
     "this": "همین رویداد",
     "following": "این رویداد و بعدی‌ها",
     "all": "همهٔ رویدادها"
+  },
+  "settings": {
+    "title": "تنظیمات",
+    "homeZone": "منطقهٔ زمانی خانه",
+    "homeZoneHint": "تقویم شما در این منطقهٔ زمانی نشان داده می‌شود. از خود تقویم می‌توانید منطقهٔ دیگری را ببینید.",
+    "browserZone": "منطقهٔ این دستگاه ({{tz}})",
+    "secondaryCalendar": "تقویم دوم",
+    "secondary": {
+      "none": "هیچ",
+      "jalali": "جلالی (هجری خورشیدی)، با مناسبت‌های ایرانی"
+    },
+    "save": "ذخیره",
+    "saved": "تنظیمات ذخیره شد",
+    "saveFailed": "تنظیمات ذخیره نشد: {{message}}"
+  },
+  "occasions": {
+    "nowruz": "نوروز",
+    "sizdahBedar": "سیزده‌بدر",
+    "chaharshanbeSuri": "چهارشنبه‌سوری",
+    "yalda": "شب یلدا"
   }
 }

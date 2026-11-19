@@ -8,7 +8,8 @@
     "signOut": "Sign out",
     "language": "Language",
     "theme": "Switch light or dark theme",
-    "signOutFailed": "Couldn't sign out: {{message}}"
+    "signOutFailed": "Couldn't sign out: {{message}}",
+    "settings": "Settings"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -58,7 +59,8 @@
       "saved": "Event saved",
       "moved": "Event moved",
       "deleted": "Event deleted"
-    }
+    },
+    "timeZone": "Time zone"
   },
   "common": {
     "cancel": "Cancel",
@@ -78,7 +80,8 @@
     "delete": "Delete",
     "endBeforeStart": "The end must be after the start.",
     "newTitle": "New event",
-    "editTitle": "Edit event"
+    "editTitle": "Edit event",
+    "timeZone": "Time zone"
   },
   "repeat": {
     "none": "Does not repeat",
@@ -95,5 +98,25 @@
     "this": "This event",
     "following": "This and following events",
     "all": "All events"
+  },
+  "settings": {
+    "title": "Settings",
+    "homeZone": "Home time zone",
+    "homeZoneHint": "Your calendar is shown in this zone. You can view another one from the calendar.",
+    "browserZone": "This device's zone ({{tz}})",
+    "secondaryCalendar": "Second calendar",
+    "secondary": {
+      "none": "None",
+      "jalali": "Jalali (Solar Hijri), with Persian occasions"
+    },
+    "save": "Save",
+    "saved": "Settings saved",
+    "saveFailed": "Couldn't save your settings: {{message}}"
+  },
+  "occasions": {
+    "nowruz": "Nowruz",
+    "sizdahBedar": "Sizdah Bedar",
+    "chaharshanbeSuri": "Chaharshanbe Suri",
+    "yalda": "Yalda Night"
   }
 }
