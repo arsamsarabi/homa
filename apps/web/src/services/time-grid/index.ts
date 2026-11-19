@@ -3,6 +3,7 @@ export {
   DAY_MINUTES,
   type Drag,
   type DragOutcome,
+  draftGhost,
   dragGhost,
   dragOutcome,
   dragTo,

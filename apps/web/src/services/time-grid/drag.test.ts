@@ -1,7 +1,17 @@
 import { describe, expect, test } from 'bun:test';
 import type { Occurrence } from '@/schemas';
 import { instantOf } from '@/services/zones';
-import { blockBox, type Drag, dragGhost, dragOutcome, dragTo, initialScrollHour, slotAt, snap } from './drag';
+import {
+  blockBox,
+  type Drag,
+  draftGhost,
+  dragGhost,
+  dragOutcome,
+  dragTo,
+  initialScrollHour,
+  slotAt,
+  snap,
+} from './drag';
 
 // Days are wall dates in Tehran (UTC+3:30); outcomes are instants.
 const TZ = 'Asia/Tehran';
@@ -89,4 +99,18 @@ test('blocks are at least 18 pixels tall', () => {
 test('the grid opens an hour before now on today', () => {
   expect(initialScrollHour(days, wall(17, 14))).toBe(13);
   expect(initialScrollHour(days, wall(31))).toBe(7);
+});
+
+describe('draftGhost', () => {
+  test('places a new event on its day in the viewed zone', () => {
+    expect(draftGhost({ start: at(17, 9, 30), end: at(17, 10, 45) }, days, TZ)).toEqual({ day: 1, from: 570, to: 645 });
+  });
+
+  test('cuts an event that runs past midnight at the end of its first day', () => {
+    expect(draftGhost({ start: at(18, 23), end: at(19, 1) }, days, TZ)).toEqual({ day: 2, from: 1380, to: 1440 });
+  });
+
+  test('is undefined when the event starts outside the days in view', () => {
+    expect(draftGhost({ start: at(20, 9), end: at(20, 10) }, days, TZ)).toBeUndefined();
+  });
 });

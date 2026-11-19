@@ -82,6 +82,7 @@ export function TimeGrid(): JSX.Element {
                 index={i}
                 items={grid.columns[i] ?? []}
                 ghost={grid.ghost}
+                draft={grid.draft}
                 colors={colors}
                 time={formats.time}
               />

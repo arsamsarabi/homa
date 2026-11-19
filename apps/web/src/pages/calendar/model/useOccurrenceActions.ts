@@ -19,7 +19,7 @@ export type OccurrenceActions = {
   clearError: () => void;
 };
 
-export function useOccurrenceActions(ask: ScopePrompt['ask'], closeDrawer: () => void): OccurrenceActions {
+export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () => void): OccurrenceActions {
   const { t } = useTranslation();
   const { create, update, remove: removeEvent, fetchSeries } = useEventMutations();
   const announce = useAnnouncer((s) => s.announce);
@@ -46,7 +46,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeDrawer: () =>
   async function save(r: EditorResult): Promise<void> {
     if (r.kind === 'create') await create.mutateAsync(r.body);
     else if (!(await change(r.occurrence, r.patch, r.seriesChanged))) return;
-    closeDrawer();
+    closeEditor();
     announce(t('calendar.announce.saved'));
   }
 
@@ -58,7 +58,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeDrawer: () =>
       scope = picked;
     }
     await removeEvent.mutateAsync({ id: o.eventId, scope, recurrenceId: o.recurring ? o.recurrenceId : undefined });
-    closeDrawer();
+    closeEditor();
     announce(t('calendar.announce.deleted'));
   }
 

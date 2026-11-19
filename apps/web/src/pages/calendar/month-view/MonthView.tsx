@@ -58,6 +58,11 @@ export function MonthView(): JSX.Element {
                 {t(`occasions.${o}`)}
               </span>
             ))}
+            {m.draftDay === key && (
+              <div className={classes.draft} data-draft aria-hidden="true">
+                {t('editor.draft')}
+              </div>
+            )}
             {items.slice(0, SHOWN_PER_DAY).map((o) => (
               <EventChip
                 key={`${o.eventId}${o.recurrenceId}`}

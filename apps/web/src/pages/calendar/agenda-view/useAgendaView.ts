@@ -15,12 +15,12 @@ export type AgendaViewModel = {
 };
 
 export function useAgendaView(): AgendaViewModel {
-  const { range, tz, secondary, occurrences, drawer } = useCalendarPageModel();
+  const { range, tz, secondary, occurrences, editor } = useCalendarPageModel();
   const occ = occurrences.data;
   const groups = useMemo((): AgendaGroup[] => agendaGroups(range.days, occ ?? [], tz), [range.days, occ, tz]);
   return {
     groups,
-    open: drawer.openEdit,
+    open: editor.openEdit,
     span: (o: Occurrence): Span => wallSpan(o, tz),
     occasions: (day: Date): Occasion[] => (secondary === 'jalali' ? occasionsOn(day) : []),
   };
