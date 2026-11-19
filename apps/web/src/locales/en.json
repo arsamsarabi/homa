@@ -1,5 +1,8 @@
 {
-  "app": { "name": "Homa", "tagline": "Find the day that works for everyone." },
+  "app": {
+    "name": "Homa",
+    "tagline": "Find the day that works for everyone."
+  },
   "nav": {
     "calendar": "Calendar",
     "signOut": "Sign out",
@@ -32,6 +35,52 @@
   },
   "calendar": {
     "today": "Today",
-    "empty": "No calendars yet. Creating events and connecting calendars come next."
+    "previous": "Previous",
+    "next": "Next",
+    "newEvent": "New event",
+    "allDay": "All day",
+    "untitled": "(No title)",
+    "more": "{{count}} more",
+    "agendaEmpty": "Nothing in the next 30 days.",
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "agenda": "Agenda"
+    }
+  },
+  "common": {
+    "cancel": "Cancel"
+  },
+  "editor": {
+    "title": "Title",
+    "titlePlaceholder": "Add a title",
+    "allDay": "All day",
+    "start": "Starts",
+    "end": "Ends",
+    "calendar": "Calendar",
+    "repeat": "Repeat",
+    "location": "Location",
+    "description": "Notes",
+    "save": "Save",
+    "delete": "Delete",
+    "endBeforeStart": "The end must be after the start."
+  },
+  "repeat": {
+    "none": "Does not repeat",
+    "daily": "Every day",
+    "weekly": "Every week",
+    "monthly": "Every month",
+    "yearly": "Every year",
+    "custom": "Custom rule"
+  },
+  "scope": {
+    "changeTitle": "Change a repeating event",
+    "deleteTitle": "Delete a repeating event",
+    "question": "Which events should this apply to?",
+    "this": "This event",
+    "following": "This and following events",
+    "all": "All events"
   }
 }
