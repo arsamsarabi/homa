@@ -15,6 +15,8 @@ export type Series = {
   rrule: string | null;
   /** Original starts of cancelled occurrences. */
   exdates: Date[];
+  /** Extra occurrence starts (RDATE) beside the RRULE's; they take the series' duration. */
+  rdates?: Date[];
 };
 
 export type Occurrence = {
@@ -67,29 +69,33 @@ const floating = (p: Temporal.PlainDateTime): ICAL.Time =>
 /** Occurrences of `series` that overlap [from, to), oldest first, without cancelled ones. */
 export function expand(series: Series, from: Date, to: Date, limit = MAX_OCCURRENCES): Occurrence[] {
   const duration = series.end.getTime() - series.start.getTime();
-  if (!series.rrule) {
-    return series.start < to && series.end > from
-      ? [{ recurrenceId: series.start, start: series.start, end: series.end }]
-      : [];
-  }
+  // Starts by epoch ms, so an RDATE that repeats an RRULE occurrence counts once.
+  const starts = new Map<number, Date>();
+  for (const d of series.rdates ?? []) if (d < to) starts.set(d.getTime(), d);
 
-  const recur = parseRrule(series.rrule);
-  // UNTIL is UTC (or a date) while we iterate in floating local time, so move it into the zone.
-  if (recur.until) {
-    const until = recur.until.isDate ? recur.until : floating(toLocal(recur.until.toJSDate(), series.tz));
-    recur.until = until;
+  if (!series.rrule) {
+    starts.set(series.start.getTime(), series.start);
+  } else {
+    const recur = parseRrule(series.rrule);
+    // UNTIL is UTC (or a date) while we iterate in floating local time, so move it into the zone.
+    if (recur.until) {
+      const until = recur.until.isDate ? recur.until : floating(toLocal(recur.until.toJSDate(), series.tz));
+      recur.until = until;
+    }
+    const it = recur.iterator(floating(toLocal(series.start, series.tz)));
+    for (let next = it.next(), seen = 0; next && seen < limit; next = it.next(), seen++) {
+      const start = toInstant(next, series.tz);
+      if (start >= to) break;
+      starts.set(start.getTime(), start);
+    }
   }
 
   const skip = new Set(series.exdates.map((d) => d.getTime()));
-  const it = recur.iterator(floating(toLocal(series.start, series.tz)));
-  const out: Occurrence[] = [];
-  for (let next = it.next(), seen = 0; next && seen < limit; next = it.next(), seen++) {
-    const start = toInstant(next, series.tz);
-    if (start >= to) break;
-    const end = new Date(start.getTime() + duration);
-    if (end > from && !skip.has(start.getTime())) out.push({ recurrenceId: start, start, end });
-  }
-  return out;
+  return [...starts.values()]
+    .sort((a, b) => a.getTime() - b.getTime())
+    .map((start) => ({ recurrenceId: start, start, end: new Date(start.getTime() + duration) }))
+    .filter((o) => o.end > from && !skip.has(o.start.getTime()))
+    .slice(0, limit);
 }
 
 /** The series' RRULE ended just before `at`: for "this and following" edits and deletes. */
@@ -104,7 +110,7 @@ export function endBefore(rrule: string, at: Date): string {
 export function continueFrom(series: Series & { rrule: string }, at: Date): string {
   const recur = parseRrule(series.rrule);
   if (recur.count) {
-    const before = expand({ ...series, exdates: [] }, series.start, at).length;
+    const before = expand({ ...series, exdates: [], rdates: [] }, series.start, at).length;
     recur.count = Math.max(1, recur.count - before);
   }
   return recur.toString();

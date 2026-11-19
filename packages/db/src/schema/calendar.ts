@@ -39,7 +39,7 @@ export const events = pgTable(
     ownerUserId: text('owner_user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    /** iCalendar UID, kept stable for export and sync. */
+    /** iCalendar UID, kept stable for export and sync; an import matches events by it. */
     uid: text('uid').notNull(),
     summary: text('summary').notNull().default(''),
     description: text('description'),
@@ -51,13 +51,16 @@ export const events = pgTable(
     /** RRULE value without the "RRULE:" prefix; null for a single event. */
     rrule: text('rrule'),
     exdates: timestamp('exdates', { withTimezone: true }).array().notNull().default(sql`'{}'`),
+    /** Extra occurrence starts (RDATE) beside the RRULE's. */
+    rdates: timestamp('rdates', { withTimezone: true }).array().notNull().default(sql`'{}'`),
     source: text('source').notNull().default('native'),
     /** How far ahead event_instances holds this event's occurrences; null for single events. */
     expandedUntil: timestamp('expanded_until', { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
-    unique('events_owner_uid_key').on(t.ownerUserId, t.uid),
+    // Unique per calendar, as in CalDAV: importing a file twice into one calendar updates its events.
+    unique('events_calendar_uid_key').on(t.calendarId, t.uid),
     index('events_calendar_idx').on(t.calendarId),
     index('events_recurring_idx').on(t.expandedUntil).where(sql`${t.rrule} is not null`),
   ],

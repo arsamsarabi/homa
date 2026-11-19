@@ -1,7 +1,7 @@
 // Overrides: changed occurrences of recurring events.
-import { and, eq, gte, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, gte, inArray, type SQL, sql } from 'drizzle-orm';
 import type { Executor } from '../client';
-import { eventOverrides } from '../schema';
+import { eventOverrides, events } from '../schema';
 
 export type OverrideRow = typeof eventOverrides.$inferSelect;
 export type OverrideColumns = {
@@ -19,6 +19,25 @@ export const listOverrides = (db: Executor, eventIds: readonly string[]): Promis
         .from(eventOverrides)
         .where(inArray(eventOverrides.eventId, [...eventIds]))
     : Promise.resolve([]);
+
+/** Every override on the user's events: for the data export. */
+export const listOwnerOverrides = (db: Executor, ownerUserId: string): Promise<OverrideRow[]> =>
+  db
+    .select(getTableColumns(eventOverrides))
+    .from(eventOverrides)
+    .innerJoin(events, eq(events.id, eventOverrides.eventId))
+    .where(eq(events.ownerUserId, ownerUserId))
+    .orderBy(asc(eventOverrides.recurrenceId));
+
+/** Replaces all of an event's overrides (an import writes the file's set). */
+export async function replaceOverrides(
+  db: Executor,
+  eventId: string,
+  rows: readonly (OverrideColumns & { recurrenceId: Date })[],
+): Promise<void> {
+  await db.delete(eventOverrides).where(eq(eventOverrides.eventId, eventId));
+  if (rows.length) await db.insert(eventOverrides).values(rows.map((r) => ({ ...r, eventId })));
+}
 
 export async function findOverride(
   db: Executor,

@@ -42,6 +42,7 @@ export const Event = z
     tz: z.string(),
     rrule: z.string().nullable(),
     exdates: z.array(z.iso.datetime()),
+    rdates: z.array(z.iso.datetime()),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })

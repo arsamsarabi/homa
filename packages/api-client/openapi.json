@@ -145,6 +145,13 @@
               "format": "date-time"
             }
           },
+          "rdates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -167,6 +174,7 @@
           "tz",
           "rrule",
           "exdates",
+          "rdates",
           "createdAt",
           "updatedAt"
         ]
@@ -519,6 +527,146 @@
             "description": "The second calendar new accounts start with"
           }
         }
+      },
+      "ImportSummary": {
+        "type": "object",
+        "properties": {
+          "imported": {
+            "type": "integer",
+            "description": "New events"
+          },
+          "updated": {
+            "type": "integer",
+            "description": "Events already in the calendar (same UID), replaced"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Events left out; the warnings say why"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "At most 50"
+          }
+        },
+        "required": [
+          "imported",
+          "updated",
+          "skipped",
+          "warnings"
+        ]
+      },
+      "DataExport": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "enum": [
+              1
+            ]
+          },
+          "exportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "homeTz": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "secondaryCalendar": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "homeTz",
+              "secondaryCalendar"
+            ]
+          },
+          "calendars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Calendar"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Event"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "overrides": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "recurrenceId": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "start": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "end": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "summary": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "description": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "location": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "recurrenceId",
+                          "start",
+                          "end",
+                          "summary",
+                          "description",
+                          "location"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "overrides"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "version",
+          "exportedAt",
+          "settings",
+          "calendars",
+          "events"
+        ]
       }
     },
     "parameters": {}
@@ -1336,6 +1484,123 @@
           },
           "403": {
             "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{id}/import": {
+      "post": {
+        "operationId": "importIcs",
+        "tags": [
+          "Import and export"
+        ],
+        "summary": "Import an .ics file into one of your calendars",
+        "description": "Events are matched by UID within the calendar, so importing the same file again updates them. Alarms, attachments and X- properties are ignored, and nothing in the file is fetched.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/calendar": {
+              "schema": {
+                "type": "string",
+                "description": "An iCalendar (.ics) file, at most 5 MB and 5000 components",
+                "example": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n…\r\nEND:VCALENDAR"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What was imported",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/export": {
+      "get": {
+        "operationId": "exportData",
+        "tags": [
+          "Import and export"
+        ],
+        "summary": "Download all of your data as JSON",
+        "description": "Settings, calendars, and events with their recurrence rules and overrides, as an attachment.",
+        "responses": {
+          "200": {
+            "description": "The export",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
             "content": {
               "application/json": {
                 "schema": {

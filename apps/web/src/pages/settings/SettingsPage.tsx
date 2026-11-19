@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { SettingsFields } from '@/components';
 import { useSession } from '@/hooks/session';
 import { useSettingsDraft } from '@/hooks/settings';
+import { ImportExportSection } from '@/pages/settings/import-export';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
 import classes from './SettingsPage.module.css';
@@ -54,6 +55,7 @@ export function SettingsPage(): JSX.Element {
             </Text>
           </Stack>
         )}
+        <ImportExportSection />
       </Stack>
     </Container>
   );

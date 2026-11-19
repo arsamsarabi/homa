@@ -1,5 +1,5 @@
 // Events (single ones and recurring series), always filtered by owner where a user asks.
-import { and, eq, inArray, isNotNull, lt } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, lt } from 'drizzle-orm';
 import type { Executor } from '../client';
 import { events } from '../schema';
 
@@ -70,3 +70,21 @@ export const listEventsPastCache = (
         calendarIds?.length ? inArray(events.calendarId, [...calendarIds]) : undefined,
       ),
     );
+
+/** Ids of the calendar's events with these iCalendar UIDs, by UID: what an import updates. */
+export async function findEventIdsByUid(
+  db: Executor,
+  calendarId: string,
+  uids: readonly string[],
+): Promise<Map<string, string>> {
+  if (!uids.length) return new Map();
+  const rows = await db
+    .select({ id: events.id, uid: events.uid })
+    .from(events)
+    .where(and(eq(events.calendarId, calendarId), inArray(events.uid, [...uids])));
+  return new Map(rows.map((r) => [r.uid, r.id]));
+}
+
+/** Every event the user owns, oldest first: for the data export. */
+export const listOwnerEvents = (db: Executor, ownerUserId: string): Promise<EventRow[]> =>
+  db.select().from(events).where(eq(events.ownerUserId, ownerUserId)).orderBy(asc(events.createdAt), asc(events.id));

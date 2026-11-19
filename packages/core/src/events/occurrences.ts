@@ -9,7 +9,14 @@ const DAY_MS = 86_400_000;
 export const HORIZON_DAYS = 548; // about 18 months
 
 /** The fields of a stored event that recurrence needs. */
-export type StoredSeries = { startAt: Date; endAt: Date; tz: string; rrule: string | null; exdates: Date[] };
+export type StoredSeries = {
+  startAt: Date;
+  endAt: Date;
+  tz: string;
+  rrule: string | null;
+  exdates: Date[];
+  rdates?: Date[];
+};
 
 /** The fields of a stored override that move an occurrence. */
 export type OverrideTimes = { recurrenceId: Date; startAt: Date; endAt: Date };
@@ -28,6 +35,7 @@ export const seriesOf = (e: StoredSeries): Series => ({
   tz: e.tz,
   rrule: e.rrule,
   exdates: e.exdates,
+  rdates: e.rdates ?? [],
 });
 
 /**

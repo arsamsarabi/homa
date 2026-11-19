@@ -51,3 +51,12 @@ export type HomaEvent = z.infer<typeof EventSchema>;
 
 export const SCOPES = ['this', 'following', 'all'] as const;
 export type Scope = (typeof SCOPES)[number];
+
+/** What an .ics import did. */
+export const ImportSummarySchema = z.object({
+  imported: z.number().int(),
+  updated: z.number().int(),
+  skipped: z.number().int(),
+  warnings: z.array(z.string()),
+});
+export type ImportSummary = z.infer<typeof ImportSummarySchema>;

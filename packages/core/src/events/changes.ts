@@ -24,11 +24,11 @@ export type EventPatch = Partial<EventFields>;
 
 export type ChangePlan =
   /** Change the event itself; recurring ones move their exceptions with them by `shiftMs`. */
-  | { kind: 'series'; start: Date; end: Date; exdates: Date[]; shiftMs: number; durationMs: number }
+  | { kind: 'series'; start: Date; end: Date; exdates: Date[]; rdates: Date[]; shiftMs: number; durationMs: number }
   /** Write an override for one occurrence (see `overrideValues`). */
   | { kind: 'occurrence'; recurrenceId: Date }
   /**
-   * End the series before `recurrenceId` (`previousRrule`, `previousExdates`) and start a new one
+   * End the series before `recurrenceId` (`previousRrule`, `previousExdates`, `previousRdates`) and start a new one
    * there; overrides from `recurrenceId` on move to the new series, shifted by `shiftMs`.
    */
   | {
@@ -38,10 +38,12 @@ export type ChangePlan =
       end: Date;
       rrule: string | null;
       exdates: Date[];
+      rdates: Date[];
       shiftMs: number;
       durationMs: number;
       previousRrule: string;
       previousExdates: Date[];
+      previousRdates: Date[];
     };
 
 const wholeSeries = (e: StoredSeries, scope: Scope, recurrenceId: Date | undefined): boolean =>
@@ -67,6 +69,7 @@ export function planChange(e: StoredSeries, patch: EventPatch, scope: Scope, rec
       start,
       end,
       exdates: e.exdates.map((d) => shift(d, shiftMs)),
+      rdates: (e.rdates ?? []).map((d) => shift(d, shiftMs)),
       shiftMs,
       durationMs: end.getTime() - start.getTime(),
     };
@@ -90,10 +93,12 @@ export function planChange(e: StoredSeries, patch: EventPatch, scope: Scope, rec
     end: newEnd,
     rrule: patch.rrule !== undefined ? patch.rrule : continueFrom({ ...seriesOf(e), rrule }, at),
     exdates: e.exdates.filter((d) => d >= at).map((d) => shift(d, shiftMs)),
+    rdates: (e.rdates ?? []).filter((d) => d >= at).map((d) => shift(d, shiftMs)),
     shiftMs,
     durationMs: newEnd.getTime() - newStart.getTime(),
     previousRrule: endBefore(rrule, at),
     previousExdates: e.exdates.filter((d) => d < at),
+    previousRdates: (e.rdates ?? []).filter((d) => d < at),
   };
 }
 
@@ -126,7 +131,7 @@ export type DeletePlan =
   /** Cancel one occurrence: add it to the exdates and drop its override. */
   | { kind: 'occurrence'; recurrenceId: Date; exdates: Date[] }
   /** End the series before `recurrenceId` and drop the overrides from there on. */
-  | { kind: 'following'; recurrenceId: Date; rrule: string; exdates: Date[] };
+  | { kind: 'following'; recurrenceId: Date; rrule: string; exdates: Date[]; rdates: Date[] };
 
 /** Decides what deleting event `e` for `scope` removes. */
 export function planDelete(e: StoredSeries, scope: Scope, recurrenceId?: Date): DeletePlan {
@@ -138,5 +143,6 @@ export function planDelete(e: StoredSeries, scope: Scope, recurrenceId?: Date): 
     recurrenceId: at,
     rrule: endBefore(e.rrule as string, at),
     exdates: e.exdates.filter((d) => d < at),
+    rdates: (e.rdates ?? []).filter((d) => d < at),
   };
 }

@@ -6,6 +6,7 @@ import { serveStatic } from 'hono/bun';
 import type { Auth } from '@/auth';
 import { calendarApi } from '@/calendar';
 import { instanceApi } from '@/instance';
+import { importExportApi } from '@/import-export';
 import { settingsApi } from '@/settings';
 import { handleError, notFound } from './errors';
 import { healthApi } from './health';
@@ -20,6 +21,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   api.route('/', calendarApi(deps));
   api.route('/', settingsApi(deps));
   api.route('/', instanceApi(deps));
+  api.route('/', importExportApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;
