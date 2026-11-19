@@ -16,14 +16,21 @@ export async function freshDb(): Promise<FreshDb> {
   const url = new URL(testDatabaseUrl);
   url.pathname = `/${name}`;
   const { db, pool } = createDb(url.toString());
-  // DROP ... WITH (FORCE) below kills any connection still open (e.g. one Better Auth hands back
-  // late after a rejected sign-up); that's intended, so don't let it surface as an unhandled error.
-  pool.on('error', () => {});
+  // pool.end() can resolve before its connections have closed, and DROP … WITH (FORCE) then
+  // terminates them (57P01, admin_shutdown); without a listener that surfaced as an unhandled
+  // error between tests. Only that error, and only while dropping, is expected.
+  let dropping = false;
+  const onError = (err: Error & { code?: string }): void => {
+    if (!(dropping && err.code === '57P01')) throw err;
+  };
+  pool.on('error', onError);
+  pool.on('connect', (client) => client.on('error', onError));
   await runMigrations(db);
   return {
     db,
     url: url.toString(),
     async drop(): Promise<void> {
+      dropping = true;
       await pool.end();
       await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);
       await admin.end();
