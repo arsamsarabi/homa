@@ -1,9 +1,10 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
+import { HORIZON_DAYS } from '@homa/core';
 import { schema } from '@homa/db';
-import { createApp } from '../app';
 import { createAuth } from '../auth';
-import { freshDb, testDatabaseUrl } from '../test-db';
-import { extendHorizon, HORIZON_DAYS } from './service';
+import { createApp } from '../http';
+import { freshDb, testDatabaseUrl } from '../testing';
+import { extendHorizon } from './instance-cache';
 
 type Json = Record<string, unknown>;
 type Occ = { eventId: string; recurrenceId: string; start: string; summary: string; overridden: boolean };

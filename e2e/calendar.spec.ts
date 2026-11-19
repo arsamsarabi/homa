@@ -9,6 +9,10 @@ const localDay = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)
 const pickView = (page: Page, name: string) =>
   page.locator('.mantine-SegmentedControl-root').getByText(name, { exact: true }).click();
 
+/** Event buttons inside one view, found by its accessible name (Day, Week, Month, Agenda, Year). */
+const eventsIn = (page: Page, view: string, text: string) =>
+  page.getByRole('region', { name: view, exact: true }).getByRole('button').filter({ hasText: text });
+
 async function newEvent(page: Page, title: string, start: string, end: string, repeat?: string) {
   await page.getByRole('button', { name: 'New event' }).click();
   await page.getByPlaceholder('Add a title').fill(title);
@@ -29,12 +33,12 @@ test('create, drag, edit a repeating event and switch views @smoke', async ({ pa
   await page.locator('input[name=password]').fill('correct horse battery');
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.getByRole('link', { name: 'Go to my calendar' }).click();
-  await expect(page.locator('.tg')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Week', exact: true })).toBeVisible();
 
   // Create today 10:00–11:00, then drag it two hours later and stretch it by half an hour.
   const today = localDay();
   await newEvent(page, 'Dentist', `${today}T10:00`, `${today}T11:00`);
-  const block = page.locator('.ev-block', { hasText: 'Dentist' });
+  const block = eventsIn(page, 'Week', 'Dentist');
   await expect(block).toContainText('10:00');
   await block.scrollIntoViewIfNeeded();
   const box = await block.boundingBox();
@@ -59,29 +63,29 @@ test('create, drag, edit a repeating event and switch views @smoke', async ({ pa
   const first = `${today.slice(0, 8)}01`;
   await newEvent(page, 'Gym', `${first}T07:00`, `${first}T08:00`, 'Every week');
   await pickView(page, 'Month');
-  const gyms = page.locator('.mv .ev', { hasText: 'Gym' });
+  const gyms = eventsIn(page, 'Month', 'Gym');
   await expect.poll(() => gyms.count()).toBeGreaterThanOrEqual(4);
   const gymCount = await gyms.count();
 
-  await page.locator('.mv .ev', { hasText: 'Gym' }).first().click();
+  await gyms.first().click();
   await page.getByPlaceholder('Add a title').fill('Gym with Leo');
   await page.getByRole('button', { name: 'Save' }).click();
   await page.getByRole('button', { name: 'This event', exact: true }).click();
   const plainGyms = gyms.filter({ hasNotText: 'Leo' });
-  await expect(page.locator('.mv .ev', { hasText: 'Gym with Leo' })).toHaveCount(1);
+  await expect(eventsIn(page, 'Month', 'Gym with Leo')).toHaveCount(1);
   await expect(plainGyms).toHaveCount(gymCount - 1);
 
   await plainGyms.first().click();
   await page.getByRole('button', { name: 'Delete' }).click();
   await page.getByRole('button', { name: 'This and following events' }).click();
   await expect(plainGyms).toHaveCount(0);
-  await expect(page.locator('.mv .ev', { hasText: 'Gym with Leo' })).toHaveCount(1);
+  await expect(eventsIn(page, 'Month', 'Gym with Leo')).toHaveCount(1);
 
   // The other views render and link back to a day.
   await pickView(page, 'Agenda');
-  await expect(page.locator('.av-row', { hasText: 'Dentist' })).toBeVisible();
+  await expect(eventsIn(page, 'Agenda', 'Dentist')).toBeVisible();
   await pickView(page, 'Year');
-  await page.locator('.yv-day[aria-current=date]').click();
+  await page.getByRole('region', { name: 'Year', exact: true }).locator('button[aria-current=date]').click();
   await expect(page).toHaveURL(/view=day/);
-  await expect(page.locator('.ev-block', { hasText: 'Dentist' })).toBeVisible();
+  await expect(eventsIn(page, 'Day', 'Dentist')).toBeVisible();
 });

@@ -42,7 +42,7 @@ If tradeoffs are required, follow that order. Security outranks convenience for 
 - Route handlers stay thin: validate input (zod-openapi does it) → call a service → map the result to the response schema
 - Services orchestrate: open the transaction, call repositories, apply `@homa/core` rules. No query building in services
 - Pure domain logic lives in `@homa/core` and is unit-testable without a database or Hono
-- SQL lives in `@homa/db` (`src/repo/`) or `drizzle/` migrations. No `sql` template strings or `db.select()` in `apps/server`
+- SQL lives in `@homa/db` (`src/repo/`) or `drizzle/` migrations. No `sql` template strings or `db.select()` in `apps/server` (tests may query directly to set up and check state)
 - If logic cannot be tested without starting Hono or Postgres, it is in the wrong layer
 
 ---

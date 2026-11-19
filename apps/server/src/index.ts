@@ -1,15 +1,21 @@
+// Entry point. HOMA_ROLE picks what this process runs: the API, the job worker, or both.
 import { createDb, runMigrations } from '@homa/db';
-import { createApp } from './app';
+import type { PgBoss } from 'pg-boss';
 import { createAuth } from './auth';
-import { loadConfig } from './config';
+import { type Config, loadConfig } from './config';
+import { createApp } from './http';
 import { startWorker } from './jobs';
+import { log } from './log';
 
 const config = loadConfig();
 const { db, pool } = createDb(config.DATABASE_URL);
-const role = config.HOMA_ROLE;
+const role: Config['HOMA_ROLE'] = config.HOMA_ROLE;
 
 // Only the API applies migrations, so a separate worker never races it.
-if (role !== 'worker') await runMigrations(db);
+if (role !== 'worker') {
+  await runMigrations(db);
+  log.info('migrations applied');
+}
 
 const server =
   role === 'worker'
@@ -22,11 +28,11 @@ const server =
         ).fetch,
       });
 
-const boss = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db);
+const boss: PgBoss | undefined = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db);
 
-console.log(`homa ${role}${server ? ` listening on http://localhost:${server.port}` : ''}`);
+log.info('homa started', { role, ...(server && { url: `http://localhost:${server.port}` }) });
 
-async function shutdown() {
+async function shutdown(): Promise<void> {
   await server?.stop();
   await boss?.stop({ graceful: true, timeout: 20_000 });
   await pool.end();

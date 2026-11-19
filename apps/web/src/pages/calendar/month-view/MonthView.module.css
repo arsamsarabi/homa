@@ -1,0 +1,71 @@
+/* Month view: whole weeks; --weeks is how many. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: auto repeat(var(--weeks), minmax(96px, 1fr));
+  gap: 1px;
+  background: var(--mantine-color-default-border);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: 12px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.head {
+  padding: 6px 0;
+  background: var(--mantine-color-body);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px;
+  background: var(--mantine-color-default);
+  cursor: pointer;
+}
+
+.cell[data-outside] {
+  background: var(--mantine-color-body);
+  opacity: 0.7;
+}
+
+.cell[data-over] {
+  outline: 2px dashed var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.day {
+  align-self: flex-start;
+  min-width: 24px;
+  padding: 0 6px;
+  border-radius: 12px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.day[aria-current="date"] {
+  background: var(--mantine-primary-color-filled);
+  color: var(--mantine-primary-color-contrast);
+  font-weight: 700;
+}
+
+.day:focus-visible,
+.more:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.more {
+  padding-inline-start: 4px;
+  font-size: 12px;
+  text-align: start;
+  color: var(--mantine-color-dimmed);
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-rows: auto repeat(var(--weeks), minmax(64px, 1fr));
+  }
+}

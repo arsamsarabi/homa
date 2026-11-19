@@ -413,7 +413,7 @@ The app is TypeScript only. Do not add `.js` / `.jsx` source files; config files
 ## 17. Developer experience
 
 - **Format and lint:** Biome (`biome.json` at the repo root) owns formatting, import sorting and lint. Do not add Prettier, ESLint or Oxlint
-- **Tests:** `bun test` with happy-dom and Testing Library for components (`src/testing/` holds the setup and `renderWithProviders`)
+- **Tests:** `bun test` with happy-dom and Testing Library for components (`src/testing/` holds the DOM setup and `renderApp`, which renders the app at a URL with the API faked at `fetch`); run with `bun run test`, which runs each package apart so only the web app gets a DOM
 - Scripts (repo root): `bun run format`, `bun run lint`, `bun run typecheck`, `bun run test`, `bun run e2e:smoke`; in `apps/web`: `bun run dev`, `bun run routes:gen`
 - Dependencies: exact versions, at least a week old (`bunfig.toml` enforces both)
 - Use consistent commit messages

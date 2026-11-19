@@ -16,7 +16,7 @@ Needs [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
 bun install
 cp .env.example .env   # then set DATABASE_URL and BETTER_AUTH_SECRET
 bun run dev        # web app on http://localhost:5173, API and worker on :3000 (/api/health, /api/openapi.json)
-bun test           # set TEST_DATABASE_URL to a Postgres server to run the database tests too
+bun run test       # every package; set TEST_DATABASE_URL to a Postgres server to run the database tests too
 bun run typecheck
 bun run lint       # bun run format to fix
 bun run e2e:smoke  # Playwright smoke tests against BASE_URL (default http://localhost:3000)

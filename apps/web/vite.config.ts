@@ -1,9 +1,14 @@
+import { fileURLToPath } from 'node:url';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   plugins: [
+    // Generates src/routeTree.gen.ts from src/routes (file-based routing). Must run before react().
+    tanstackRouter({ target: 'react' }),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

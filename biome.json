@@ -1,6 +1,57 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "files": { "includes": ["**", "!**/node_modules", "!**/dist", "!**/schema.d.ts", "!**/openapi.json", "!**/*.md"] },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/schema.d.ts",
+      "!**/openapi.json",
+      "!**/routeTree.gen.ts",
+      "!**/*.md"
+    ]
+  },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
-  "javascript": { "formatter": { "quoteStyle": "single" } }
+  "javascript": { "formatter": { "quoteStyle": "single" } },
+  "css": { "parser": { "cssModules": true } },
+  "linter": {
+    "rules": {
+      "nursery": { "useExplicitType": "error" },
+      "suspicious": { "noConsole": "error", "noExplicitAny": "error" }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/web/src/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": { "level": "error", "options": { "allow": ["error"] } } },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["../*"],
+                    "message": "Import through the @/ alias; only same-folder ./ imports are relative."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "e2e/**",
+        "**/*.config.ts",
+        "apps/web/src/testing/**"
+      ],
+      "linter": { "rules": { "nursery": { "useExplicitType": "off" } } }
+    }
+  ]
 }

@@ -1,0 +1,4 @@
+[test]
+# Web tests run with a DOM. Run them from this folder (`bun run test`), not from the repo root,
+# so the server's tests keep the real fetch and Response.
+preload = ["./src/testing/setup.ts"]
