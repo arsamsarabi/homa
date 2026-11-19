@@ -6,15 +6,15 @@ Status: draft, 2026-11-18. Source: architecture interview with Arsam Sarabi (tec
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Runtime | Bun | Fast installs, built-in test runner and TypeScript. Node compatibility is good enough; DAV and XML libraries get a spike in phase 1 |
+| Runtime | Bun | Fast installs, built-in test runner and TypeScript. The phase 1 spike found no blockers for the recurrence and XML libraries |
 | API | Hono + `@hono/zod-openapi` | REST with an OpenAPI spec generated from zod schemas. One spec feeds the web client, the future Expo app, API-key users and MCP tools |
 | DB | Postgres + Drizzle (drizzle-kit migrations) | SQL-shaped schema; raw SQL stays easy for range queries (`tstzrange`, GiST indexes) |
 | Jobs | pg-boss | Postgres-backed queue and cron. No Redis, so self-host stays app + Postgres |
 | Auth | Better Auth (Drizzle adapter) | Password, OIDC, passkeys, 2FA, sessions and API keys. Homa adds its own policies on top: email verification, rate limits, first user is admin |
 | Search | Postgres full-text (`tsvector`, `pg_trgm`) | No extra service; Meilisearch can come later if needed |
 | Web | Vite, React 19, TypeScript, TanStack Router and Query, Mantine, Zustand, `vite-plugin-pwa` | A plain SPA: the app sits behind sign-in, so it needs no server rendering. Mantine gives accessible components with RTL support, and the PWA plugin makes it installable with web push |
-| Calendar views | Custom, on headless libraries | `@dnd-kit` for drag, TanStack Virtual for long ranges, Temporal polyfill for date math. No FullCalendar: its timeline views are paid |
-| Recurrence | `rrule` + `ical.js` (to be confirmed in the phase 1 spike) | RFC 5545 parsing, expansion and serialization |
+| Calendar views | Custom, on headless libraries | `@dnd-kit` for drag, TanStack Virtual for long ranges, Temporal polyfill for date math in the browser. No FullCalendar: its timeline views are paid |
+| Recurrence | `ical.js` for parsing, expansion and serialization; `Temporal` for date math (native in Bun, polyfilled in the browser) | Chosen in the phase 1 spike (below). `rrule` was dropped |
 | Tests | `bun test` (unit and integration on a throwaway Postgres) + Playwright (e2e, `@smoke` subset) | CalDAV conformance runs against a Radicale container |
 | Monorepo | Bun workspaces | |
 | Tooling | Biome (lint and format), TypeScript 6, `openapi-typescript` + `openapi-fetch` for the client | Biome is one fast tool for both jobs. TypeScript stays on 6.x: TypeScript 7 (the native port) has no JavaScript compiler API yet, which `openapi-typescript` needs |
@@ -110,6 +110,34 @@ Every read path takes the viewer and resolves grants: owner, direct grant, circl
 
 `/mcp` exposes tools generated from the same zod schemas as the REST routes (list events, find free time, create event, create task, plan routines), authenticated by API key.
 
+## Phase 1 spike results (2026-11-19)
+
+The tests live in `packages/core/src/spikes/` and keep running in CI, so a library upgrade that breaks one of these cases fails the build.
+
+**Recurrence.** Test case: a weekly Monday 09:00 meeting in `Europe/London` from 16 March 2026, across the clock change on 29 March, with one occurrence cancelled (`EXDATE`) and one moved to 10:00 (`RECURRENCE-ID`).
+
+| Library | Result |
+| --- | --- |
+| `ical.js` 2.2 | Correct when the feed includes its `VTIMEZONE`: the cancelled week is skipped, the moved one is at 10:00 BST, and later weeks stay at 09:00 local (08:00 UTC). **Without** a `VTIMEZONE` it treats the `TZID` as floating time and gets the clock change wrong |
+| `rrule` 2.8 | Only correct when the process runs in UTC: under `TZ=Europe/London` every occurrence after the change is an hour off, under `America/New_York` four or five hours. It also only sees the `RRULE`, not the `EXDATE` or moved occurrence in other components |
+| `Temporal` | Native in Bun 1.4. `ZonedDateTime` keeps 09:00 local across the change. Browsers still need the polyfill |
+
+Decisions:
+
+- `ical.js` parses, expands and serializes. `rrule` is not used.
+- Before expanding, Homa registers a timezone for every `TZID` the feed uses but doesn't define, built from the IANA database through `Temporal`/`Intl`. Many feeds (and some CalDAV servers) omit `VTIMEZONE`, so this is required, not optional.
+- The server image sets `TZ=UTC`, and nothing depends on the host's local zone.
+- Golden tests from real exported calendars (Google, Outlook, iCloud, Fastmail) are added in phase 2 alongside the expansion cache.
+
+**XML for the CalDAV server.** Clients send the same `PROPFIND` with different prefixes, or with a default namespace.
+
+| Library | Result |
+| --- | --- |
+| `@xmldom/xmldom` 0.9 | Resolves namespaces: both forms give `{DAV:}displayname` and `{urn:ietf:params:xml:ns:caldav}calendar-home-set`. Builds and escapes `multistatus` responses |
+| `fast-xml-parser` 5 | Either keeps the client's prefixes as part of the names, or strips them and loses the namespace. Not suitable for DAV |
+
+Decision: `@xmldom/xmldom` for `packages/dav`.
+
 ## Self-hosting
 
 - `docker compose up` with `homa` (api + worker) and `postgres`. Configuration through environment variables only.
@@ -120,7 +148,7 @@ Every read path takes the viewer and resolves grants: owner, direct grant, circl
 
 | Risk | Mitigation |
 | --- | --- |
-| Bun compatibility with XML/DAV and crypto libraries | Spike in phase 1; fall back to Node for the server image only if needed |
+| Bun compatibility with XML/DAV and crypto libraries | Phase 1 spike passed for `ical.js`, `@xmldom/xmldom` and native `Temporal`; Better Auth and pg-boss already run on Bun. Fall back to Node for the server image only if a later library fails |
 | Recurrence edge cases (time zones, DST, overrides) | Golden tests from real exported calendars; property tests for expansion |
 | Google sensitive-scope verification for the hosted instance | Self-hosters bring their own OAuth client; start Google review early for the hosted one |
 | Two-way sync conflicts and data loss | Outbox with ETags, remote-wins plus notice, never delete remote data without a matching remote state |

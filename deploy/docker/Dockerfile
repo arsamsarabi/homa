@@ -25,6 +25,7 @@ RUN bun install --frozen-lockfile --production --filter @homa/server
 FROM oven/bun:${BUN_VERSION}-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
+    TZ=UTC \
     HOMA_WEB_DIR=apps/web/dist \
     PORT=3000
 COPY --from=prod-deps /app/node_modules node_modules

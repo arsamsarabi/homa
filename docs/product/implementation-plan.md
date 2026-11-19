@@ -10,6 +10,8 @@ Lives in `homa-infra`: brand starter, landing page on `homa.day`, docs site on `
 
 ## Phase 1: scaffolding
 
+Status: done 2026-11-19 (pull requests #2 to #7). Spike results are in [architecture.md](./architecture.md#phase-1-spike-results-2026-11-19).
+
 - Bun workspace with `apps/web`, `apps/server` and the `packages/*` from the architecture doc.
 - Hono server with `@hono/zod-openapi`, health route, OpenAPI document, generated `api-client`.
 - Drizzle + Postgres, first migration, pg-boss wired with a sample job, `role=api|worker|all`.
