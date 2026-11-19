@@ -1,6 +1,33 @@
-import { app } from './app';
+import { createDb, runMigrations } from '@homa/db';
+import { createApp } from './app';
+import { createAuth } from './auth';
+import { loadConfig } from './config';
+import { startWorker } from './jobs';
 
-const port = Number(process.env.PORT ?? 3000);
+const config = loadConfig();
+const { db, pool } = createDb(config.DATABASE_URL);
+const role = config.HOMA_ROLE;
 
-Bun.serve({ port, fetch: app.fetch });
-console.log(`homa listening on http://localhost:${port}`);
+// Only the API applies migrations, so a separate worker never races it.
+if (role !== 'worker') await runMigrations(db);
+
+const server =
+  role === 'worker'
+    ? undefined
+    : Bun.serve({
+        port: config.PORT,
+        fetch: createApp(createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL })).fetch,
+      });
+
+const boss = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db);
+
+console.log(`homa ${role}${server ? ` listening on http://localhost:${server.port}` : ''}`);
+
+async function shutdown() {
+  await server?.stop();
+  await boss?.stop({ graceful: true, timeout: 20_000 });
+  await pool.end();
+  process.exit(0);
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

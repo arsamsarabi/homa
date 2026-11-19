@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
+import type { Auth } from './auth';
 
 const Health = z
   .object({
@@ -30,4 +31,9 @@ export const openApiConfig = {
 
 api.doc31('/openapi.json', openApiConfig);
 
-export const app = new OpenAPIHono().route('/api', api);
+/** The HTTP app. Without `auth` (tests, the OpenAPI dump) the /api/auth routes are left out. */
+export function createApp(auth?: Auth) {
+  const app = new OpenAPIHono();
+  if (auth) app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw));
+  return app.route('/api', api);
+}
