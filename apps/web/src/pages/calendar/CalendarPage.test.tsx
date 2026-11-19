@@ -112,4 +112,14 @@ describe('calendar page', () => {
     expect(await screen.findByText('Yalda Night')).toBeTruthy();
     expect(screen.getByText('30 Azar')).toBeTruthy();
   });
+
+  test('letter keys switch the view', async () => {
+    renderApp(
+      '/?view=week',
+      api(() => json([dentist])),
+    );
+    expect(await screen.findByRole('region', { name: 'Week' })).toBeTruthy();
+    fireEvent.keyDown(document.documentElement, { key: 'm', code: 'KeyM' });
+    expect(await screen.findByRole('region', { name: 'Month' })).toBeTruthy();
+  });
 });

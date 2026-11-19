@@ -18,13 +18,24 @@ test('sign up, onboard, see the calendar, switch to Farsi, sign out @smoke', asy
   await page.getByRole('button', { name: 'Go to my calendar' }).click();
   await expect(page.locator('[aria-current=date]')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Language' }).click();
+  // Keyboard: M shows the month, the palette opens settings, and the back link returns.
+  await page.keyboard.press('m');
+  await expect(page.getByRole('region', { name: 'Month', exact: true })).toBeVisible();
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.getByPlaceholder('Type a command…').fill('settings');
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.getByRole('link', { name: 'Back to the calendar' }).click();
+  await expect(page.getByRole('region', { name: 'Week', exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Account menu' }).click();
   await page.getByRole('menuitem', { name: 'فارسی' }).click();
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await page.getByRole('button', { name: 'خروج' }).click();
+  await page.getByRole('button', { name: 'منوی حساب' }).click();
+  await page.getByRole('menuitem', { name: 'خروج' }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
 });
 

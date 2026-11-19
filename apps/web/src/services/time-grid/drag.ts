@@ -88,6 +88,9 @@ export function dragGhost(d: Drag | undefined, days: readonly Date[], tz: string
   return { day: day < 0 ? d.day : day, from: startMin, to: Math.max(d.min, startMin + MIN_MINUTES) };
 }
 
+/** Blocks shorter than this can't fit the title and the time on two lines, so they use one. */
+export const TWO_LINE_PX = 36;
+
 /** Top and height in pixels for minutes [from, to) of a day, never shorter than a line of text. */
 export function blockBox(from: number, to: number): { top: number; height: number } {
   const a = clamp(from, 0, DAY_MINUTES);

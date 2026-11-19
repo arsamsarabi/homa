@@ -141,6 +141,23 @@
   color: var(--mantine-color-dimmed);
 }
 
+/* Short events: title and start time on one line; the end time only shows on two-line blocks. */
+.block[data-compact] {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding-block: 0;
+}
+
+.block[data-compact] b {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.block[data-compact] .end {
+  display: none;
+}
+
 .block[data-dragging] {
   opacity: 0.35;
 }
