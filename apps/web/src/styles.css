@@ -1,0 +1,5 @@
+/* Farsi text in Vazirmatn. */
+:root[lang="fa"] {
+  --mantine-font-family: Vazirmatn, system-ui, sans-serif;
+  --mantine-font-family-headings: Vazirmatn, system-ui, sans-serif;
+}

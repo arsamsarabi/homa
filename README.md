@@ -11,7 +11,7 @@ Needs [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
 ```sh
 bun install
 cp .env.example .env   # then set DATABASE_URL and BETTER_AUTH_SECRET
-bun run dev        # API and worker on http://localhost:3000/api (health: /api/health, spec: /api/openapi.json)
+bun run dev        # web app on http://localhost:5173, API and worker on :3000 (/api/health, /api/openapi.json)
 bun test           # set TEST_DATABASE_URL to a Postgres server to run the database tests too
 bun run typecheck
 bun run lint       # bun run format to fix

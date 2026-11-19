@@ -36,6 +36,7 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun test
+      - run: bun run build
       - name: Generated API client is up to date
         run: |
           bun run openapi
