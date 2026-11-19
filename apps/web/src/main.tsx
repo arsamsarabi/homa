@@ -1,8 +1,7 @@
 import '@mantine/core/styles.css';
-import '@fontsource/rajdhani/600.css';
-import '@fontsource/rajdhani/700.css';
 import '@fontsource/vazirmatn/400.css';
 import '@fontsource/vazirmatn/700.css';
+import './fonts.css';
 import './styles.css';
 import './i18n';
 import { DirectionProvider, MantineProvider } from '@mantine/core';
