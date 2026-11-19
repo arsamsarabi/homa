@@ -1,8 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, createRoute, createRouter, Outlet, redirect } from '@tanstack/react-router';
+import { CalendarPage } from './calendar/CalendarPage';
+import { VIEWS, type View } from './calendar/dates';
 import { AppLayout } from './routes/AppLayout';
 import { AuthForm } from './routes/AuthForm';
-import { Calendar } from './routes/Calendar';
 import { Onboarding } from './routes/Onboarding';
 import { sessionQuery } from './session';
 
@@ -34,7 +35,15 @@ const app = createRoute({
   },
   component: AppLayout,
 });
-const calendar = createRoute({ getParentRoute: () => app, path: '/', component: Calendar });
+const calendar = createRoute({
+  getParentRoute: () => app,
+  path: '/',
+  validateSearch: (s: Record<string, unknown>): { view?: View; date?: string } => ({
+    view: VIEWS.includes(s.view as View) ? (s.view as View) : undefined,
+    date: typeof s.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.date) ? s.date : undefined,
+  }),
+  component: CalendarPage,
+});
 const onboarding = createRoute({ getParentRoute: () => app, path: '/onboarding', component: Onboarding });
 
 const routeTree = root.addChildren([signIn, signUp, app.addChildren([calendar, onboarding])]);

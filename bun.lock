@@ -32,6 +32,7 @@
       "name": "@homa/web",
       "dependencies": {
         "@fontsource/vazirmatn": "5.3.0",
+        "@homa/api-client": "workspace:*",
         "@mantine/core": "9.8.0",
         "@mantine/hooks": "9.8.0",
         "@tabler/icons-react": "3.51.0",
