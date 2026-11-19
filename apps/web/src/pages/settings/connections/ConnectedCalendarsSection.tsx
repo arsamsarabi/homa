@@ -3,20 +3,25 @@ import { type JSX, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { useConnectionMutations, useConnections } from '@/hooks/connections';
-import type { Connection } from '@/schemas';
+import type { Calendar, Connection } from '@/schemas';
 import { useAnnouncer } from '@/stores';
+import { CaldavDrawer } from './CaldavDrawer';
+import { CalendarEditDrawer } from './CalendarEditDrawer';
 import classes from './ConnectedCalendarsSection.module.css';
-import { ConnectionItem } from './ConnectionItem';
+import { ConnectionItem, connectionName } from './ConnectionItem';
 import { SubscribeDrawer } from './SubscribeDrawer';
 
-/** Settings section: subscribed calendars (ICS feeds, public holidays) with their sync status. */
+/** Settings section: connected calendars (ICS feeds, public holidays, CalDAV accounts) with their sync status. */
 export function ConnectedCalendarsSection(): JSX.Element {
   const { t, i18n } = useTranslation();
   const headingId = useId();
   const connections = useConnections();
-  const { syncNow, remove } = useConnectionMutations();
+  const { syncNow, remove, dismissNotice } = useConnectionMutations();
   const announce = useAnnouncer((s) => s.announce);
   const [adding, setAdding] = useState(false);
+  // The CalDAV drawer: closed, adding an account (null) or choosing an account's calendars (its id).
+  const [caldav, setCaldav] = useState<string | null>();
+  const [editing, setEditing] = useState<Calendar>();
   const [removing, setRemoving] = useState<Connection>();
   const format = useMemo(
     () => new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }),
@@ -46,6 +51,9 @@ export function ConnectedCalendarsSection(): JSX.Element {
       </Text>
       <Group>
         <Button onClick={() => setAdding(true)}>{t('connections.add')}</Button>
+        <Button variant="default" onClick={() => setCaldav(null)}>
+          {t('caldav.add')}
+        </Button>
       </Group>
       {connections.isPending && <Loader size="sm" aria-label={t('connections.loading')} />}
       {connections.isError && (
@@ -55,9 +63,9 @@ export function ConnectedCalendarsSection(): JSX.Element {
           onRetry={() => void connections.refetch()}
         />
       )}
-      {(syncNow.isError || remove.isError) && (
+      {(syncNow.isError || remove.isError || dismissNotice.isError) && (
         <Alert color="red" role="alert">
-          {(syncNow.error ?? remove.error)?.message}
+          {(syncNow.error ?? remove.error ?? dismissNotice.error)?.message}
         </Alert>
       )}
       {connections.data?.length === 0 && (
@@ -75,11 +83,20 @@ export function ConnectedCalendarsSection(): JSX.Element {
               syncing={syncNow.isPending && syncNow.variables === c.id}
               onSync={() => sync(c.id)}
               onRemove={() => setRemoving(c)}
+              onEditCalendar={setEditing}
+              onChoose={() => setCaldav(c.id)}
+              onDismissNotice={() => dismissNotice.mutate(c.id)}
             />
           ))}
         </Stack>
       )}
       <SubscribeDrawer opened={adding} onClose={() => setAdding(false)} />
+      <CaldavDrawer
+        opened={caldav !== undefined}
+        connectionId={caldav ?? undefined}
+        onClose={() => setCaldav(undefined)}
+      />
+      <CalendarEditDrawer calendar={editing} onClose={() => setEditing(undefined)} />
       <Modal
         opened={removing !== undefined}
         onClose={() => setRemoving(undefined)}
@@ -87,7 +104,9 @@ export function ConnectedCalendarsSection(): JSX.Element {
       >
         <Stack>
           <Text size="sm">
-            {t('connections.removeBody', { name: removing?.calendars[0]?.name ?? t('connections.untitled') })}
+            {t(removing?.provider === 'caldav' ? 'caldav.removeBody' : 'connections.removeBody', {
+              name: removing ? connectionName(removing, t('connections.untitled')) : '',
+            })}
           </Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setRemoving(undefined)}>

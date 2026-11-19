@@ -15,10 +15,10 @@ import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { type SubscribeVars, useConnectionMutations, useHolidayCalendars } from '@/hooks/connections';
 import { useAnnouncer } from '@/stores';
+import { SWATCHES } from './swatches';
 
 export type SubscribeDrawerProps = { opened: boolean; onClose: () => void };
 
-const SWATCHES = ['#4a4e69', '#2f6f4f', '#1c6ea4', '#8a5a00', '#a23b72', '#6c4ab6', '#b23a48', '#3d7068'] as const;
 type Mode = 'url' | 'holidays';
 
 /** Subscribe to an ICS feed by its address, or pick a public-holiday calendar. */

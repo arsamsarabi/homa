@@ -219,7 +219,7 @@
   },
   "connections": {
     "title": "تقویم‌های متصل",
-    "hint": "مشترک یک تقویم شوید (نشانی .ics یا webcal از Google Calendar، Outlook، Apple Calendar، یک تیم ورزشی یا مدرسه) یا تعطیلات رسمی را اضافه کنید. این تقویم‌ها اینجا فقط‌خواندنی هستند و خودکار به‌روز می‌شوند.",
+    "hint": "به خوراک یک تقویم (نشانی ‎.ics‎ یا webcal از Google Calendar، Outlook، Apple Calendar، یک تیم ورزشی یا یک مدرسه) مشترک شوید، تعطیلات رسمی را اضافه کنید، یا یک حساب CalDAV (iCloud، Fastmail، Nextcloud) را برای همگام‌سازی دوطرفه وصل کنید.",
     "add": "افزودن تقویم",
     "addTitle": "افزودن تقویم",
     "byAddress": "با نشانی",
@@ -256,6 +256,48 @@
       "syncing": "در حال همگام‌سازی",
       "ok": "به‌روز",
       "error": "خطا"
-    }
+    },
+    "editCalendar": "تغییر نام یا رنگ {{name}}",
+    "editTitle": "ویرایش تقویم",
+    "save": "ذخیره",
+    "calendarSaved": "تقویم ذخیره شد",
+    "dismissNotice": "بستن",
+    "calendarsOf": "تقویم‌های {{name}}"
+  },
+  "caldav": {
+    "add": "اتصال حساب",
+    "title": "اتصال حساب CalDAV",
+    "provider": "سرویس‌دهنده",
+    "presets": {
+      "icloud": "iCloud",
+      "fastmail": "Fastmail",
+      "nextcloud": "Nextcloud",
+      "other": "سرور CalDAV دیگر"
+    },
+    "hints": {
+      "icloud": "از گذرواژهٔ مخصوص برنامه در account.apple.com استفاده کنید، نه گذرواژهٔ حساب Apple.",
+      "fastmail": "در Fastmail از بخش Settings → Privacy & Security یک گذرواژهٔ برنامه برای CalDAV بسازید.",
+      "nextcloud": "نشانی سرور شما و سپس ‎/remote.php/dav‎، برای نمونه ‎https://cloud.example.com/remote.php/dav‎. در بخش Settings → Security یک گذرواژهٔ برنامه بسازید.",
+      "other": "نشانی سرور CalDAV شما. Homa نشانی ‎/.well-known/caldav‎ آن را هم امتحان می‌کند."
+    },
+    "server": "نشانی سرور",
+    "username": "نام کاربری",
+    "password": "گذرواژهٔ برنامه",
+    "passwordHint": "رمزنگاری‌شده نگه داشته می‌شود. Homa دیگر آن را نشان نمی‌دهد.",
+    "checking": "در حال بررسی حساب…",
+    "connect": "اتصال",
+    "connected": "حساب وصل شد",
+    "chooseTitle": "انتخاب تقویم‌ها",
+    "chooseHint": "تقویم‌های انتخاب‌شده دوطرفه همگام می‌شوند. برداشتن تیک یک تقویم آن را فقط از Homa حذف می‌کند، نه از سرور.",
+    "calendars": "تقویم‌های این حساب",
+    "noCalendars": "این حساب تقویمی با رویداد ندارد.",
+    "loadingCalendars": "در حال بارگذاری تقویم‌های حساب",
+    "calendarsFailed": "تقویم‌های حساب بارگذاری نشد",
+    "save": "ذخیره",
+    "saved": "تقویم‌ها ذخیره شدند",
+    "choose": "انتخاب تقویم‌ها",
+    "noneChosen": "هنوز تقویمی انتخاب نشده است.",
+    "twoWay": "همگام‌سازی دوطرفه",
+    "removeBody": "«{{name}}» و تقویم‌هایش از Homa حذف می‌شوند. چیزی روی سرور تغییر نمی‌کند."
   }
 }

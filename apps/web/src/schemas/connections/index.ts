@@ -6,4 +6,7 @@ export {
   type HolidayFeed,
   HolidayFeedListSchema,
   HolidayFeedSchema,
+  type RemoteCalendar,
+  RemoteCalendarListSchema,
+  RemoteCalendarSchema,
 } from './connections';
