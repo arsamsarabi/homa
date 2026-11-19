@@ -49,5 +49,6 @@ export function icsAdapter(credentials: IcsCredentials, options: IcsAdapterOptio
     },
     pullChanges: (_calendar: RemoteCalendar, since: SyncCursor): Promise<PullResult> => pull(since),
     pushChange: (): Promise<never> => Promise.reject(new ReadOnlyError('ICS subscriptions are read-only')),
+    fetchResource: (): Promise<never> => Promise.reject(new ReadOnlyError('ICS subscriptions have no resources')),
   };
 }

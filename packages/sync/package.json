@@ -7,7 +7,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@homa/core": "workspace:*"
+    "@homa/core": "workspace:*",
+    "@xmldom/xmldom": "0.9.12"
   },
   "exports": {
     ".": "./src/index.ts"

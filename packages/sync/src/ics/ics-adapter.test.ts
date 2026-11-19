@@ -106,8 +106,6 @@ describe('ICS adapter', () => {
   test('a body that is not iCalendar is a ValidationError; pushes are refused', async () => {
     body = 'hello';
     await expect(adapter().pullChanges(calendar, EMPTY_CURSOR)).rejects.toBeInstanceOf(ValidationError);
-    await expect(
-      adapter().pushChange({ kind: 'delete', calendarRemoteId: 'x', uid: 'y', etag: null }),
-    ).rejects.toBeInstanceOf(ReadOnlyError);
+    await expect(adapter().pushChange({ kind: 'delete', href: 'x', etag: 'y' })).rejects.toBeInstanceOf(ReadOnlyError);
   });
 });
