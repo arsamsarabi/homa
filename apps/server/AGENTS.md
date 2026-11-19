@@ -181,6 +181,7 @@ If tradeoffs are required, follow that order. Security outranks convenience for 
 ```bash
 bun run test                                    # every package; database tests skip without TEST_DATABASE_URL
 TEST_DATABASE_URL=postgres://... bun run test   # what CI runs, against a throwaway Postgres
+TEST_CALDAV_URL=http://127.0.0.1:5232/ …        # also runs the CalDAV tests against Radicale (see .github/workflows/ci.yml)
 bun run lint                                    # Biome
 bun run typecheck
 ```
