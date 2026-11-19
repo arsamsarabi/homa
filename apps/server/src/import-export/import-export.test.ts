@@ -2,9 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { ICS_LIMITS } from '@homa/core';
 import { schema } from '@homa/db';
 import { eq } from 'drizzle-orm';
-import { createAuth } from '@/auth';
 import { createApp } from '@/http';
-import { freshDb, testDatabaseUrl } from '@/testing';
+import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 
 type Json = Record<string, unknown>;
 
@@ -88,7 +87,7 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
 
   beforeAll(async () => {
     t = await freshDb();
-    app = createApp({ db: t.db, auth: createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }) });
+    app = createApp({ db: t.db, auth: testAuth(t.db) });
     ada = await signUp('ada@example.com');
     bob = await signUp('bob@example.com');
     adaCalendar = await firstCalendar(ada);
