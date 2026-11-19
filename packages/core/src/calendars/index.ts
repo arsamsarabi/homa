@@ -1,0 +1,1 @@
+export { assertWritable } from './writable';

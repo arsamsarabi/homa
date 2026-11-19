@@ -1,1 +1,1 @@
-export { NotFoundError, ValidationError } from './errors';
+export { NotFoundError, ReadOnlyError, UnavailableError, ValidationError } from './errors';

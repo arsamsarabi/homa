@@ -54,6 +54,8 @@ export type IcsEvent = {
 };
 
 export type IcsImport = {
+  /** The feed's own name (X-WR-CALNAME), if it has one. */
+  name: string | null;
   events: IcsEvent[];
   /** VEVENTs left out (each has a warning, up to the cap). */
   skipped: number;
@@ -311,5 +313,6 @@ export function parseIcs(text: string, options: IcsOptions): IcsImport {
     }
   }
 
-  return { events: [...events.values()], skipped, warnings };
+  const name = calendars.map((c) => cleanOrNull(c.getFirstPropertyValue('x-wr-calname'), 100)).find(Boolean) ?? null;
+  return { name, events: [...events.values()], skipped, warnings };
 }

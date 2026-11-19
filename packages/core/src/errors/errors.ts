@@ -12,3 +12,16 @@ export class NotFoundError extends Error {
 export class ValidationError extends Error {
   override name = 'ValidationError';
 }
+
+/** The calendar is read-only (a subscription): its events can't be created, changed or deleted here. */
+export class ReadOnlyError extends Error {
+  override name = 'ReadOnlyError';
+  constructor(message = 'This calendar is read-only') {
+    super(message);
+  }
+}
+
+/** The server isn't set up for this (a missing setting the operator must add). */
+export class UnavailableError extends Error {
+  override name = 'UnavailableError';
+}
