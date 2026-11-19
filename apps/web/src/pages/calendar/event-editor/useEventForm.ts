@@ -18,6 +18,8 @@ import { timeZones } from '@/services/zones';
 
 export type EventFormModel = {
   occurrence: Occurrence | undefined;
+  /** The occurrence is in a read-only calendar: show its details, not a form. */
+  readOnly: boolean;
   calendarOptions: { value: string; label: string }[];
   repeatOptions: { value: Repeat; label: string }[];
   zones: string[];
@@ -46,13 +48,13 @@ const message = (err: unknown): string => (err instanceof Error ? err.message : 
 
 export function useEventForm(draft: Draft): EventFormModel {
   const { t } = useTranslation();
-  const { calendars, colors, actions, editor, tz: viewTz } = useCalendarPageModel();
+  const { writableCalendars, isReadOnly, colors, actions, editor, tz: viewTz } = useCalendarPageModel();
   const occurrence = draft.kind === 'edit' ? draft.occurrence : undefined;
   const series = useSeries(occurrence?.recurring ? occurrence.eventId : undefined);
 
   const [allDay, setAllDay] = useState(draftAllDay(draft));
   const [tz, setTz] = useState(draftZone(draft, viewTz));
-  const [calendarId, setCalendarId] = useState(occurrence?.calendarId ?? calendars[0]?.id ?? '');
+  const [calendarId, setCalendarId] = useState(occurrence?.calendarId ?? writableCalendars[0]?.id ?? '');
   const [picked, setPicked] = useState<Repeat>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -63,7 +65,10 @@ export function useEventForm(draft: Draft): EventFormModel {
   // wall times and moves the event, as other calendars do.
   const times = useMemo(() => formTimes(draft, allDay, tz), [draft, allDay, tz]);
   const zones = useMemo((): string[] => timeZones(), []);
-  const calendarOptions = useMemo(() => calendars.map((c) => ({ value: c.id, label: c.name })), [calendars]);
+  const calendarOptions = useMemo(
+    () => writableCalendars.map((c) => ({ value: c.id, label: c.name })),
+    [writableCalendars],
+  );
   const repeatOptions = useMemo(
     () =>
       REPEATS.filter((r) => r !== 'custom' || repeat === 'custom').map((r) => ({ value: r, label: t(`repeat.${r}`) })),
@@ -110,6 +115,7 @@ export function useEventForm(draft: Draft): EventFormModel {
 
   return {
     occurrence,
+    readOnly: occurrence !== undefined && isReadOnly(occurrence.calendarId),
     calendarOptions,
     repeatOptions,
     zones,

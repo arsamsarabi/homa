@@ -91,7 +91,8 @@
     "timeZone": "Time zone",
     "event": "Event",
     "more": "More actions",
-    "draft": "Draft"
+    "draft": "Draft",
+    "readOnly": "This event is from a read-only calendar and can't be changed here."
   },
   "repeat": {
     "none": "Does not repeat",
@@ -215,5 +216,46 @@
     "warnings": "Notes",
     "exportHint": "Download your settings, calendars and events as a JSON file, for a backup or to move to another Homa.",
     "export": "Download my data (JSON)"
+  },
+  "connections": {
+    "title": "Connected calendars",
+    "hint": "Subscribe to a calendar feed (an .ics or webcal address from Google Calendar, Outlook, Apple Calendar, a sports team or a school) or add public holidays. They are read-only here and update on their own.",
+    "add": "Add calendar",
+    "addTitle": "Add a calendar",
+    "byAddress": "By address",
+    "holidays": "Public holidays",
+    "url": "Calendar address",
+    "urlHint": "An https or webcal link ending in .ics. Private links are stored encrypted.",
+    "holidayCalendar": "Holiday calendar",
+    "holidayPlaceholder": "Pick a country",
+    "holidaysFailed": "Couldn't load the holiday calendars",
+    "source": "Source: {{source}}",
+    "name": "Name",
+    "nameHint": "Optional. Leave empty to use the calendar's own name.",
+    "color": "Color",
+    "subscribe": "Subscribe",
+    "fetching": "Fetching the calendar…",
+    "added": "Calendar added",
+    "loading": "Loading connected calendars",
+    "loadFailed": "Couldn't load your connected calendars",
+    "empty": "No connected calendars yet.",
+    "untitled": "Untitled calendar",
+    "readOnly": "Read-only",
+    "lastChecked": "Last checked {{time}}",
+    "never": "Not synced yet",
+    "lastError": "Last sync failed: {{message}}",
+    "syncNow": "Sync now",
+    "synced": "Calendar synced",
+    "syncFailed": "Sync failed",
+    "remove": "Remove",
+    "removeTitle": "Remove this calendar?",
+    "removeBody": "\"{{name}}\" and its events will be removed from Homa. The original calendar isn't changed.",
+    "removed": "Calendar removed",
+    "status": {
+      "pending": "Waiting",
+      "syncing": "Syncing",
+      "ok": "Up to date",
+      "error": "Error"
+    }
   }
 }

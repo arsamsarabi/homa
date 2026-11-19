@@ -22,6 +22,10 @@ export type CalendarPageModel = CalendarUrlState & {
   /** Today, as a wall date in the viewed zone. */
   today: Date;
   calendars: Calendar[];
+  /** Calendars events can be created in or moved to (not subscriptions). */
+  writableCalendars: Calendar[];
+  /** True for a read-only calendar (a subscription): its events open as details, not a form. */
+  isReadOnly: (calendarId: string) => boolean;
   /** Calendar id → color. */
   colors: Record<string, string>;
   occurrences: UseQueryResult<Occurrence[]>;
@@ -50,6 +54,11 @@ export function useCalendarPage(): CalendarPageModel {
     (): Record<string, string> => Object.fromEntries(calendars.map((c) => [c.id, c.color])),
     [calendars],
   );
+  const writableCalendars = useMemo((): Calendar[] => calendars.filter((c) => !c.readOnly), [calendars]);
+  const readOnlyIds = useMemo(
+    (): ReadonlySet<string> => new Set(calendars.filter((c) => c.readOnly).map((c) => c.id)),
+    [calendars],
+  );
   const pickDay = (d: Date): void => url.go({ view: 'day' satisfies View, date: d });
 
   return {
@@ -61,6 +70,8 @@ export function useCalendarPage(): CalendarPageModel {
     secondary,
     today: today(url.tz),
     calendars,
+    writableCalendars,
+    isReadOnly: (calendarId: string): boolean => readOnlyIds.has(calendarId),
     colors,
     occurrences,
     pickDay,
