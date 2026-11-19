@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
+import { serveStatic } from 'hono/bun';
 import type { Auth } from './auth';
 
 const Health = z
@@ -31,9 +32,31 @@ export const openApiConfig = {
 
 api.doc31('/openapi.json', openApiConfig);
 
-/** The HTTP app. Without `auth` (tests, the OpenAPI dump) the /api/auth routes are left out. */
-export function createApp(auth?: Auth) {
+/**
+ * The HTTP app. Without `auth` (tests, the OpenAPI dump) the /api/auth routes are left out.
+ * With `webDir` (the built SPA, relative to the working directory) it also serves the web app,
+ * falling back to index.html so client-side routes load on refresh.
+ */
+export function createApp(auth?: Auth, webDir?: string) {
   const app = new OpenAPIHono();
   if (auth) app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw));
-  return app.route('/api', api);
+  app.route('/api', api);
+  app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
+  if (webDir) {
+    app.use(
+      '/*',
+      serveStatic({
+        root: webDir,
+        onFound: (path, c) => {
+          // Vite fingerprints everything under assets/, so those can be cached for good.
+          c.header('Cache-Control', path.includes('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache');
+        },
+      }),
+    );
+    app.get(
+      '/*',
+      serveStatic({ path: `${webDir}/index.html`, onFound: (_p, c) => c.header('Cache-Control', 'no-cache') }),
+    );
+  }
+  return app;
 }

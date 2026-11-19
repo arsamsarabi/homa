@@ -9,3 +9,4 @@ graphify-out/
 .claude/settings.json
 test-results/
 playwright-report/
+deploy/docker/.env

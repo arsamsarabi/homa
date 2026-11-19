@@ -16,7 +16,10 @@ const server =
     ? undefined
     : Bun.serve({
         port: config.PORT,
-        fetch: createApp(createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL })).fetch,
+        fetch: createApp(
+          createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL }),
+          config.HOMA_WEB_DIR,
+        ).fetch,
       });
 
 const boss = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db);

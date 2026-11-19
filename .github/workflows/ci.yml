@@ -44,3 +44,37 @@ jobs:
             echo "::error::packages/api-client is out of date. Run 'bun run openapi' and commit the result."
             exit 1
           }
+
+  e2e:
+    name: Docker image and smoke test
+    runs-on: ubuntu-24.04
+    env:
+      COMPOSE_FILE: deploy/docker/compose.yaml
+    steps:
+      - uses: actions/checkout@v7
+      - name: Throwaway auth secret for this run
+        run: |
+          secret=$(openssl rand -base64 32)
+          echo "::add-mask::$secret"
+          echo "BETTER_AUTH_SECRET=$secret" >> "$GITHUB_ENV"
+      - run: docker compose build
+      - run: docker compose up -d --wait --wait-timeout 120
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run e2e:smoke
+        env:
+          BASE_URL: http://localhost:3000
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --no-color
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+      - if: always()
+        run: docker compose down -v
