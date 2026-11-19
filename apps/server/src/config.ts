@@ -8,6 +8,8 @@ const Env = z.object({
   HOMA_URL: z.string().url().default('http://localhost:3000'),
   PORT: z.coerce.number().int().positive().default(3000),
   HOMA_ROLE: z.enum(['api', 'worker', 'all']).default('all'),
+  // The built web app to serve, relative to the working directory. Unset in development (Vite serves it).
+  HOMA_WEB_DIR: z.string().optional(),
 });
 
 export type Config = z.infer<typeof Env>;

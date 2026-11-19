@@ -2,3 +2,7 @@
 # Only install package versions published at least a week ago (supply-chain safety).
 minimumReleaseAge = 604800
 exact = true
+
+[test]
+# Playwright specs run with `bun run e2e`, not bun test.
+pathIgnorePatterns = ["e2e/**"]
