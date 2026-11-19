@@ -21,10 +21,15 @@ export const connections = pgTable(
      * a private token; OAuth tokens or an app password later), bound to this row's id.
      */
     credentials: text('credentials').notNull(),
+    /** What the user sees for the account, such as `ada on caldav.fastmail.com`; null for ICS. */
+    label: text('label'),
     status: text('status', { enum: CONNECTION_STATUSES }).notNull().default('pending'),
     /** Why the last sync failed, in words safe to show the user (never the URL or a token). */
     lastError: text('last_error'),
     lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
+    /** Something the user should know that isn't an error, such as a conflict the server's copy won. */
+    notice: text('notice'),
+    noticeAt: timestamp('notice_at', { withTimezone: true }),
     /** When the running sync claimed the row; a stale claim (a crashed worker) can be taken over. */
     syncStartedAt: timestamp('sync_started_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

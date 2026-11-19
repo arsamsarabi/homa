@@ -6,7 +6,7 @@ import { calendars } from '../schema';
 export type CalendarRow = typeof calendars.$inferSelect;
 export type CalendarValues = { name: string; color?: string };
 /** A calendar that belongs to a connection. */
-export type ConnectedCalendarValues = CalendarValues & { connectionId: string; readOnly: boolean };
+export type ConnectedCalendarValues = CalendarValues & { connectionId: string; readOnly: boolean; remoteId?: string };
 /** Where an ICS feed was at its last fetch. */
 export type FeedState = { remoteEtag: string | null; remoteLastModified: string | null; contentHash: string | null };
 
@@ -82,4 +82,8 @@ export const listConnectionCalendars = (db: Executor, connectionIds: readonly st
 
 export async function updateFeedState(db: Executor, id: string, state: FeedState): Promise<void> {
   await db.update(calendars).set(state).where(eq(calendars.id, id));
+}
+
+export async function updateSyncToken(db: Executor, id: string, syncToken: string | null): Promise<void> {
+  await db.update(calendars).set({ syncToken }).where(eq(calendars.id, id));
 }
