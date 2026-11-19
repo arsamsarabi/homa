@@ -45,7 +45,12 @@ const server =
         fetch: createApp(
           {
             db,
-            auth: createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL, setupGate }),
+            auth: createAuth(db, {
+              secret: config.BETTER_AUTH_SECRET,
+              baseURL: config.HOMA_URL,
+              setupGate,
+              rateLimit: config.HOMA_AUTH_RATE_LIMIT,
+            }),
             sync,
           },
           config.HOMA_WEB_DIR,
