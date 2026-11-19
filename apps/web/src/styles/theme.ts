@@ -8,6 +8,7 @@ import {
 
 // Brand palette: space indigo #22223b, dusty grape #4a4e69, lilac ash #9a8c98,
 // almond silk #c9ada7, parchment #f2e9e4. Index 6 of `grape` and 4 of `almond` are the brand values.
+// Backgrounds and surfaces follow brand/tokens.css (guidelines v4).
 const grape: MantineColorsTuple = [
   '#f4f3f7',
   '#e6e5ee',
@@ -32,18 +33,18 @@ const almond: MantineColorsTuple = [
   '#6a4f4a',
   '#4f3a36',
 ];
-// Mantine's dark scale: 0 is text, 6 the surface, 7 the page background.
+// Mantine's dark scale: 0 is text, 6 the surface (space indigo), 7 the page background.
 const dark: MantineColorsTuple = [
   '#f2e9e4',
   '#ddd2ce',
   '#a99ca7',
   '#8a7f8c',
   '#4a4e69',
-  '#3a3b58',
   '#2c2c48',
   '#22223b',
-  '#1c1c31',
-  '#151526',
+  '#16162a',
+  '#111122',
+  '#0b0b18',
 ];
 
 export const theme: MantineThemeOverride = createTheme({
@@ -51,16 +52,16 @@ export const theme: MantineThemeOverride = createTheme({
   primaryColor: 'primary',
   primaryShade: { light: 6, dark: 4 },
   autoContrast: true,
-  white: '#faf6f3',
+  white: '#fefcfb',
   black: '#22223b',
   fontFamily: 'Satoshi, system-ui, sans-serif',
   headings: { fontFamily: 'Rajdhani, system-ui, sans-serif', fontWeight: '700' },
   defaultRadius: 'md',
 });
 
-// Page background: parchment in light (cards stay on the lighter `white`), space indigo in dark.
+// Page background in light (cards stay on the lighter `white`); dark uses the dark scale's 7.
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
-  light: { '--mantine-color-body': '#f2e9e4' },
+  light: { '--mantine-color-body': '#f9f5f2' },
   dark: {},
 });

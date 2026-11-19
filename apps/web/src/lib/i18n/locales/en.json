@@ -7,9 +7,14 @@
     "calendar": "Calendar",
     "signOut": "Sign out",
     "language": "Language",
-    "theme": "Switch light or dark theme",
     "signOutFailed": "Couldn't sign out: {{message}}",
-    "settings": "Settings"
+    "settings": "Settings",
+    "home": "Homa, go to the calendar",
+    "account": "Account menu",
+    "palette": "Search commands",
+    "shortcuts": "Keyboard shortcuts",
+    "lightTheme": "Light theme",
+    "darkTheme": "Dark theme"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -111,12 +116,37 @@
     },
     "save": "Save",
     "saved": "Settings saved",
-    "saveFailed": "Couldn't save your settings: {{message}}"
+    "saveFailed": "Couldn't save your settings: {{message}}",
+    "back": "Back to the calendar"
   },
   "occasions": {
     "nowruz": "Nowruz",
     "sizdahBedar": "Sizdah Bedar",
     "chaharshanbeSuri": "Chaharshanbe Suri",
     "yalda": "Yalda Night"
+  },
+  "palette": {
+    "placeholder": "Type a command…",
+    "nothingFound": "No matching command",
+    "calendar": "Calendar",
+    "app": "App",
+    "showView": "Show {{view}}"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "palette": "Search commands",
+    "help": "Show these shortcuts",
+    "today": "Go to today",
+    "previous": "Previous",
+    "next": "Next",
+    "newEvent": "New event",
+    "view": {
+      "day": "Day view",
+      "week": "Week view",
+      "month": "Month view",
+      "year": "Year view",
+      "agenda": "Agenda"
+    },
+    "note": "Letter keys work on any keyboard layout. Shortcuts pause while you type in a field."
   }
 }

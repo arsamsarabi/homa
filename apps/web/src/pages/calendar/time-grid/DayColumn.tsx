@@ -2,7 +2,7 @@ import type { CSSProperties, JSX, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Placed, TimedItem } from '@/services/calendar-layout';
 import { minutesFrom, sameDay } from '@/services/dates';
-import { blockBox, type Ghost, HOUR_PX } from '@/services/time-grid';
+import { blockBox, type Ghost, HOUR_PX, TWO_LINE_PX } from '@/services/time-grid';
 import classes from './TimeGrid.module.css';
 import type { TimeGridModel } from './useTimeGrid';
 
@@ -38,6 +38,7 @@ export function DayColumn({ grid, day, index, items, ghost, colors, time }: Prop
             key={`${p.o.eventId}${p.o.recurrenceId}`}
             className={classes.block}
             data-dragging={dragging || undefined}
+            data-compact={box.height < TWO_LINE_PX || undefined}
             style={style}
             onPointerDown={(e: PointerEvent<HTMLButtonElement>): void => grid.beginMove(e, p.o)}
             onClick={(e: MouseEvent<HTMLButtonElement>): void => {
@@ -47,7 +48,8 @@ export function DayColumn({ grid, day, index, items, ghost, colors, time }: Prop
           >
             <b>{p.o.summary || t('calendar.untitled')}</b>
             <span>
-              {time.format(p.start)} – {time.format(p.end)}
+              {time.format(p.start)}
+              <span className={classes.end}> – {time.format(p.end)}</span>
             </span>
             <span
               aria-hidden="true"

@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import '@mantine/spotlight/styles.css';
 import '@fontsource/vazirmatn/400.css';
 import '@fontsource/vazirmatn/700.css';
 import '@/styles/fonts.css';

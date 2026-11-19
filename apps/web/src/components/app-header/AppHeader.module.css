@@ -1,0 +1,21 @@
+.home,
+.account {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-md);
+}
+
+.account {
+  padding: 4px 8px;
+}
+
+.account:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.home:focus-visible,
+.account:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}

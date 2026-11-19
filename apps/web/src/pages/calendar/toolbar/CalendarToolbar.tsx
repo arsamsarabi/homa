@@ -3,12 +3,14 @@ import { IconChevronLeft, IconChevronRight, IconPlus, IconWorld } from '@tabler/
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import classes from './CalendarToolbar.module.css';
+import { useCalendarShortcuts } from './useCalendarShortcuts';
 import { useCalendarToolbar } from './useCalendarToolbar';
 
 /** Today, previous and next, the title, the view switcher, the zone and "New event". */
 export function CalendarToolbar(): JSX.Element {
   const { t } = useTranslation();
   const bar = useCalendarToolbar();
+  useCalendarShortcuts(bar);
   return (
     <Group justify="space-between" wrap="wrap" gap="sm">
       <Group gap="xs">

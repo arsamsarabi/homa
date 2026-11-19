@@ -14,4 +14,5 @@ export {
   SNAP_MINUTES,
   slotAt,
   snap,
+  TWO_LINE_PX,
 } from './drag';

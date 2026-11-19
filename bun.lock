@@ -35,11 +35,10 @@
         "@homa/api-client": "workspace:*",
         "@mantine/core": "9.8.0",
         "@mantine/hooks": "9.8.0",
+        "@mantine/spotlight": "9.8.0",
         "@tabler/icons-react": "3.51.0",
         "@tanstack/react-query": "5.107.1",
         "@tanstack/react-router": "1.170.46",
-        "@tanstack/router-cli": "1.168.0",
-        "@tanstack/router-plugin": "1.169.0",
         "better-auth": "1.7.22",
         "i18next": "27.1.1",
         "react": "19.3.1",
@@ -50,6 +49,8 @@
       },
       "devDependencies": {
         "@happy-dom/global-registrator": "21.0.4",
+        "@tanstack/router-cli": "1.168.0",
+        "@tanstack/router-plugin": "1.169.0",
         "@testing-library/dom": "10.4.2",
         "@testing-library/react": "16.3.3",
         "@testing-library/user-event": "14.6.10",
@@ -431,6 +432,10 @@
     "@mantine/core": ["@mantine/core@9.8.0", "", { "dependencies": { "@floating-ui/react": "^0.27.20", "clsx": "^2.1.1", "react-number-format": "^5.4.5", "react-remove-scroll": "^2.7.2", "type-fest": "^5.10.0" }, "peerDependencies": { "@mantine/hooks": "9.8.0", "react": "^19.2.0", "react-dom": "^19.2.0" } }, "sha512-+2Y+GBM6WvBJgBBb7hrfEvHbyljuRsOqC1GjxNpmX6NcD2SwmDXf9ZVFfquyXvi8fFerMrTpAwYdfb6k2PGAlQ=="],
 
     "@mantine/hooks": ["@mantine/hooks@9.8.0", "", { "peerDependencies": { "react": "^19.2.0" } }, "sha512-fUA3PS8Ys2kih6VEuozgdEO0UyiGhryTJqx+Bf2lxee1XpXQ0XFXsQY7lNB4f+eBDzYCczYykQjIIuUzyJft7A=="],
+
+    "@mantine/spotlight": ["@mantine/spotlight@9.8.0", "", { "dependencies": { "@mantine/store": "9.8.0" }, "peerDependencies": { "@mantine/core": "9.8.0", "@mantine/hooks": "9.8.0", "react": "^19.2.0", "react-dom": "^19.2.0" } }, "sha512-MsJKv6h0ARTJGgATOZYDh/0liA9ffJQZ7L2TMs1D/0brGFb5l1a4kiUrp1p1GRtZpAEZoiQK1n9Rg8Zo6qqtRA=="],
+
+    "@mantine/store": ["@mantine/store@9.8.0", "", { "peerDependencies": { "react": "^19.2.0" } }, "sha512-1lXf+ULBFLnMTN+cN4rCNxaBIRAUEPGm2uplLtNk0WHpvL+UwSuXZc26S5tdjYUW5HYsLLeY6C3u/N5qLv1r1Q=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.6", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || 2.0.0-beta.2", "@emnapi/runtime": "^1.7.1 || 2.0.0-beta.2" } }, "sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw=="],
 
