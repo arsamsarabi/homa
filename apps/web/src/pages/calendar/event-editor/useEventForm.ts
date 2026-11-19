@@ -38,13 +38,15 @@ export type EventFormModel = {
   submit: (e: FormEvent<HTMLFormElement>) => void;
   remove: () => void;
   close: () => void;
+  /** The chosen calendar's color, for the header dot. */
+  color: string | undefined;
 };
 
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 export function useEventForm(draft: Draft): EventFormModel {
   const { t } = useTranslation();
-  const { calendars, actions, drawer, tz: viewTz } = useCalendarPageModel();
+  const { calendars, colors, actions, editor, tz: viewTz } = useCalendarPageModel();
   const occurrence = draft.kind === 'edit' ? draft.occurrence : undefined;
   const series = useSeries(occurrence?.recurring ? occurrence.eventId : undefined);
 
@@ -117,6 +119,7 @@ export function useEventForm(draft: Draft): EventFormModel {
     setAllDay,
     calendarId,
     setCalendarId,
+    color: colors[calendarId],
     repeat,
     setRepeat: setPicked,
     repeatLoading: Boolean(occurrence?.recurring) && series.isPending,
@@ -127,6 +130,6 @@ export function useEventForm(draft: Draft): EventFormModel {
     remove: (): void => {
       if (occurrence) void run(() => actions.remove(occurrence));
     },
-    close: drawer.close,
+    close: editor.close,
   };
 }

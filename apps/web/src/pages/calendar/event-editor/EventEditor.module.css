@@ -1,0 +1,27 @@
+.panel {
+  position: fixed;
+  z-index: 200;
+  width: min(380px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+}
+
+.sheet {
+  height: auto;
+  border-start-start-radius: var(--mantine-radius-lg);
+  border-start-end-radius: var(--mantine-radius-lg);
+  max-height: 90dvh;
+}
+
+.calendar {
+  flex: 1;
+  min-width: 0;
+}
+
+.kind {
+  white-space: nowrap;
+}
+
+.title {
+  font-weight: 600;
+}

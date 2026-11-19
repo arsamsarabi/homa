@@ -3,7 +3,7 @@
 // dates in zone `tz`; outcomes are real instants.
 import type { Occurrence } from '@/schemas';
 import { addDays, addMinutes, MINUTE, minutesFrom, sameDay, startOfDay, wallSpan } from '@/services/dates';
-import { instantOf } from '@/services/zones';
+import { instantOf, wallOf } from '@/services/zones';
 
 export const HOUR_PX = 48;
 export const DAY_MINUTES = 24 * 60;
@@ -101,4 +101,13 @@ export function blockBox(from: number, to: number): { top: number; height: numbe
 /** Where the grid starts scrolled: an hour before now (a wall time) when today is shown, else 07:00. */
 export function initialScrollHour(days: readonly Date[], now: Date): number {
   return days.some((d) => sameDay(d, now)) ? Math.max(0, now.getUTCHours() - 1) : 7;
+}
+
+/** Where a new event that is being created shows its placeholder: its first day in view, cut at midnight. */
+export function draftGhost(span: { start: Date; end: Date }, days: readonly Date[], tz: string): Ghost | undefined {
+  const start = wallOf(span.start, tz);
+  const day = days.findIndex((d) => sameDay(d, start));
+  const first = days[day];
+  if (!first) return undefined;
+  return { day, from: minutesFrom(first, start), to: Math.min(minutesFrom(first, wallOf(span.end, tz)), DAY_MINUTES) };
 }

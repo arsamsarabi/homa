@@ -9,7 +9,7 @@ import type { Calendar, Occurrence, SecondaryCalendar, View } from '@/schemas';
 import { type DayRange, rangeFor, today } from '@/services/dates';
 import { instantOf } from '@/services/zones';
 import { type CalendarUrlState, useCalendarUrlState } from './useCalendarUrlState';
-import { type EventDrawerState, useEventDrawer } from './useEventDrawer';
+import { type EventEditorState, useEventEditor } from './useEventEditor';
 import { type OccurrenceActions, useOccurrenceActions } from './useOccurrenceActions';
 import { type ScopePrompt, useScopePrompt } from './useScopePrompt';
 
@@ -26,7 +26,7 @@ export type CalendarPageModel = CalendarUrlState & {
   colors: Record<string, string>;
   occurrences: UseQueryResult<Occurrence[]>;
   pickDay: (d: Date) => void;
-  drawer: EventDrawerState;
+  editor: EventEditorState;
   scope: ScopePrompt;
   actions: OccurrenceActions;
 };
@@ -41,9 +41,9 @@ export function useCalendarPage(): CalendarPageModel {
   const calendarsQuery = useCalendars();
   // The range's wall dates, as instants in the viewed zone.
   const occurrences = useOccurrences(instantOf(range.from, url.tz), instantOf(range.to, url.tz));
-  const drawer = useEventDrawer();
+  const editor = useEventEditor();
   const scope = useScopePrompt();
-  const actions = useOccurrenceActions(scope.ask, drawer.close);
+  const actions = useOccurrenceActions(scope.ask, editor.close);
 
   const calendars = useMemo((): Calendar[] => calendarsQuery.data ?? [], [calendarsQuery.data]);
   const colors = useMemo(
@@ -64,7 +64,7 @@ export function useCalendarPage(): CalendarPageModel {
     colors,
     occurrences,
     pickDay,
-    drawer,
+    editor,
     scope,
     actions,
   };

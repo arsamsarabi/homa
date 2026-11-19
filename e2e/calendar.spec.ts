@@ -79,7 +79,8 @@ test('create, drag, edit a repeating event and switch views @smoke', async ({ pa
   await expect(plainGyms).toHaveCount(gymCount - 1);
 
   await plainGyms.first().click();
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Delete' }).click();
   await page.getByRole('button', { name: 'This and following events' }).click();
   await expect(plainGyms).toHaveCount(0);
   await expect(eventsIn(page, 'Month', 'Gym with Leo')).toHaveCount(1);

@@ -170,6 +170,15 @@
   pointer-events: none;
 }
 
+.draft {
+  composes: ghost;
+  z-index: 2;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mantine-color-text);
+}
+
 .resize {
   position: absolute;
   inset-inline: 0;

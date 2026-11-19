@@ -70,7 +70,8 @@
   },
   "common": {
     "cancel": "Cancel",
-    "retry": "Try again"
+    "retry": "Try again",
+    "close": "Close"
   },
   "editor": {
     "title": "Title",
@@ -87,7 +88,10 @@
     "endBeforeStart": "The end must be after the start.",
     "newTitle": "New event",
     "editTitle": "Edit event",
-    "timeZone": "Time zone"
+    "timeZone": "Time zone",
+    "event": "Event",
+    "more": "More actions",
+    "draft": "Draft"
   },
   "repeat": {
     "none": "Does not repeat",

@@ -4,7 +4,7 @@ import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { allDayRowItems, type Placed, type TimedItem, timedColumnItems } from '@/services/calendar-layout';
 import { type Occasion, occasionsOn } from '@/services/jalali';
-import { type DragOutcome, dragGhost, type Ghost, HOUR_PX, initialScrollHour } from '@/services/time-grid';
+import { type DragOutcome, draftGhost, dragGhost, type Ghost, HOUR_PX, initialScrollHour } from '@/services/time-grid';
 import { wallOf } from '@/services/zones';
 import { type GridDrag, useGridDrag } from './useGridDrag';
 
@@ -13,6 +13,8 @@ export type TimeGridModel = GridDrag & {
   allDay: Occurrence[][];
   columns: Placed<TimedItem>[][];
   ghost: Ghost | undefined;
+  /** The placeholder for a new event while its editor is open. */
+  draft: Ghost | undefined;
   /** Persian occasions per day, when the Jalali calendar is on. */
   occasions: Occasion[][];
   /** Now, as a wall time in the viewed zone. */
@@ -23,7 +25,7 @@ export type TimeGridModel = GridDrag & {
 };
 
 export function useTimeGrid(): TimeGridModel {
-  const { range, tz, secondary, occurrences, drawer, actions, pickDay } = useCalendarPageModel();
+  const { range, tz, secondary, occurrences, editor, actions, pickDay } = useCalendarPageModel();
   const days = range.days;
   const occ = occurrences.data;
   const allDay = useMemo((): Occurrence[][] => allDayRowItems(days, occ ?? [], tz), [days, occ, tz]);
@@ -34,8 +36,8 @@ export function useTimeGrid(): TimeGridModel {
   );
 
   const onDone = (o: DragOutcome): void => {
-    if (o.kind === 'create') drawer.openCreate(o.start, o.end, false);
-    else if (o.kind === 'open') drawer.openEdit(o.o);
+    if (o.kind === 'create') editor.openCreate(o.start, o.end, false);
+    else if (o.kind === 'open') editor.openEdit(o.o);
     else actions.move(o.o, o.start, o.end);
   };
   const gridDrag = useGridDrag(days, tz, onDone);
@@ -46,6 +48,9 @@ export function useTimeGrid(): TimeGridModel {
     return () => clearInterval(id);
   }, []);
   const now = wallOf(instant, tz);
+
+  const d = editor.draft;
+  const draft = d?.kind === 'create' && !d.allDay ? draftGhost(d, days, tz) : undefined;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -58,10 +63,11 @@ export function useTimeGrid(): TimeGridModel {
     allDay,
     columns,
     ghost: dragGhost(gridDrag.drag, days, tz),
+    draft,
     occasions,
     now,
     scrollRef,
-    open: drawer.openEdit,
+    open: editor.openEdit,
     pickDay,
   };
 }

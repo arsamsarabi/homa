@@ -12,12 +12,13 @@ type Props = {
   index: number;
   items: Placed<TimedItem>[];
   ghost: Ghost | undefined;
+  draft: Ghost | undefined;
   colors: Record<string, string>;
   time: Intl.DateTimeFormat;
 };
 
 /** One day of the time grid: its events, the drag preview and the now line. */
-export function DayColumn({ grid, day, index, items, ghost, colors, time }: Props): JSX.Element {
+export function DayColumn({ grid, day, index, items, ghost, draft, colors, time }: Props): JSX.Element {
   const { t } = useTranslation();
   const drag = grid.drag;
   return (
@@ -60,6 +61,11 @@ export function DayColumn({ grid, day, index, items, ghost, colors, time }: Prop
         );
       })}
       {ghost?.day === index && <div className={classes.ghost} style={blockBox(ghost.from, ghost.to)} />}
+      {draft?.day === index && (
+        <div className={classes.draft} style={blockBox(draft.from, draft.to)} data-draft aria-hidden="true">
+          {t('editor.draft')}
+        </div>
+      )}
       {sameDay(day, grid.now) && (
         <div className={classes.now} style={{ top: (minutesFrom(day, grid.now) / 60) * HOUR_PX }} />
       )}

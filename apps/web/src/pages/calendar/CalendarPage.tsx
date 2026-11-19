@@ -1,12 +1,12 @@
 import { Stack } from '@mantine/core';
 import type { JSX } from 'react';
 import { CalendarContent } from '@/pages/calendar/content';
-import { EventDrawer } from '@/pages/calendar/event-drawer';
+import { EventEditor } from '@/pages/calendar/event-editor';
 import { CalendarPageProvider } from '@/pages/calendar/model';
 import { ScopeModal } from '@/pages/calendar/scope-modal';
 import { CalendarToolbar } from '@/pages/calendar/toolbar';
 
-/** The calendar: toolbar, the current view, the event drawer and the scope question. */
+/** The calendar: toolbar, the current view, the event editor and the scope question. */
 export function CalendarPage(): JSX.Element {
   return (
     <CalendarPageProvider>
@@ -14,7 +14,7 @@ export function CalendarPage(): JSX.Element {
         <CalendarToolbar />
         <CalendarContent />
       </Stack>
-      <EventDrawer />
+      <EventEditor />
       <ScopeModal />
     </CalendarPageProvider>
   );

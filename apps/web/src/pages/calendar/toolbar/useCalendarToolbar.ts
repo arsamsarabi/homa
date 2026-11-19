@@ -25,7 +25,7 @@ export type CalendarToolbar = {
 
 export function useCalendarToolbar(): CalendarToolbar {
   const { t } = useTranslation();
-  const { view, date, range, formats, secondary, today, tz, homeTz, go, setZone, drawer } = useCalendarPageModel();
+  const { view, date, range, formats, secondary, today, tz, homeTz, go, setZone, editor } = useCalendarPageModel();
   const views = useMemo(() => VIEWS.map((v) => ({ value: v, label: t(`calendar.views.${v}`) })), [t]);
   const zones = useMemo((): string[] => timeZones(), []);
   return {
@@ -42,7 +42,7 @@ export function useCalendarToolbar(): CalendarToolbar {
     pickZone: (zone: string | null): void => setZone(zone ?? homeTz),
     newEvent: (): void => {
       const { start, end } = newEventSlot(date, wallOf(new Date(), tz));
-      drawer.openCreate(instantOf(start, tz), instantOf(end, tz), false);
+      editor.openCreate(instantOf(start, tz), instantOf(end, tz), false);
     },
   };
 }

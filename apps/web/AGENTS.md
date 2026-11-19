@@ -95,7 +95,7 @@ Keep modules small enough to review in one pass. Soft ceilings (prefer under; sp
 
 **Hook decomposition rules:**
 
-- Name by concern: `useCalendarUrlState`, `useEventDrawer`, `useScopePrompt`, not `useCalendarStuff`
+- Name by concern: `useCalendarUrlState`, `useEventEditor`, `useScopePrompt`, not `useCalendarStuff`
 - Composition roots (`useCalendarPage`, …) must not grow fat again — push new behavior into a focused child hook
 - Child hooks take plain inputs (ids, filter values, data arrays); avoid importing sibling page hooks in a cycle
 - Import sibling hooks via relative paths or `@/hooks/<domain>`, never `@/hooks` from inside `hooks/` (barrel cycles)
@@ -328,7 +328,7 @@ TypeScript is not sufficient for external data.
 - Example: an event chip → `components/event-chip/` (`EventChip.tsx`, `EventChip.module.css`, `index.ts`)
 - Same pattern for pages (`pages/calendar/`), hooks (`hooks/calendar/`), services (`services/dates/`), schemas (`schemas/calendar/`), stores (`stores/announcer/`), styles (`styles/`)
 - Co-locate CSS modules and tests with the component/module they belong to
-- Folder names: kebab-case matching purpose (`query-error-alert`, `event-drawer`)
+- Folder names: kebab-case matching purpose (`query-error-alert`, `event-editor`)
 
 ### Routing (mandatory)
 
@@ -342,7 +342,7 @@ TypeScript is not sufficient for external data.
 ### Path aliases (mandatory)
 
 - Import app code via the `@/` alias (`@` → `src/`). Do **not** use cross-folder `../` or `../../` chains
-- Allowed relative imports: same-folder only (`./Foo.module.css`, `./useEventDrawer`, colocated tests). Biome's `noRestrictedImports` rejects `../`
+- Allowed relative imports: same-folder only (`./Foo.module.css`, `./useEventEditor`, colocated tests). Biome's `noRestrictedImports` rejects `../`
 - Configure in Vite (`resolve.alias`) and TypeScript (`paths`: `"@/*": ["./src/*"]`, no `baseUrl`); `bun test` reads the TypeScript paths
 - Prefer barrel entrypoints: `@/components/event-chip`, `@/hooks`, `@/services/dates` — not deep file paths when a barrel exists
 
@@ -368,7 +368,8 @@ TypeScript is not sufficient for external data.
 
 ### Overlays (forms vs confirmations)
 
-- Prefer **Drawers** (`position="right"`, which Mantine flips in RTL, `size="md"`, `padding="lg"`) for create/edit/share forms and multi-field flows — match `EventDrawer`
+- Prefer **Drawers** (`position="right"`, which Mantine flips in RTL, `size="md"`, `padding="lg"`) for create/edit/share forms and multi-field flows
+- Exception: quick capture on the calendar. Creating or editing an event opens a compact panel beside the event or the dashed "Draft" placeholder, so the calendar stays in view; on phones it becomes a bottom sheet (`Drawer position="bottom"`). Match `EventEditor`. The panel is a `role="dialog"` that traps focus and closes on Esc; place it with `placeBeside` (`@/services/popover`)
 - Prefer **Modals** only for short confirmations, alerts, or tiny one-shot prompts (`ScopeModal`: "this event, this and following, or all?")
 - Do not put multi-field forms in Modals when a Drawer fits
 

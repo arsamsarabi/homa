@@ -69,6 +69,15 @@
   font-weight: 500;
 }
 
+.draft {
+  padding: 1px 6px;
+  border: 1px dashed var(--mantine-primary-color-filled);
+  border-radius: var(--mantine-radius-sm);
+  background: color-mix(in srgb, var(--mantine-primary-color-filled) 25%, transparent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .more {
   padding-inline-start: 4px;
   font-size: 12px;

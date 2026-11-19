@@ -9,7 +9,7 @@ export function useCalendarShortcuts(bar: CalendarToolbar): void {
   const { i18n } = useTranslation();
   const rtl = languages[i18n.language as Language]?.dir === 'rtl';
   const run = (command: CalendarCommand): void => {
-    // Leave the keys alone while a drawer, modal or the palette is open.
+    // Leave the keys alone while a editor, modal or the palette is open.
     if (document.querySelector('[role="dialog"]')) return;
     const c = directed(command, rtl);
     if (c === 'today') bar.today();
