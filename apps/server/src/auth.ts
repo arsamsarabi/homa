@@ -22,6 +22,10 @@ export function createAuth(db: Db, opts: { secret: string; baseURL: string }) {
             const [row] = await db.select({ n: count() }).from(schema.users);
             return { data: { ...user, role: row?.n === 0 ? 'admin' : 'user' } };
           },
+          // Everyone starts with one calendar to put events in.
+          after: async (user) => {
+            await db.insert(schema.calendars).values({ ownerUserId: user.id, name: 'Personal' });
+          },
         },
       },
     },

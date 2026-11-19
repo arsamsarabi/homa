@@ -17,7 +17,7 @@ const server =
     : Bun.serve({
         port: config.PORT,
         fetch: createApp(
-          createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL }),
+          { db, auth: createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL }) },
           config.HOMA_WEB_DIR,
         ).fetch,
       });
