@@ -249,6 +249,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/connections/caldav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect a CalDAV account
+         * @description Checks the account with an app password (iCloud, Fastmail, Nextcloud and other CalDAV servers) and saves it without calendars; choose them next with PUT /connections/{id}/calendars. The password is stored encrypted and never returned.
+         */
+        post: operations["addCaldav"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}/remote-calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The calendars on a CalDAV account, and which of them sync */
+        get: operations["listRemoteCalendars"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}/calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Choose which calendars of a CalDAV account sync
+         * @description New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).
+         */
+        put: operations["chooseCalendars"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}/notice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Dismiss a connection's notice */
+        delete: operations["dismissConnectionNotice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/connections/{id}/sync": {
         parameters: {
             query?: never;
@@ -545,6 +619,8 @@ export interface components {
             id: string;
             /** @enum {string} */
             provider: "ics" | "caldav" | "google" | "microsoft";
+            /** @description The account, such as "ada on caldav.fastmail.com"; null for ICS feeds */
+            label: string | null;
             /** @enum {string} */
             status: "pending" | "syncing" | "ok" | "error";
             /** @description Why the last sync failed; null after a good one */
@@ -554,6 +630,10 @@ export interface components {
              * @description When the last sync ran, whether or not it worked
              */
             lastSyncedAt: string | null;
+            /** @description Something to tell the user that isn't an error, such as a conflict the server's copy won */
+            notice: string | null;
+            /** Format: date-time */
+            noticeAt: string | null;
             /** Format: date-time */
             createdAt: string;
             calendars: components["schemas"]["Calendar"][];
@@ -567,6 +647,27 @@ export interface components {
             holidayId: string;
             name?: string;
             color?: string;
+        };
+        CaldavInput: {
+            /** @example https://caldav.fastmail.com */
+            serverUrl: string;
+            username: string;
+            /** @description An app password for this account */
+            password: string;
+        };
+        RemoteCalendar: {
+            /** @description The calendar's URL on the server */
+            remoteId: string;
+            name: string | null;
+            color: string | null;
+            /** @description You can't change events in it on the server */
+            readOnly: boolean;
+            /** @description It syncs with a local calendar */
+            selected: boolean;
+        };
+        /** @description Exactly the remote calendars to sync */
+        ChooseCalendarsInput: {
+            remoteIds: string[];
         };
         HolidayFeed: {
             id: string;
@@ -1397,6 +1498,221 @@ export interface operations {
                     "application/json": {
                         error: string;
                     };
+                };
+            };
+        };
+    };
+    addCaldav: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaldavInput"];
+            };
+        };
+        responses: {
+            /** @description Connected */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    listRemoteCalendars: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Calendars that hold events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemoteCalendar"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    chooseCalendars: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChooseCalendarsInput"];
+            };
+        };
+        responses: {
+            /** @description After the first sync of new calendars */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    dismissConnectionNotice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Dismissed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };
