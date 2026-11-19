@@ -24,6 +24,8 @@ Status: done 2026-11-19 (pull requests #2 to #7). Spike results are in [architec
 
 ## Phase 2: native calendar core
 
+Delivered in four pull requests: 2a events, recurrence and the API; 2b the calendar views; 2c time zones and the Jalali calendar; 2d ICS import and JSON export.
+
 - Calendars and events CRUD, RRULE with overrides and "this / this and following / all" edits.
 - Expansion cache and range queries.
 - Week, day, month, year and agenda views with drag to create, move and resize.

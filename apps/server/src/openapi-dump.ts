@@ -1,4 +1,4 @@
 // Prints the OpenAPI document; packages/api-client generates its types from it.
-import { api, openApiConfig } from './app';
+import { createApi, openApiConfig } from './app';
 
-console.log(JSON.stringify(api.getOpenAPI31Document(openApiConfig), null, 2));
+console.log(JSON.stringify(createApi().getOpenAPI31Document(openApiConfig), null, 2));

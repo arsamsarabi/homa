@@ -1,6 +1,8 @@
+import type { Db } from '@homa/db';
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { serveStatic } from 'hono/bun';
 import type { Auth } from './auth';
+import { calendarApi } from './calendar/routes';
 
 const Health = z
   .object({
@@ -22,7 +24,13 @@ const healthRoute = createRoute({
 
 export const version = process.env.HOMA_VERSION ?? '0.0.0';
 
-export const api = new OpenAPIHono().openapi(healthRoute, (c) => c.json({ status: 'ok' as const, version }, 200));
+/** The /api routes. Without `deps` (tests, the OpenAPI dump) routes that need a user answer 401. */
+export function createApi(deps?: { db: Db; auth: Auth }) {
+  const api = new OpenAPIHono().openapi(healthRoute, (c) => c.json({ status: 'ok' as const, version }, 200));
+  api.route('/', calendarApi(deps));
+  api.doc31('/openapi.json', openApiConfig);
+  return api;
+}
 
 export const openApiConfig = {
   openapi: '3.1.0',
@@ -30,17 +38,16 @@ export const openApiConfig = {
   servers: [{ url: '/api' }],
 };
 
-api.doc31('/openapi.json', openApiConfig);
-
 /**
- * The HTTP app. Without `auth` (tests, the OpenAPI dump) the /api/auth routes are left out.
+ * The HTTP app. Without `deps` (tests, the OpenAPI dump) the /api/auth routes are left out.
  * With `webDir` (the built SPA, relative to the working directory) it also serves the web app,
  * falling back to index.html so client-side routes load on refresh.
  */
-export function createApp(auth?: Auth, webDir?: string) {
+export function createApp(deps?: { db: Db; auth: Auth }, webDir?: string) {
   const app = new OpenAPIHono();
+  const auth = deps?.auth;
   if (auth) app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw));
-  app.route('/api', api);
+  app.route('/api', createApi(deps));
   app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
   if (webDir) {
     app.use(

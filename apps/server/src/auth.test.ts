@@ -11,7 +11,7 @@ describe.skipIf(!testDatabaseUrl)('with a database', () => {
 
   beforeAll(async () => {
     t = await freshDb();
-    app = createApp(createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }));
+    app = createApp({ db: t.db, auth: createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }) });
   });
   afterAll(() => t.drop());
 

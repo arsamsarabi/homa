@@ -84,7 +84,7 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 
 ### Recurrence and the expansion cache
 
-RRULE, EXDATE, RDATE and overrides are the source of truth, because they round-trip with CalDAV, Google and Microsoft. Every write to an event re-expands that event into `event_instances` for the rolling window; a nightly job extends the window. Reads for views, free/busy and polls query `event_instances` by range. Edits of "this and following" split the series into two masters, as RFC 5545 clients do.
+RRULE, EXDATE and overrides are the source of truth (RDATE comes with ICS import in phase 2d), because they round-trip with CalDAV, Google and Microsoft. Every write to an event re-expands that event into `event_instances` up to about 18 months ahead (`expanded_until` on the event); the nightly `calendar.extend-horizon` job moves that window forward, and range reads past it expand the series on the fly. Expansion walks the RRULE in local wall-clock time with `ical.js` and places each occurrence in the event's zone with `Temporal`, so no `VTIMEZONE` is needed. An occurrence whose time was never changed follows the series when the series moves. Reads for views, free/busy and polls query `event_instances` by range. Edits of "this and following" split the series into two masters, as RFC 5545 clients do.
 
 ### Availability engine
 

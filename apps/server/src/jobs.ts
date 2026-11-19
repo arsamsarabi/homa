@@ -1,8 +1,10 @@
 import { type Db, schema } from '@homa/db';
 import { lt } from 'drizzle-orm';
 import { PgBoss } from 'pg-boss';
+import { extendHorizon } from './calendar/service';
 
 export const PURGE_AUTH = 'maintenance.purge-auth';
+export const EXTEND_HORIZON = 'calendar.extend-horizon';
 
 /** Deletes expired sessions and verification tokens. Returns how many rows went. */
 export async function purgeExpiredAuth(db: Db, now = new Date()) {
@@ -26,6 +28,11 @@ export async function startWorker(databaseUrl: string, db: Db) {
   await boss.work(PURGE_AUTH, async () => {
     const purged = await purgeExpiredAuth(db);
     console.log(`${PURGE_AUTH}:`, purged);
+  });
+  await boss.createQueue(EXTEND_HORIZON);
+  await boss.schedule(EXTEND_HORIZON, '41 2 * * *'); // daily, 02:41 UTC
+  await boss.work(EXTEND_HORIZON, async () => {
+    console.log(`${EXTEND_HORIZON}: re-expanded`, await extendHorizon(db), 'events');
   });
   return boss;
 }

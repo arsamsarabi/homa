@@ -8,6 +8,7 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@homa/core": "workspace:*",
     "@homa/db": "workspace:*",
     "@hono/zod-openapi": "1.6.3",
     "better-auth": "1.7.22",
