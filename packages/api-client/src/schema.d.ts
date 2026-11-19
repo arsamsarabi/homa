@@ -134,6 +134,41 @@ export interface paths {
         patch: operations["updateSettings"];
         trace?: never;
     };
+    "/instance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The instance's name, whether sign-ups are open and whether it still needs its admin */
+        get: operations["getInstance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/instance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The instance's settings (admin only) */
+        get: operations["getInstanceSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the instance's settings (admin only) */
+        patch: operations["updateInstanceSettings"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -258,6 +293,76 @@ export interface components {
              * @enum {string}
              */
             secondaryCalendar?: "none" | "jalali";
+        };
+        PublicInstance: {
+            /**
+             * @description The instance's name
+             * @example Homa
+             */
+            name: string;
+            /** @description Whether new accounts can sign up */
+            signUpsOpen: boolean;
+            /** @description True until the first account (the admin) exists */
+            needsSetup: boolean;
+            /**
+             * @description The web app's language until someone picks one
+             * @enum {string}
+             */
+            defaultLanguage: "en" | "fa";
+        };
+        InstanceSettings: {
+            /**
+             * @description The instance's name
+             * @example Homa
+             */
+            name: string;
+            /**
+             * @description Closed: only existing accounts can sign in
+             * @enum {string}
+             */
+            signUps: "open" | "closed";
+            /**
+             * @description The web app's language until someone picks one
+             * @enum {string}
+             */
+            defaultLanguage: "en" | "fa";
+            /**
+             * @description New accounts' home zone; null uses each browser's
+             * @example Asia/Tehran
+             */
+            defaultHomeTz: string | null;
+            /**
+             * @description The second calendar new accounts start with
+             * @enum {string}
+             */
+            defaultSecondaryCalendar: "none" | "jalali";
+        };
+        InstanceSettingsPatch: {
+            /**
+             * @description The instance's name
+             * @example Homa
+             */
+            name?: string;
+            /**
+             * @description Closed: only existing accounts can sign in
+             * @enum {string}
+             */
+            signUps?: "open" | "closed";
+            /**
+             * @description The web app's language until someone picks one
+             * @enum {string}
+             */
+            defaultLanguage?: "en" | "fa";
+            /**
+             * @description New accounts' home zone; null uses each browser's
+             * @example Asia/Tehran
+             */
+            defaultHomeTz?: string | null;
+            /**
+             * @description The second calendar new accounts start with
+             * @enum {string}
+             */
+            defaultSecondaryCalendar?: "none" | "jalali";
         };
     };
     responses: never;
@@ -442,6 +547,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Not found */
             404: {
                 headers: {
@@ -575,6 +689,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Not found */
             404: {
                 headers: {
@@ -625,6 +748,15 @@ export interface operations {
             };
             /** @description Not signed in */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -747,6 +879,115 @@ export interface operations {
             };
             /** @description Not signed in */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getInstance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The instance */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicInstance"];
+                };
+            };
+        };
+    };
+    getInstanceSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstanceSettings"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateInstanceSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstanceSettingsPatch"];
+            };
+        };
+        responses: {
+            /** @description The settings after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InstanceSettings"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
