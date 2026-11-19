@@ -6,11 +6,19 @@ test('set up a new instance as its admin @smoke', async ({ page, request }) => {
   const instance = (await (await request.get('/api/instance')).json()) as { needsSetup: boolean };
   test.skip(!instance.needsSetup, 'this instance is already set up');
 
+  // The code the server printed in its log at start (CI reads it from the container log).
+  const code = process.env.HOMA_SETUP_CODE;
+  expect(code, 'set HOMA_SETUP_CODE to the first-run setup code from the server log').toMatch(/^\d{4}$/);
+
   await page.goto('/');
   await expect(page).toHaveURL(/\/setup$/);
+  await page.getByLabel('Setup code').fill('0000' === code ? '0001' : '0000');
   await page.getByLabel('Name').fill('Admin');
   await page.getByLabel('Email').fill(`admin-${Date.now()}@example.com`);
   await page.locator('input[name=password]').fill('correct horse battery');
+  await page.getByRole('button', { name: 'Create admin account' }).click();
+  await expect(page.getByRole('alert')).toContainText('setup code');
+  await page.getByLabel('Setup code').fill(code as string);
   await page.getByRole('button', { name: 'Create admin account' }).click();
 
   // Instance settings: rename it and leave sign-ups open, so the other specs can sign up.

@@ -6,6 +6,9 @@ import { authClient } from '@/api';
 import { instanceQuery } from '@/hooks/instance';
 import { sessionQuery } from './session-query';
 
+/** Must match the server's header for the first-run setup code. */
+export const SETUP_CODE_HEADER = 'x-homa-setup-code';
+
 export type AuthMode = 'sign-in' | 'sign-up';
 export type AuthForm = { error: string | undefined; busy: boolean; submit: (e: FormEvent<HTMLFormElement>) => void };
 
@@ -21,7 +24,15 @@ export function useAuthForm(mode: AuthMode, onDone?: () => void): AuthForm {
     const password = String(form.get('password'));
     const res =
       mode === 'sign-up'
-        ? await authClient.signUp.email({ email, password, name: String(form.get('name')) })
+        ? await authClient.signUp.email({
+            email,
+            password,
+            name: String(form.get('name')),
+            // The first account (the admin) needs the setup code from the server log.
+            ...(form.has('setupCode') && {
+              fetchOptions: { headers: { [SETUP_CODE_HEADER]: String(form.get('setupCode')).trim() } },
+            }),
+          })
         : await authClient.signIn.email({ email, password });
     if (res.error) {
       setError(res.error.message ?? res.error.statusText);

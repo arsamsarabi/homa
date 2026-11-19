@@ -10,6 +10,11 @@ const Env = z.object({
   HOMA_ROLE: z.enum(['api', 'worker', 'all']).default('all'),
   // The built web app to serve, relative to the working directory. Unset in development (Vite serves it).
   HOMA_WEB_DIR: z.string().optional(),
+  // Pins the first-run setup code instead of a random one. For automated tests; leave unset otherwise.
+  HOMA_SETUP_CODE: z
+    .string()
+    .regex(/^\d{4}$/, 'HOMA_SETUP_CODE must be 4 digits')
+    .optional(),
 });
 
 export type Config = z.infer<typeof Env>;

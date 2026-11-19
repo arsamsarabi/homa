@@ -1,4 +1,4 @@
-import { Alert, Button, Stack, Text } from '@mantine/core';
+import { Alert, Button, Stack, Text, TextInput } from '@mantine/core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccountFields } from '@/components';
@@ -17,6 +17,17 @@ export function AdminAccountStep({ onDone }: { onDone: () => void }): JSX.Elemen
             {t('auth.failed', { message: error })}
           </Alert>
         )}
+        <TextInput
+          name="setupCode"
+          label={t('setup.code')}
+          description={t('setup.codeHint')}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{4}"
+          maxLength={4}
+          w={160}
+          required
+        />
         <AccountFields signUp />
         <Button type="submit" loading={busy} w="fit-content">
           {t('setup.createAdmin')}

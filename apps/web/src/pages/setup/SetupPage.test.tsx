@@ -13,11 +13,13 @@ const defaults = {
 /** A new instance: nobody signed in until the sign-up call, then Ada is its admin. */
 function newInstance(adminInstance: () => Response | Promise<Response> = () => json(defaults)) {
   const sent: { path: string; body: unknown }[] = [];
+  const codes: (string | null)[] = [];
   let admin = false;
   const api = async (url: URL, req: Request): Promise<Response> => {
     const record = async (): Promise<unknown> => {
       const body = await req.json();
       sent.push({ path: url.pathname, body });
+      if (url.pathname === '/api/auth/sign-up/email') codes.push(req.headers.get('x-homa-setup-code'));
       return body;
     };
     switch (url.pathname) {
@@ -39,7 +41,7 @@ function newInstance(adminInstance: () => Response | Promise<Response> = () => j
         return json({ error: `unexpected ${url.pathname}` }, 404);
     }
   };
-  return { api, sent };
+  return { api, sent, codes };
 }
 
 describe('setup journey', () => {
@@ -50,10 +52,11 @@ describe('setup journey', () => {
   });
 
   test('creates the admin, saves the instance and personal settings, then finishes', async () => {
-    const { api, sent } = newInstance();
+    const { api, sent, codes } = newInstance();
     renderApp('/', api);
 
-    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: 'Ada' } });
+    fireEvent.change(await screen.findByLabelText(/^Setup code/), { target: { value: '4321' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Ada' } });
     fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'ada@example.com' } });
     fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'correct horse battery' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create admin account' }));
@@ -74,6 +77,7 @@ describe('setup journey', () => {
       { path: '/api/admin/instance', body: { name: 'Family', signUps: 'closed' } },
       { path: '/api/settings', body: { secondaryCalendar: 'jalali' } },
     ]);
+    expect(codes).toEqual(['4321']);
   });
 
   test('the instance step shows a loading state, then a failure with a retry', async () => {
@@ -88,7 +92,8 @@ describe('setup journey', () => {
     });
     renderApp('/', api);
 
-    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: 'Ada' } });
+    fireEvent.change(await screen.findByLabelText(/^Setup code/), { target: { value: '4321' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Ada' } });
     fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: 'ada@example.com' } });
     fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: 'correct horse battery' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create admin account' }));

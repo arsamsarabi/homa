@@ -1,9 +1,8 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import { HORIZON_DAYS } from '@homa/core';
 import { schema } from '@homa/db';
-import { createAuth } from '@/auth';
 import { createApp } from '@/http';
-import { freshDb, testDatabaseUrl } from '@/testing';
+import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 import { extendHorizon } from './instance-cache';
 
 type Json = Record<string, unknown>;
@@ -47,7 +46,7 @@ describe.skipIf(!testDatabaseUrl)('calendars and events', () => {
 
   beforeAll(async () => {
     t = await freshDb();
-    app = createApp({ db: t.db, auth: createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }) });
+    app = createApp({ db: t.db, auth: testAuth(t.db) });
     cookie = await signUp('ada@example.com');
   });
   afterEach(() => t.db.delete(schema.events));

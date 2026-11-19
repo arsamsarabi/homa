@@ -19,7 +19,13 @@ echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > deploy/docker/.env
 docker compose -f deploy/docker/compose.yaml up -d --build --wait
 ```
 
-Open http://localhost:3000 and create an account. The first account becomes the admin.
+Open http://localhost:3000 to set up the instance. The first account becomes the admin, and creating it needs the 4-digit setup code the API prints in its log at start:
+
+```bash
+docker compose logs api | grep 'first-run setup code'
+```
+
+Five wrong tries replace the code with a new one, also printed in the log.
 
 ## Settings
 

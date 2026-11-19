@@ -165,7 +165,9 @@
     "loadingSettings": "Loading your settings",
     "settingsLoadFailed": "Couldn't load your settings",
     "continue": "Continue",
-    "done": "All set. Your Homa is ready."
+    "done": "All set. Your Homa is ready.",
+    "code": "Setup code",
+    "codeHint": "The 4 digits Homa printed in its server log when it started (look for \"first-run setup code\")."
   },
   "instance": {
     "title": "Instance settings",

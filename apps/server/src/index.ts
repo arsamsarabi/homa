@@ -1,9 +1,10 @@
 // Entry point. HOMA_ROLE picks what this process runs: the API, the job worker, or both.
-import { createDb, runMigrations } from '@homa/db';
+import { createDb, repo, runMigrations } from '@homa/db';
 import type { PgBoss } from 'pg-boss';
 import { createAuth } from './auth';
 import { type Config, loadConfig } from './config';
 import { createApp } from './http';
+import { createSetupGate } from './instance';
 import { startWorker } from './jobs';
 import { log } from './log';
 
@@ -17,13 +18,21 @@ if (role !== 'worker') {
   log.info('migrations applied');
 }
 
+// Until the first account exists, signing up needs this code; print it now so it's in the log.
+const setupGate = createSetupGate({
+  fixed: config.HOMA_SETUP_CODE,
+  announce: (code: string): void =>
+    log.warn(`first-run setup code: ${code} (enter it on the setup page to create the admin)`, { setupCode: code }),
+});
+if (role !== 'worker' && (await repo.countUsers(db)) === 0) setupGate.current();
+
 const server =
   role === 'worker'
     ? undefined
     : Bun.serve({
         port: config.PORT,
         fetch: createApp(
-          { db, auth: createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL }) },
+          { db, auth: createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL, setupGate }) },
           config.HOMA_WEB_DIR,
         ).fetch,
       });

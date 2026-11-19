@@ -1,18 +1,18 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { schema } from '@homa/db';
-import { createAuth } from '@/auth';
 import { createApp } from '@/http';
-import { freshDb, testDatabaseUrl } from '@/testing';
+import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
+import { createSetupGate, SETUP_CODE_HEADER } from './setup-code';
 
 describe.skipIf(!testDatabaseUrl)('instance', () => {
   let t: Awaited<ReturnType<typeof freshDb>>;
   let app: ReturnType<typeof createApp>;
 
   const headers = (cookie = '') => ({ 'content-type': 'application/json', origin: 'http://localhost:3000', cookie });
-  const signUp = (email: string) =>
+  const signUp = (email: string, setupCode?: string) =>
     app.request('/api/auth/sign-up/email', {
       method: 'POST',
-      headers: headers(),
+      headers: { ...headers(), ...(setupCode === undefined ? {} : { [SETUP_CODE_HEADER]: setupCode }) },
       body: JSON.stringify({ email, password: 'correct horse battery', name: 'x' }),
     });
   const cookieOf = (res: Response) => res.headers.get('set-cookie')?.split(';')[0] ?? '';
@@ -26,7 +26,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
 
   beforeAll(async () => {
     t = await freshDb();
-    app = createApp({ db: t.db, auth: createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }) });
+    app = createApp({ db: t.db, auth: testAuth(t.db, createSetupGate({ fixed: '4321', announce: () => {} })) });
   });
   afterAll(() => t.drop());
 
@@ -39,8 +39,16 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
     });
   });
 
+  test('the first account needs the setup code from the log', async () => {
+    expect((await signUp('admin@example.com')).status).toBe(403);
+    const wrong = await signUp('admin@example.com', '1111');
+    expect(wrong.status).toBe(403);
+    expect(((await wrong.json()) as { message: string }).message).toMatch(/setup code/);
+    expect((await publicInstance()).needsSetup).toBe(true);
+  });
+
   test('the first account is the admin and finishes setup', async () => {
-    const res = await signUp('admin@example.com');
+    const res = await signUp('admin@example.com', '4321');
     expect(res.status).toBe(200);
     admin = cookieOf(res);
     const [row] = await t.db.select({ role: schema.users.role }).from(schema.users);
