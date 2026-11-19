@@ -17,6 +17,7 @@ Status: draft, 2026-11-18. Source: architecture interview with Arsam Sarabi (tec
 | Recurrence | `rrule` + `ical.js` (to be confirmed in the phase 1 spike) | RFC 5545 parsing, expansion and serialization |
 | Tests | `bun test` (unit and integration on a throwaway Postgres) + Playwright (e2e, `@smoke` subset) | CalDAV conformance runs against a Radicale container |
 | Monorepo | Bun workspaces | |
+| Tooling | Biome (lint and format), TypeScript 6, `openapi-typescript` + `openapi-fetch` for the client | Biome is one fast tool for both jobs. TypeScript stays on 6.x: TypeScript 7 (the native port) has no JavaScript compiler API yet, which `openapi-typescript` needs |
 | License | PolyForm Noncommercial 1.0.0 | Anyone can read, run and self-host the code; commercial hosting of it by others is not allowed |
 
 ## Repo layout

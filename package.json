@@ -1,0 +1,22 @@
+{
+  "name": "homa",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter @homa/server dev",
+    "typecheck": "bun --filter '*' typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "bun test",
+    "openapi": "bun --filter @homa/api-client generate"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@types/bun": "1.4.4",
+    "typescript": "6.0.3"
+  }
+}
