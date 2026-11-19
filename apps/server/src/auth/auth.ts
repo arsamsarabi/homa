@@ -18,6 +18,8 @@ type AuthOptions = {
   baseURL: string;
   /** Guards the first sign-up (the admin) with the code from the server log. */
   setupGate: SetupGate;
+  /** Better Auth's per-IP limits (on in production by default); false only for automated tests. */
+  rateLimit?: boolean;
 };
 
 // biome-ignore lint/nursery/useExplicitType: the inferred options type carries the plugin types that Auth is built from.
@@ -26,6 +28,7 @@ function authConfig(db: Db, opts: AuthOptions) {
     secret: opts.secret,
     baseURL: opts.baseURL,
     basePath: '/api/auth',
+    ...(opts.rateLimit === false && { rateLimit: { enabled: false } }),
     database: drizzleAdapter(db, { provider: 'pg', schema, usePlural: true }),
     emailAndPassword: { enabled: true },
     plugins: [admin()],

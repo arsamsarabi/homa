@@ -42,6 +42,12 @@ const Env = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
+  // Better Auth's per-IP limits on sign-in and sign-up. Turn off only for automated tests, where
+  // one machine signs up several accounts within seconds.
+  HOMA_AUTH_RATE_LIMIT: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
 });
 
 export type Config = z.infer<typeof Env>;

@@ -57,6 +57,8 @@ jobs:
           secret=$(openssl rand -base64 32)
           echo "::add-mask::$secret"
           echo "BETTER_AUTH_SECRET=$secret" >> "$GITHUB_ENV"
+          # The specs sign up several accounts from one address within seconds.
+          echo "HOMA_AUTH_RATE_LIMIT=false" >> "$GITHUB_ENV"
       - run: docker compose build
       - run: docker compose up -d --wait --wait-timeout 120
       - uses: oven-sh/setup-bun@v2
