@@ -1,0 +1,16 @@
+{
+  "name": "@homa/core",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "ical.js": "2.2.1"
+  },
+  "devDependencies": {
+    "fast-xml-parser": "5.12.0",
+    "rrule": "2.8.1"
+  }
+}
