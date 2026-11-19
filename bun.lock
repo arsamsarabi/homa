@@ -16,6 +16,7 @@
       "dependencies": {
         "@homa/core": "workspace:*",
         "@homa/db": "workspace:*",
+        "@homa/sync": "workspace:*",
         "@hono/zod-openapi": "1.6.3",
         "better-auth": "1.7.22",
         "drizzle-orm": "0.45.4",
@@ -93,6 +94,12 @@
       "devDependencies": {
         "@types/pg": "8.23.1",
         "drizzle-kit": "0.31.11",
+      },
+    },
+    "packages/sync": {
+      "name": "@homa/sync",
+      "dependencies": {
+        "@homa/core": "workspace:*",
       },
     },
   },
@@ -408,6 +415,8 @@
     "@homa/db": ["@homa/db@workspace:packages/db"],
 
     "@homa/server": ["@homa/server@workspace:apps/server"],
+
+    "@homa/sync": ["@homa/sync@workspace:packages/sync"],
 
     "@homa/web": ["@homa/web@workspace:apps/web"],
 
