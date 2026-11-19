@@ -16,6 +16,10 @@ x-homa: &homa
     DATABASE_URL: postgres://homa:${POSTGRES_PASSWORD:-homa}@postgres:5432/homa
     BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET (openssl rand -base64 32)}
     HOMA_URL: ${HOMA_URL:-http://localhost:3000}
+    # Needed once anyone adds a connected calendar (openssl rand -base64 32); keep it with your backups.
+    HOMA_ENCRYPTION_KEY: ${HOMA_ENCRYPTION_KEY:-}
+    HOMA_SYNC_INTERVAL_MINUTES: ${HOMA_SYNC_INTERVAL_MINUTES:-30}
+    HOMA_SYNC_ALLOW_PRIVATE_NETWORKS: ${HOMA_SYNC_ALLOW_PRIVATE_NETWORKS:-false}
 
 services:
   api:

@@ -55,8 +55,9 @@ const r = {
     operationId: 'deleteCalendar',
     tags: tags.calendars,
     summary: 'Delete a calendar and its events',
+    description: 'A subscribed calendar is removed with its connection (DELETE /connections/{id}) instead: 400.',
     request: { params: Id },
-    responses: { 204: { description: 'Deleted' }, 401: errors[401], 404: errors[404] },
+    responses: { 204: { description: 'Deleted' }, 400: errors[400], 401: errors[401], 404: errors[404] },
   }),
   createEvent: createRoute({
     method: 'post',
@@ -65,7 +66,7 @@ const r = {
     tags: tags.events,
     summary: 'Create an event, optionally recurring',
     request: jsonBody(EventInput),
-    responses: { 201: jsonContent(Event, 'Created'), 400: errors[400], 401: errors[401] },
+    responses: { 201: jsonContent(Event, 'Created'), 400: errors[400], 401: errors[401], 403: errors[403] },
   }),
   getEvent: createRoute({
     method: 'get',

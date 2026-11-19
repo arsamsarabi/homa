@@ -32,7 +32,7 @@ export const jsonBody = <T extends z.ZodType>(
 export const errorResponses = {
   400: jsonContent(ApiError, 'Invalid request'),
   401: jsonContent(ApiError, 'Not signed in'),
-  403: jsonContent(ApiError, 'Not allowed'),
+  403: jsonContent(ApiError, 'Not allowed (or a read-only calendar)'),
   404: jsonContent(ApiError, 'Not found'),
 };
 

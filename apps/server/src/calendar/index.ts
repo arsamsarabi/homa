@@ -1,3 +1,4 @@
+export { writeIcsEvents } from './ics-events';
 export { extendHorizon, reexpand } from './instance-cache';
 export { calendarOut, eventOut } from './responses';
 export { calendarApi } from './routes';

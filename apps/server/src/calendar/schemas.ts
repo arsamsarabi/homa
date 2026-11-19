@@ -5,7 +5,15 @@ import { z } from '@hono/zod-openapi';
 
 const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #4a4e69');
 export const Calendar = z
-  .object({ id: z.uuid(), name: z.string(), color: Color, createdAt: z.iso.datetime(), updatedAt: z.iso.datetime() })
+  .object({
+    id: z.uuid(),
+    name: z.string(),
+    color: Color,
+    connectionId: z.uuid().nullable().openapi({ description: 'The connection it syncs with; null for your own' }),
+    readOnly: z.boolean().openapi({ description: 'Events here cannot be created, changed or deleted (subscriptions)' }),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
   .openapi('Calendar');
 export const CalendarInput = z
   .object({ name: z.string().trim().min(1).max(100), color: Color.optional() })
