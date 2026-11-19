@@ -1,4 +1,4 @@
-// The interface every provider implements (ICS now; CalDAV, Google and Microsoft in later phases).
+// The interface every provider implements (ICS and CalDAV now; Google and Microsoft later).
 // The worker drives it: listCalendars when a connection is added, pullChanges on every sync, and
 // pushChange for each outbox entry of a writable calendar. See docs/product/architecture.md ("Sync").
 import type { IcsEvent } from '@homa/core';
@@ -22,15 +22,20 @@ export const EMPTY_CURSOR: SyncCursor = {
 };
 
 export type RemoteCalendar = {
-  /** The provider's id for the calendar; null for an ICS feed (one calendar per connection). */
+  /** The provider's id for the calendar (CalDAV: the collection's URL); null for an ICS feed. */
   remoteId: string | null;
   name: string | null;
+  /** `#rrggbb`, when the provider has one. */
+  color?: string | null;
   readOnly: boolean;
 };
 
+/** One remote resource (a CalDAV object): its URL, ETag and the events in it (a series with its overrides). */
+export type RemoteResource = { href: string; etag: string | null; events: IcsEvent[] };
+
 /**
- * What a pull found. `snapshot` is the whole calendar (ICS): events not in it are gone. Incremental
- * providers will add a `delta` kind with changed events and deleted UIDs.
+ * What a pull found. `snapshot` is the whole calendar (ICS): events not in it are gone. `delta`
+ * lists the resources that changed and the hrefs that were deleted since the cursor.
  */
 export type PullResult =
   | { kind: 'unchanged'; cursor: SyncCursor }
@@ -41,16 +46,37 @@ export type PullResult =
       skipped: number;
       warnings: string[];
       cursor: SyncCursor;
+    }
+  | {
+      kind: 'delta';
+      changed: RemoteResource[];
+      deleted: string[];
+      skipped: number;
+      warnings: string[];
+      cursor: SyncCursor;
     };
 
-/** A local change to send to the provider (from the outbox). */
+/**
+ * A local change to send (from the outbox). A put with `etag` replaces that version (If-Match); a
+ * put without one creates the resource (If-None-Match: *). A delete needs the version it deletes.
+ */
 export type ChangeOp =
-  | { kind: 'put'; calendarRemoteId: string; uid: string; ics: string; etag: string | null }
-  | { kind: 'delete'; calendarRemoteId: string; uid: string; etag: string | null };
+  | { kind: 'put'; href: string; ics: string; etag: string | null }
+  | { kind: 'delete'; href: string; etag: string };
 
 export interface SyncAdapter {
   listCalendars(): Promise<RemoteCalendar[]>;
-  pullChanges(calendar: RemoteCalendar, since: SyncCursor): Promise<PullResult>;
-  /** Returns the new ETag. Read-only providers throw ReadOnlyError. */
+  /** `known` maps the hrefs Homa holds to their ETags, so unchanged resources aren't downloaded. */
+  pullChanges(
+    calendar: RemoteCalendar,
+    since: SyncCursor,
+    known?: ReadonlyMap<string, string | null>,
+  ): Promise<PullResult>;
+  /**
+   * Returns the new ETag (null if the server didn't say). Throws PushConflict when the remote
+   * version isn't the expected one, PushError when the server refused, ReadOnlyError for ICS.
+   */
   pushChange(op: ChangeOp): Promise<{ etag: string | null }>;
+  /** The resource as the server has it now, or null if it's gone. */
+  fetchResource(href: string): Promise<RemoteResource | null>;
 }

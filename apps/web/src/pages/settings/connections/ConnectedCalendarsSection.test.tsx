@@ -14,9 +14,12 @@ const calendar = {
 const ok = {
   id: 'k1',
   provider: 'ics',
+  label: null,
   status: 'ok',
   lastError: null,
   lastSyncedAt: '2026-11-19T10:00:00Z',
+  notice: null,
+  noticeAt: null,
   createdAt: '2026-11-02T00:00:00Z',
   calendars: [calendar],
 };
@@ -31,6 +34,33 @@ const holidays = [
   { id: 'gb-eaw', country: 'GB', names: { en: 'UK: England and Wales', fa: 'بریتانیا' }, source: 'GOV.UK, OGL' },
 ];
 
+const work = { ...calendar, id: 'c9', name: 'Work', readOnly: false, connectionId: 'k3' };
+const account = {
+  ...ok,
+  id: 'k3',
+  provider: 'caldav',
+  label: 'ada on caldav.fastmail.com',
+  notice: 'Your change to "Lunch" conflicted with a change on the server, so the server\'s version was kept.',
+  noticeAt: '2026-11-19T10:00:00Z',
+  calendars: [work],
+};
+const remote = [
+  {
+    remoteId: 'https://caldav.fastmail.com/dav/calendars/user/ada/work/',
+    name: 'Work',
+    color: '#336699',
+    readOnly: false,
+    selected: false,
+  },
+  {
+    remoteId: 'https://caldav.fastmail.com/dav/calendars/user/ada/shared/',
+    name: 'Shared',
+    color: null,
+    readOnly: true,
+    selected: false,
+  },
+];
+
 type Sent = { method: string; path: string; body: unknown };
 
 /** The settings page with these connections; every write is recorded and answered with `ok`. */
@@ -39,10 +69,13 @@ function api(list: () => Response | Promise<Response>, sent: Sent[] = []): FakeA
     if (url.pathname === '/api/calendars') return json([]);
     if (url.pathname === '/api/holiday-calendars') return json(holidays);
     if (url.pathname === '/api/connections') return list();
-    if (url.pathname.startsWith('/api/connections')) {
+    if (url.pathname.endsWith('/remote-calendars')) return json(remote);
+    if (url.pathname.startsWith('/api/connections') || url.pathname.startsWith('/api/calendars/')) {
       const text = await req.text();
       sent.push({ method: req.method, path: url.pathname, body: text ? JSON.parse(text) : undefined });
-      return req.method === 'DELETE' ? new Response(null, { status: 204 }) : json(ok, 201);
+      if (req.method === 'DELETE') return new Response(null, { status: 204 });
+      if (url.pathname.startsWith('/api/calendars/')) return json(calendar);
+      return json(url.pathname === '/api/connections/caldav' ? account : ok, 201);
     }
     return signedIn(url, req);
   };
@@ -131,6 +164,72 @@ describe('connected calendars section', () => {
         { method: 'POST', path: '/api/connections/ics', body: { holidayId: 'gb-eaw', name: 'UK: England and Wales' } },
       ]),
     );
+  });
+
+  test('connects a CalDAV account with a provider preset, then chooses its calendars', async () => {
+    const sent: Sent[] = [];
+    renderApp(
+      '/settings',
+      api(() => json([]), sent),
+    );
+    fireEvent.click(within(await section()).getByRole('button', { name: 'Connect account' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Connect a CalDAV account' });
+    const server = within(drawer).getByLabelText(/Server address/) as HTMLInputElement;
+    expect(server.value).toBe('https://caldav.icloud.com');
+    fireEvent.click(within(drawer).getByRole('combobox', { name: 'Provider' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Fastmail', hidden: true }));
+    await waitFor(() => expect(server.value).toBe('https://caldav.fastmail.com'));
+    fireEvent.change(within(drawer).getByLabelText(/User name/), { target: { value: 'ada' } });
+    fireEvent.change(within(drawer).getByLabelText(/App password/), { target: { value: 'app-pass' } });
+    submit(drawer);
+
+    const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
+    const workBox = (await within(picker).findByRole('checkbox', { name: /Work/ })) as HTMLInputElement;
+    // A new account starts with every calendar checked.
+    await waitFor(() => expect(workBox.checked).toBe(true));
+    expect(within(picker).getByText('Read-only')).toBeTruthy();
+    fireEvent.click(within(picker).getByRole('checkbox', { name: /Shared/ }));
+    fireEvent.click(within(picker).getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(sent).toEqual([
+        {
+          method: 'POST',
+          path: '/api/connections/caldav',
+          body: { serverUrl: 'https://caldav.fastmail.com', username: 'ada', password: 'app-pass' },
+        },
+        { method: 'PUT', path: '/api/connections/k3/calendars', body: { remoteIds: [remote[0]?.remoteId] } },
+      ]),
+    );
+  });
+
+  test('a CalDAV account shows its notice and calendars; notices dismiss and calendars rename', async () => {
+    const sent: Sent[] = [];
+    renderApp(
+      '/settings',
+      api(() => json([account]), sent),
+    );
+    const item = await within(await section()).findByRole('listitem', { name: 'ada on caldav.fastmail.com' });
+    expect(within(item).getByText('Syncs both ways', { exact: false })).toBeTruthy();
+    expect(within(item).getByText(/"Lunch" conflicted/)).toBeTruthy();
+    fireEvent.click(within(item).getByRole('button', { name: 'Dismiss' }));
+    await waitFor(() =>
+      expect(sent).toEqual([{ method: 'DELETE', path: '/api/connections/k3/notice', body: undefined }]),
+    );
+
+    fireEvent.click(within(item).getByRole('button', { name: 'Rename or recolor Work' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Edit calendar' });
+    fireEvent.change(within(drawer).getByLabelText(/Name/), { target: { value: 'Office' } });
+    submit(drawer);
+    await waitFor(() =>
+      expect(sent.at(-1)).toEqual({
+        method: 'PATCH',
+        path: '/api/calendars/c9',
+        body: { name: 'Office', color: '#336699' },
+      }),
+    );
+
+    fireEvent.click(within(item).getByRole('button', { name: 'Choose calendars' }));
+    expect(await screen.findByRole('dialog', { name: 'Choose calendars' })).toBeTruthy();
   });
 
   test('a failed load can be retried', async () => {

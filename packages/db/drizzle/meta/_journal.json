@@ -43,6 +43,13 @@
       "when": 1795114970348,
       "tag": "0005_connections",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795128203071,
+      "tag": "0006_caldav_outbox",
+      "breakpoints": true
     }
   ]
 }

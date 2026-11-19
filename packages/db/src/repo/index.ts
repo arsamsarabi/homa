@@ -12,10 +12,12 @@ export {
   listConnectionCalendars,
   updateCalendar,
   updateFeedState,
+  updateSyncToken,
 } from './calendars';
 export {
   type ConnectionRow,
   claimConnection,
+  clearConnectionNotice,
   countConnections,
   deleteConnection,
   findOwnedConnection,
@@ -23,6 +25,9 @@ export {
   insertConnection,
   listConnections,
   listDueConnections,
+  releaseConnection,
+  setConnectionNotice,
+  updateConnectionCredentials,
 } from './connections';
 export { type CachedOccurrence, deleteInstances, listCachedOccurrences, replaceInstances } from './event-instances';
 export {
@@ -38,6 +43,7 @@ export {
 } from './event-overrides';
 export {
   deleteEvent,
+  deleteEventsByHref,
   deleteEventsNotInUids,
   type EventColumns,
   type EventRow,
@@ -49,8 +55,20 @@ export {
   listEventsPastCache,
   listEventsToExtend,
   listOwnerEvents,
+  listRemoteState,
   type NewEventRow,
   updateEventColumns,
 } from './events';
 export { findInstanceSettings, type InstanceSettingsRow, updateInstanceSettings } from './instance';
+export {
+  completeOutbox,
+  deferOutbox,
+  dropOutbox,
+  enqueueOutbox,
+  listDueOutbox,
+  listOutboxConnections,
+  type OutboxRow,
+  type OutboxValues,
+  pendingOutboxUids,
+} from './outbox';
 export { findSettings, type SettingsRow, updateSettings } from './settings';

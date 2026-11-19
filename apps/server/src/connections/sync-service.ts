@@ -1,24 +1,26 @@
-// Syncs connected calendars. A sync claims its connection (so two never run at once), pulls with the
-// provider's adapter outside any transaction, then applies the result in one transaction: each
-// event is upserted by UID and re-expanded, and events the feed no longer has are deleted. A failure
-// is stored on the connection as a message safe to show (never the URL) and never stops the run.
+// Syncs connected calendars. A sync claims its connection (so two never run at once), pushes the
+// outbox (CalDAV), then pulls each calendar with the provider's adapter outside any transaction and
+// applies the result in one transaction per calendar. A failure is stored on the connection as a
+// message safe to show (never the URL or a password) and never stops the run.
 import { UnavailableError, ValidationError } from '@homa/core';
-import { type Db, type Executor, repo } from '@homa/db';
+import { type Db, repo } from '@homa/db';
 import {
+  type CaldavCredentials,
+  caldavAdapter,
   decryptCredentials,
   type IcsCredentials,
   icsAdapter,
-  type PullResult,
   type SyncAdapter,
   type SyncCursor,
   SyncError,
 } from '@homa/sync';
-import { writeIcsEvents } from '@/calendar';
 import { errorFields, log } from '@/log';
+import { applyPull, conflictNotice } from './apply-pull';
+import { pushOutbox } from './outbox-push';
 import type { SyncSettings } from './sync-settings';
 
 /** A claim older than this belongs to a sync that died (a restarted worker); it can be taken over. */
-const STALE_CLAIM_MS = 10 * 60_000;
+export const STALE_CLAIM_MS = 10 * 60_000;
 /** Most connections one scheduled run syncs; the rest wait for the next run. */
 const BATCH = 50;
 
@@ -30,12 +32,29 @@ export function requireKey(settings: SyncSettings): NonNullable<SyncSettings['ke
   return settings.key;
 }
 
-const expected = (err: unknown): err is Error =>
+export const expected = (err: unknown): err is Error =>
   err instanceof SyncError || err instanceof ValidationError || err instanceof UnavailableError;
 
 /** The user-facing reason a sync failed. Unexpected errors are logged and not shown. */
 export const failureMessage = (err: unknown): string =>
   expected(err) ? err.message : 'Something went wrong while syncing';
+
+/** The connection's decrypted credentials. SyncError if the key changed since they were saved. */
+export function credentialsOf(settings: SyncSettings, connection: repo.ConnectionRow): unknown {
+  const key = requireKey(settings);
+  try {
+    return decryptCredentials(key, connection.id, connection.credentials);
+  } catch {
+    throw new SyncError("Can't read this connection's saved details: the server's encryption key has changed");
+  }
+}
+
+export function caldavCredentials(value: unknown): CaldavCredentials {
+  const c = value as Partial<CaldavCredentials> | null;
+  if (typeof c?.serverUrl !== 'string' || typeof c.username !== 'string' || typeof c.password !== 'string')
+    throw new Error('CalDAV credentials without a server, user name or password');
+  return { serverUrl: c.serverUrl, username: c.username, password: c.password, homeUrl: c.homeUrl };
+}
 
 export function adapterFor(
   connection: repo.ConnectionRow,
@@ -43,11 +62,17 @@ export function adapterFor(
   settings: SyncSettings,
   floatingTz: string,
 ): SyncAdapter {
+  if (connection.provider === 'caldav')
+    return caldavAdapter(caldavCredentials(credentials), { floatingTz, policy: settings.policy });
   if (connection.provider !== 'ics') throw new SyncError(`${connection.provider} connections aren't supported yet`);
   const url = (credentials as Partial<IcsCredentials> | null)?.url;
   if (typeof url !== 'string') throw new Error('ICS credentials without a URL');
   return icsAdapter({ url }, { floatingTz, policy: settings.policy });
 }
+
+/** The owner's home zone, for floating times in what the provider sends. */
+export const floatingTzOf = async (db: Db, userId: string): Promise<string> =>
+  (await repo.findSettings(db, userId))?.homeTz ?? 'UTC';
 
 const cursorOf = (c: repo.CalendarRow): SyncCursor => ({
   remoteEtag: c.remoteEtag,
@@ -56,22 +81,36 @@ const cursorOf = (c: repo.CalendarRow): SyncCursor => ({
   syncToken: c.syncToken,
 });
 
-/** Writes a pull's result into the calendar. Call inside a transaction. */
-export async function applyPull(tx: Executor, calendar: repo.CalendarRow, result: PullResult): Promise<void> {
-  const { remoteEtag, remoteLastModified, contentHash } = result.cursor;
-  await repo.updateFeedState(tx, calendar.id, { remoteEtag, remoteLastModified, contentHash });
-  if (result.kind === 'unchanged') return;
-  await writeIcsEvents(tx, calendar.ownerUserId, calendar.id, result.events);
-  await repo.deleteEventsNotInUids(
-    tx,
-    calendar.id,
-    result.events.map((e) => e.uid),
-  );
-}
-
 export type SyncOutcome = 'changed' | 'unchanged' | 'failed' | 'busy';
 
-/** Syncs one connection by id (any owner: callers check ownership). Never throws for a bad feed. */
+/** Pulls every calendar of the connection; returns whether anything changed and conflicted titles. */
+async function pullAll(
+  db: Db,
+  adapter: SyncAdapter,
+  calendars: readonly repo.CalendarRow[],
+): Promise<{ changed: boolean; conflicts: string[]; errors: unknown[] }> {
+  let changed = false;
+  const conflicts: string[] = [];
+  const errors: unknown[] = [];
+  for (const calendar of calendars) {
+    try {
+      const known = await repo.listRemoteState(db, calendar.id);
+      const result = await adapter.pullChanges(
+        { remoteId: calendar.remoteId, name: calendar.name, readOnly: calendar.readOnly },
+        cursorOf(calendar),
+        known,
+      );
+      conflicts.push(...(await db.transaction((tx) => applyPull(tx, calendar, result))));
+      changed ||= result.kind !== 'unchanged';
+    } catch (err) {
+      // One calendar failing doesn't stop the others.
+      errors.push(err);
+    }
+  }
+  return { changed, conflicts, errors };
+}
+
+/** Syncs one connection by id (any owner: callers check ownership). Never throws for a bad server. */
 export async function syncConnection(
   db: Db,
   settings: SyncSettings,
@@ -81,24 +120,19 @@ export async function syncConnection(
   const connection = await repo.claimConnection(db, id, new Date(now.getTime() - STALE_CLAIM_MS));
   if (!connection) return 'busy';
   try {
-    const key = requireKey(settings);
-    const credentials = (() => {
-      try {
-        return decryptCredentials(key, connection.id, connection.credentials);
-      } catch {
-        throw new SyncError("Can't read this connection's saved details: the server's encryption key has changed");
-      }
-    })();
-    const [calendar] = await repo.listConnectionCalendars(db, [connection.id]);
-    if (!calendar) throw new SyncError('The calendar for this connection is missing');
-    const floatingTz = (await repo.findSettings(db, connection.ownerUserId))?.homeTz ?? 'UTC';
-    const result = await adapterFor(connection, credentials, settings, floatingTz).pullChanges(
-      { remoteId: calendar.remoteId, name: calendar.name, readOnly: calendar.readOnly },
-      cursorOf(calendar),
-    );
-    await db.transaction((tx) => applyPull(tx, calendar, result));
+    const credentials = credentialsOf(settings, connection);
+    const calendars = await repo.listConnectionCalendars(db, [connection.id]);
+    if (connection.provider === 'ics' && !calendars.length)
+      throw new SyncError('The calendar for this connection is missing');
+    const adapter = adapterFor(connection, credentials, settings, await floatingTzOf(db, connection.ownerUserId));
+    const pushed = connection.provider === 'caldav' ? await pushOutbox(db, adapter, connection, calendars, now) : [];
+    const pulled = await pullAll(db, adapter, calendars);
+    const notice = conflictNotice([...pushed, ...pulled.conflicts]);
+    if (notice) await repo.setConnectionNotice(db, connection.id, notice);
+    const [first] = pulled.errors;
+    if (first !== undefined) throw first;
     await repo.finishSync(db, connection.id, { status: 'ok', lastError: null, lastSyncedAt: new Date() });
-    return result.kind === 'unchanged' ? 'unchanged' : 'changed';
+    return pulled.changed ? 'changed' : 'unchanged';
   } catch (err) {
     const message = failureMessage(err);
     if (expected(err)) log.warn('sync failed', { connectionId: id, reason: message });
@@ -127,6 +161,48 @@ export async function syncDueConnections(
       // A database error on one connection: log it and go on with the rest.
       log.error('sync failed', { connectionId: id, ...errorFields(err) });
       counts.failed++;
+    }
+  }
+  return counts;
+}
+
+/**
+ * Pushes the outbox of every connection with a due op, between full syncs, so local changes reach
+ * the server within a minute or two. A connection that's syncing is skipped (its sync pushes).
+ */
+export async function pushDueOutboxes(
+  db: Db,
+  settings: SyncSettings,
+  now = new Date(),
+): Promise<{ connections: number; busy: number; failed: number }> {
+  const counts = { connections: 0, busy: 0, failed: 0 };
+  if (!settings.key) return counts;
+  for (const { id } of await repo.listOutboxConnections(db, now, BATCH)) {
+    const connection = await repo.claimConnection(db, id, new Date(now.getTime() - STALE_CLAIM_MS), {
+      pushOnly: true,
+    });
+    if (!connection) {
+      counts.busy++;
+      continue;
+    }
+    try {
+      const calendars = await repo.listConnectionCalendars(db, [id]);
+      const adapter = adapterFor(
+        connection,
+        credentialsOf(settings, connection),
+        settings,
+        await floatingTzOf(db, connection.ownerUserId),
+      );
+      const notice = conflictNotice(await pushOutbox(db, adapter, connection, calendars, now));
+      if (notice) await repo.setConnectionNotice(db, id, notice);
+      counts.connections++;
+    } catch (err) {
+      // The next full sync reports the reason on the connection.
+      if (expected(err)) log.warn('outbox push failed', { connectionId: id, reason: failureMessage(err) });
+      else log.error('outbox push failed', { connectionId: id, ...errorFields(err) });
+      counts.failed++;
+    } finally {
+      await repo.releaseConnection(db, id);
     }
   }
   return counts;

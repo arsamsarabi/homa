@@ -26,3 +26,12 @@ export {
   seriesOf,
   shift,
 } from './occurrences';
+export {
+  type OutboxDelete,
+  type OutboxOp,
+  type OutboxPut,
+  opsForChange,
+  opsForCreate,
+  opsForDelete,
+  type SyncedEvent,
+} from './outbox';

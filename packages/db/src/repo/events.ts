@@ -101,3 +101,26 @@ export async function deleteEventsNotInUids(
     .returning({ id: events.id });
   return rows.length;
 }
+
+/** href → ETag of the calendar's events that came from (or went to) the remote calendar. */
+export async function listRemoteState(db: Executor, calendarId: string): Promise<Map<string, string | null>> {
+  const rows = await db
+    .select({ href: events.remoteHref, etag: events.remoteEtag })
+    .from(events)
+    .where(and(eq(events.calendarId, calendarId), isNotNull(events.remoteHref)));
+  return new Map(rows.map((r) => [r.href as string, r.etag]));
+}
+
+/** Deletes the calendar's events stored at these remote hrefs. Returns their UIDs. */
+export async function deleteEventsByHref(
+  db: Executor,
+  calendarId: string,
+  hrefs: readonly string[],
+): Promise<string[]> {
+  if (!hrefs.length) return [];
+  const rows = await db
+    .delete(events)
+    .where(and(eq(events.calendarId, calendarId), inArray(events.remoteHref, [...hrefs])))
+    .returning({ uid: events.uid });
+  return rows.map((r) => r.uid);
+}

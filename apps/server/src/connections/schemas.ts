@@ -8,12 +8,20 @@ export const Connection = z
   .object({
     id: z.uuid(),
     provider: z.enum(CONNECTION_PROVIDERS),
+    label: z
+      .string()
+      .nullable()
+      .openapi({ description: 'The account, such as "ada on caldav.fastmail.com"; null for ICS feeds' }),
     status: z.enum(CONNECTION_STATUSES),
     lastError: z.string().nullable().openapi({ description: 'Why the last sync failed; null after a good one' }),
     lastSyncedAt: z.iso
       .datetime()
       .nullable()
       .openapi({ description: 'When the last sync ran, whether or not it worked' }),
+    notice: z.string().nullable().openapi({
+      description: "Something to tell the user that isn't an error, such as a conflict the server's copy won",
+    }),
+    noticeAt: z.iso.datetime().nullable(),
     createdAt: z.iso.datetime(),
     calendars: z.array(Calendar),
   })
@@ -38,3 +46,25 @@ export const HolidayFeed = z
     source: z.string(),
   })
   .openapi('HolidayFeed');
+
+export const CaldavInput = z
+  .object({
+    serverUrl: z.string().trim().min(1).max(2000).openapi({ example: 'https://caldav.fastmail.com' }),
+    username: z.string().trim().min(1).max(200),
+    password: z.string().min(1).max(500).openapi({ description: 'An app password for this account' }),
+  })
+  .openapi('CaldavInput');
+
+export const RemoteCalendar = z
+  .object({
+    remoteId: z.string().openapi({ description: "The calendar's URL on the server" }),
+    name: z.string().nullable(),
+    color: Color.nullable(),
+    readOnly: z.boolean().openapi({ description: "You can't change events in it on the server" }),
+    selected: z.boolean().openapi({ description: 'It syncs with a local calendar' }),
+  })
+  .openapi('RemoteCalendar');
+
+export const ChooseCalendarsInput = z
+  .object({ remoteIds: z.array(z.string().max(2000)).max(100) })
+  .openapi('ChooseCalendarsInput', { description: 'Exactly the remote calendars to sync' });

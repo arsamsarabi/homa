@@ -8,7 +8,7 @@ export type ConnectionRow = typeof connections.$inferSelect;
 
 export async function insertConnection(
   db: Executor,
-  values: { id: string; ownerUserId: string; provider: ConnectionProvider; credentials: string },
+  values: { id: string; ownerUserId: string; provider: ConnectionProvider; credentials: string; label?: string },
 ): Promise<ConnectionRow> {
   const [row] = await db.insert(connections).values(values).returning();
   if (!row) throw new Error('insert into connections returned no row');
@@ -52,10 +52,16 @@ export async function countConnections(db: Executor): Promise<number> {
  * Marks the connection as syncing, unless another sync holds it (claimed after `staleBefore`).
  * Returns the row when this caller got it, so two syncs of one connection never run at once.
  */
-export async function claimConnection(db: Executor, id: string, staleBefore: Date): Promise<ConnectionRow | undefined> {
+export async function claimConnection(
+  db: Executor,
+  id: string,
+  staleBefore: Date,
+  { pushOnly = false }: { pushOnly?: boolean } = {},
+): Promise<ConnectionRow | undefined> {
   const [row] = await db
     .update(connections)
-    .set({ status: 'syncing', syncStartedAt: sql`now()` })
+    // A push-only claim (the outbox) leaves the status alone and is released with releaseConnection.
+    .set(pushOnly ? { syncStartedAt: sql`now()` } : { status: 'syncing', syncStartedAt: sql`now()` })
     .where(
       and(eq(connections.id, id), or(isNull(connections.syncStartedAt), lt(connections.syncStartedAt, staleBefore))),
     )
@@ -88,3 +94,28 @@ export const listDueConnections = (db: Executor, before: Date, limit: number): P
     )
     .orderBy(sql`${connections.lastSyncedAt} asc nulls first`)
     .limit(limit);
+
+/** Releases a push-only claim without touching the status or the last sync time. */
+export async function releaseConnection(db: Executor, id: string): Promise<void> {
+  await db.update(connections).set({ syncStartedAt: null }).where(eq(connections.id, id));
+}
+
+/** Records something the user should see on the connection (replacing an earlier notice). */
+export async function setConnectionNotice(db: Executor, id: string, notice: string): Promise<void> {
+  await db.update(connections).set({ notice, noticeAt: sql`now()` }).where(eq(connections.id, id));
+}
+
+/** Clears the notice. False if the connection isn't the owner's. */
+export async function clearConnectionNotice(db: Executor, ownerUserId: string, id: string): Promise<boolean> {
+  const rows = await db
+    .update(connections)
+    .set({ notice: null, noticeAt: null })
+    .where(and(eq(connections.id, id), eq(connections.ownerUserId, ownerUserId)))
+    .returning({ id: connections.id });
+  return rows.length > 0;
+}
+
+/** Replaces the stored (encrypted) credentials. */
+export async function updateConnectionCredentials(db: Executor, id: string, credentials: string): Promise<void> {
+  await db.update(connections).set({ credentials }).where(eq(connections.id, id));
+}

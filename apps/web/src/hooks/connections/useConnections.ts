@@ -1,5 +1,6 @@
-// Connected calendars: the list with sync status, the holiday catalog, and subscribe / sync now /
-// remove. Every change refetches the calendars and occurrences, since a connection brings its own.
+// Connected calendars: the list with sync status, the holiday catalog, CalDAV accounts and their
+// calendars, and subscribe / connect / choose / sync now / rename / remove. Every change refetches
+// the calendars and occurrences, since a connection brings its own.
 import {
   type UseMutationResult,
   type UseQueryResult,
@@ -10,20 +11,36 @@ import {
 import { homaClient, unwrap } from '@/api';
 import { calendarKeys } from '@/hooks/calendar';
 import {
+  type Calendar,
+  CalendarSchema,
   type Connection,
   ConnectionListSchema,
   ConnectionSchema,
   type HolidayFeed,
   HolidayFeedListSchema,
+  type RemoteCalendar,
+  RemoteCalendarListSchema,
 } from '@/schemas';
 
-export const connectionKeys = { list: ['connections'] as const, holidays: ['holiday-calendars'] as const };
+export const connectionKeys = {
+  list: ['connections'] as const,
+  holidays: ['holiday-calendars'] as const,
+  remote: (id: string): readonly string[] => ['connections', id, 'remote-calendars'],
+};
 
 export type SubscribeVars = ({ url: string } | { holidayId: string }) & { name?: string; color?: string };
 
+export type CaldavVars = { serverUrl: string; username: string; password: string };
+export type ChooseVars = { id: string; remoteIds: string[] };
+export type CalendarEditVars = { id: string; name: string; color: string };
+
 export type ConnectionMutations = {
   subscribe: UseMutationResult<Connection, Error, SubscribeVars>;
+  addCaldav: UseMutationResult<Connection, Error, CaldavVars>;
+  choose: UseMutationResult<Connection, Error, ChooseVars>;
   syncNow: UseMutationResult<Connection, Error, string>;
+  dismissNotice: UseMutationResult<void, Error, string>;
+  editCalendar: UseMutationResult<Calendar, Error, CalendarEditVars>;
   remove: UseMutationResult<void, Error, string>;
 };
 
@@ -42,6 +59,18 @@ export const useHolidayCalendars = (): UseQueryResult<HolidayFeed[]> =>
     queryFn: async (): Promise<HolidayFeed[]> =>
       HolidayFeedListSchema.parse(await unwrap(homaClient.GET('/holiday-calendars'))),
     staleTime: Number.POSITIVE_INFINITY,
+  });
+
+/** The calendars on a CalDAV account (asks the server each time); off while `id` is undefined. */
+export const useRemoteCalendars = (id: string | undefined): UseQueryResult<RemoteCalendar[]> =>
+  useQuery({
+    queryKey: connectionKeys.remote(id ?? ''),
+    queryFn: async (): Promise<RemoteCalendar[]> =>
+      RemoteCalendarListSchema.parse(
+        await unwrap(homaClient.GET('/connections/{id}/remote-calendars', { params: { path: { id: id ?? '' } } })),
+      ),
+    enabled: id !== undefined,
+    staleTime: 0,
   });
 
 /**
@@ -63,6 +92,31 @@ export function useConnectionMutations(): ConnectionMutations {
       ConnectionSchema.parse(await unwrap(homaClient.POST('/connections/ics', { body }))),
     onSuccess: refresh,
   });
+  const addCaldav = useMutation({
+    mutationFn: async (body: CaldavVars): Promise<Connection> =>
+      ConnectionSchema.parse(await unwrap(homaClient.POST('/connections/caldav', { body }))),
+    onSuccess: refresh,
+  });
+  const choose = useMutation({
+    mutationFn: async ({ id, remoteIds }: ChooseVars): Promise<Connection> =>
+      ConnectionSchema.parse(
+        await unwrap(homaClient.PUT('/connections/{id}/calendars', { params: { path: { id } }, body: { remoteIds } })),
+      ),
+    onSettled: refresh,
+  });
+  const dismissNotice = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await unwrap(homaClient.DELETE('/connections/{id}/notice', { params: { path: { id } } }));
+    },
+    onSettled: refresh,
+  });
+  const editCalendar = useMutation({
+    mutationFn: async ({ id, name, color }: CalendarEditVars): Promise<Calendar> =>
+      CalendarSchema.parse(
+        await unwrap(homaClient.PATCH('/calendars/{id}', { params: { path: { id } }, body: { name, color } })),
+      ),
+    onSuccess: refresh,
+  });
   const syncNow = useMutation({
     mutationFn: async (id: string): Promise<Connection> =>
       ConnectionSchema.parse(await unwrap(homaClient.POST('/connections/{id}/sync', { params: { path: { id } } }))),
@@ -74,5 +128,5 @@ export function useConnectionMutations(): ConnectionMutations {
     },
     onSettled: refresh,
   });
-  return { subscribe, syncNow, remove };
+  return { subscribe, addCaldav, choose, syncNow, dismissNotice, editCalendar, remove };
 }

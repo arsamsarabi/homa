@@ -67,6 +67,9 @@ export const events = pgTable(
     /** Extra occurrence starts (RDATE) beside the RRULE's. */
     rdates: timestamp('rdates', { withTimezone: true }).array().notNull().default(sql`'{}'`),
     source: text('source').notNull().default('native'),
+    /** CalDAV: the URL of the remote resource holding this event, and its ETag when last seen. */
+    remoteHref: text('remote_href'),
+    remoteEtag: text('remote_etag'),
     /** How far ahead event_instances holds this event's occurrences; null for single events. */
     expandedUntil: timestamp('expanded_until', { withTimezone: true }),
     ...timestamps,
@@ -75,6 +78,7 @@ export const events = pgTable(
     // Unique per calendar, as in CalDAV: importing a file twice into one calendar updates its events.
     unique('events_calendar_uid_key').on(t.calendarId, t.uid),
     index('events_calendar_idx').on(t.calendarId),
+    index('events_remote_href_idx').on(t.calendarId, t.remoteHref).where(sql`${t.remoteHref} is not null`),
     index('events_recurring_idx').on(t.expandedUntil).where(sql`${t.rrule} is not null`),
   ],
 );

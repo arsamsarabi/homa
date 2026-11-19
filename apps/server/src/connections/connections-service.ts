@@ -3,7 +3,8 @@
 import { NotFoundError, ValidationError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 import { EMPTY_CURSOR, encryptCredentials, findHolidayFeed, icsAdapter, parseFeedUrl, SyncError } from '@homa/sync';
-import { applyPull, failureMessage, requireKey, syncConnection } from './sync-service';
+import { applyPull } from './apply-pull';
+import { failureMessage, requireKey, syncConnection } from './sync-service';
 import type { SyncSettings } from './sync-settings';
 
 export type ConnectionView = { connection: repo.ConnectionRow; calendars: repo.CalendarRow[] };
@@ -22,7 +23,7 @@ export async function listConnections(db: Db, userId: string): Promise<Connectio
   }));
 }
 
-async function view(db: Db, userId: string, id: string): Promise<ConnectionView> {
+export async function view(db: Db, userId: string, id: string): Promise<ConnectionView> {
   const connection = await repo.findOwnedConnection(db, userId, id);
   if (!connection) throw new NotFoundError();
   return { connection, calendars: await repo.listConnectionCalendars(db, [id]) };
@@ -99,4 +100,8 @@ export async function syncNow(db: Db, settings: SyncSettings, userId: string, id
 /** Removes the connection with its calendars and their events. */
 export async function deleteConnection(db: Db, userId: string, id: string): Promise<void> {
   if (!(await repo.deleteConnection(db, userId, id))) throw new NotFoundError();
+}
+
+export async function dismissNotice(db: Db, userId: string, id: string): Promise<void> {
+  if (!(await repo.clearConnectionNotice(db, userId, id))) throw new NotFoundError();
 }

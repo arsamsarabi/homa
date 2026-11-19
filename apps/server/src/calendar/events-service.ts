@@ -4,6 +4,9 @@ import {
   type EventFields,
   type EventPatch,
   NotFoundError,
+  opsForChange,
+  opsForCreate,
+  opsForDelete,
   overrideValues,
   planChange,
   planDelete,
@@ -12,6 +15,7 @@ import {
 import { type Db, type Executor, repo } from '@homa/db';
 import { requireWritableCalendar } from './calendars-service';
 import { reexpand } from './instance-cache';
+import { enqueueOps } from './outbox';
 
 const newUid = (): string => `${crypto.randomUUID()}@homa`;
 
@@ -58,6 +62,7 @@ export function createEvent(db: Db, userId: string, input: EventFields): Promise
       rrule: input.rrule,
     });
     await reexpand(tx, row.id);
+    await enqueueOps(tx, userId, opsForCreate(row));
     return ownEvent(tx, userId, row.id);
   });
 }
@@ -78,28 +83,34 @@ export function updateEvent(
     const e = await writableEvent(tx, userId, id);
     if (patch.calendarId) await requireWritableCalendar(tx, userId, patch.calendarId);
     const plan = planChange(e, patch, scope, recurrenceId);
+    const calendarId = patch.calendarId ?? e.calendarId;
 
     switch (plan.kind) {
       case 'series': {
+        const moved = calendarId !== e.calendarId;
         await repo.updateEventColumns(tx, id, {
           ...patchColumns(patch),
           startAt: plan.start,
           endAt: plan.end,
           exdates: plan.exdates,
           rdates: plan.rdates,
+          // In another calendar the event is a new remote resource.
+          ...(moved && { remoteHref: null, remoteEtag: null }),
         });
         if (e.rrule) await repo.shiftOverrides(tx, id, plan.shiftMs, plan.durationMs);
         await reexpand(tx, id);
+        await enqueueOps(tx, userId, opsForChange(e, plan, { calendarId }));
         return ownEvent(tx, userId, id);
       }
       case 'occurrence': {
         const existing = await repo.findOverride(tx, id, plan.recurrenceId);
         await repo.upsertOverride(tx, id, plan.recurrenceId, overrideValues(e, existing, patch, plan.recurrenceId));
         await reexpand(tx, id);
+        await enqueueOps(tx, userId, opsForChange(e, plan, { calendarId }));
         return ownEvent(tx, userId, id);
       }
       case 'split': {
-        const { id: _id, uid: _uid, createdAt: _c, updatedAt: _u, ...rest } = e;
+        const { id: _id, uid: _uid, createdAt: _c, updatedAt: _u, remoteHref: _h, remoteEtag: _t, ...rest } = e;
         const created = await repo.insertEvent(tx, {
           ...rest,
           ...patchColumns(patch),
@@ -121,6 +132,7 @@ export function updateEvent(
         });
         await reexpand(tx, id);
         await reexpand(tx, created.id);
+        await enqueueOps(tx, userId, opsForChange(e, plan, { calendarId, created }));
         return ownEvent(tx, userId, created.id);
       }
     }
@@ -135,7 +147,9 @@ export async function deleteEvent(
   recurrenceId?: Date,
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    const plan = planDelete(await writableEvent(tx, userId, id), scope, recurrenceId);
+    const e = await writableEvent(tx, userId, id);
+    const plan = planDelete(e, scope, recurrenceId);
+    await enqueueOps(tx, userId, opsForDelete(e, plan));
     switch (plan.kind) {
       case 'event':
         await repo.deleteEvent(tx, id);

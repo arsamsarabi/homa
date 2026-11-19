@@ -24,9 +24,10 @@ export type Validators = { etag: string | null; lastModified: string | null };
 
 export type FeedResponse = { kind: 'not-modified' } | ({ kind: 'body'; text: string } & Validators);
 
-async function readCapped(res: Response, maxBytes: number): Promise<string> {
-  const declared = Number(res.headers.get('content-length'));
-  if (declared > maxBytes) throw new SyncError(`The feed is larger than ${maxBytes / 1024 / 1024} MB`);
+/** Reads the body as text, stopping (SyncError) past `maxBytes` whatever Content-Length says. */
+export async function readCapped(res: Response, maxBytes: number, what = 'The feed'): Promise<string> {
+  const tooLarge = (): SyncError => new SyncError(`${what} is larger than ${maxBytes / 1024 / 1024} MB`);
+  if (Number(res.headers.get('content-length')) > maxBytes) throw tooLarge();
   if (!res.body) return '';
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -37,7 +38,7 @@ async function readCapped(res: Response, maxBytes: number): Promise<string> {
     size += value.byteLength;
     if (size > maxBytes) {
       await reader.cancel();
-      throw new SyncError(`The feed is larger than ${maxBytes / 1024 / 1024} MB`);
+      throw tooLarge();
     }
     chunks.push(value);
   }

@@ -698,6 +698,13 @@
               "microsoft"
             ]
           },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The account, such as \"ada on caldav.fastmail.com\"; null for ICS feeds"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -722,6 +729,20 @@
             "format": "date-time",
             "description": "When the last sync ran, whether or not it worked"
           },
+          "notice": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Something to tell the user that isn't an error, such as a conflict the server's copy won"
+          },
+          "noticeAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -736,9 +757,12 @@
         "required": [
           "id",
           "provider",
+          "label",
           "status",
           "lastError",
           "lastSyncedAt",
+          "notice",
+          "noticeAt",
           "createdAt",
           "calendars"
         ]
@@ -790,6 +814,87 @@
           }
         ],
         "description": "An ICS feed by URL (http, https or webcal), or a feed from the holiday catalog by id"
+      },
+      "CaldavInput": {
+        "type": "object",
+        "properties": {
+          "serverUrl": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "example": "https://caldav.fastmail.com"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "An app password for this account"
+          }
+        },
+        "required": [
+          "serverUrl",
+          "username",
+          "password"
+        ]
+      },
+      "RemoteCalendar": {
+        "type": "object",
+        "properties": {
+          "remoteId": {
+            "type": "string",
+            "description": "The calendar's URL on the server"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^#[0-9a-f]{6}$/i"
+          },
+          "readOnly": {
+            "type": "boolean",
+            "description": "You can't change events in it on the server"
+          },
+          "selected": {
+            "type": "boolean",
+            "description": "It syncs with a local calendar"
+          }
+        },
+        "required": [
+          "remoteId",
+          "name",
+          "color",
+          "readOnly",
+          "selected"
+        ]
+      },
+      "ChooseCalendarsInput": {
+        "type": "object",
+        "properties": {
+          "remoteIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "remoteIds"
+        ],
+        "description": "Exactly the remote calendars to sync"
       },
       "HolidayFeed": {
         "type": "object",
@@ -1888,6 +1993,295 @@
                   "required": [
                     "error"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/caldav": {
+      "post": {
+        "operationId": "addCaldav",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Connect a CalDAV account",
+        "description": "Checks the account with an app password (iCloud, Fastmail, Nextcloud and other CalDAV servers) and saves it without calendars; choose them next with PUT /connections/{id}/calendars. The password is stored encrypted and never returned.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaldavInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/{id}/remote-calendars": {
+      "get": {
+        "operationId": "listRemoteCalendars",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "The calendars on a CalDAV account, and which of them sync",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calendars that hold events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RemoteCalendar"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/{id}/calendars": {
+      "put": {
+        "operationId": "chooseCalendars",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Choose which calendars of a CalDAV account sync",
+        "description": "New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChooseCalendarsInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "After the first sync of new calendars",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/{id}/notice": {
+      "delete": {
+        "operationId": "dismissConnectionNotice",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Dismiss a connection's notice",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Dismissed"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

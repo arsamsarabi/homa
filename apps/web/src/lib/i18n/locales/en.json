@@ -219,7 +219,7 @@
   },
   "connections": {
     "title": "Connected calendars",
-    "hint": "Subscribe to a calendar feed (an .ics or webcal address from Google Calendar, Outlook, Apple Calendar, a sports team or a school) or add public holidays. They are read-only here and update on their own.",
+    "hint": "Subscribe to a calendar feed (an .ics or webcal address from Google Calendar, Outlook, Apple Calendar, a sports team or a school), add public holidays, or connect a CalDAV account (iCloud, Fastmail, Nextcloud) to sync both ways.",
     "add": "Add calendar",
     "addTitle": "Add a calendar",
     "byAddress": "By address",
@@ -256,6 +256,48 @@
       "syncing": "Syncing",
       "ok": "Up to date",
       "error": "Error"
-    }
+    },
+    "editCalendar": "Rename or recolor {{name}}",
+    "editTitle": "Edit calendar",
+    "save": "Save",
+    "calendarSaved": "Calendar saved",
+    "dismissNotice": "Dismiss",
+    "calendarsOf": "Calendars of {{name}}"
+  },
+  "caldav": {
+    "add": "Connect account",
+    "title": "Connect a CalDAV account",
+    "provider": "Provider",
+    "presets": {
+      "icloud": "iCloud",
+      "fastmail": "Fastmail",
+      "nextcloud": "Nextcloud",
+      "other": "Other CalDAV server"
+    },
+    "hints": {
+      "icloud": "Use an app-specific password from account.apple.com, not your Apple Account password.",
+      "fastmail": "Create an app password for CalDAV under Settings → Privacy & Security in Fastmail.",
+      "nextcloud": "Your server's address followed by /remote.php/dav, for example https://cloud.example.com/remote.php/dav. Create an app password under Settings → Security.",
+      "other": "The address of your CalDAV server. Homa also tries /.well-known/caldav on it."
+    },
+    "server": "Server address",
+    "username": "User name",
+    "password": "App password",
+    "passwordHint": "Stored encrypted. Homa never shows it again.",
+    "checking": "Checking the account…",
+    "connect": "Connect",
+    "connected": "Account connected",
+    "chooseTitle": "Choose calendars",
+    "chooseHint": "Checked calendars sync both ways. Unchecking one removes it from Homa only, not from the server.",
+    "calendars": "Calendars on this account",
+    "noCalendars": "This account has no calendars with events.",
+    "loadingCalendars": "Loading the account's calendars",
+    "calendarsFailed": "Couldn't load the account's calendars",
+    "save": "Save",
+    "saved": "Calendars saved",
+    "choose": "Choose calendars",
+    "noneChosen": "No calendars chosen yet.",
+    "twoWay": "Syncs both ways",
+    "removeBody": "\"{{name}}\" and its calendars will be removed from Homa. Nothing on the server is changed."
   }
 }
