@@ -47,7 +47,7 @@ export const theme = createTheme({
   autoContrast: true,
   white: '#faf6f3',
   black: '#22223b',
-  fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  fontFamily: 'Satoshi, system-ui, sans-serif',
   headings: { fontFamily: 'Rajdhani, system-ui, sans-serif', fontWeight: '700' },
   defaultRadius: 'md',
 });
