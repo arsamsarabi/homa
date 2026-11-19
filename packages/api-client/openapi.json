@@ -344,6 +344,52 @@
           "recurring",
           "overridden"
         ]
+      },
+      "Settings": {
+        "type": "object",
+        "properties": {
+          "homeTz": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Asia/Tehran",
+            "description": "The zone the calendar is shown in; null uses the browser's"
+          },
+          "secondaryCalendar": {
+            "type": "string",
+            "enum": [
+              "none",
+              "jalali"
+            ],
+            "description": "A second calendar shown beside the Gregorian one"
+          }
+        },
+        "required": [
+          "homeTz",
+          "secondaryCalendar"
+        ]
+      },
+      "SettingsPatch": {
+        "type": "object",
+        "properties": {
+          "homeTz": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Asia/Tehran",
+            "description": "The zone the calendar is shown in; null uses the browser's"
+          },
+          "secondaryCalendar": {
+            "type": "string",
+            "enum": [
+              "none",
+              "jalali"
+            ],
+            "description": "A second calendar shown beside the Gregorian one"
+          }
+        }
       }
     },
     "parameters": {}
@@ -914,6 +960,86 @@
                   "items": {
                     "$ref": "#/components/schemas/Occurrence"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "operationId": "getSettings",
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Your settings",
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateSettings",
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Change your settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The settings after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
                 }
               }
             }

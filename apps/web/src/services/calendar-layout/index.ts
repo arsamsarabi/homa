@@ -10,4 +10,4 @@ export {
   type TimedItem,
   timedColumnItems,
 } from './layout';
-export { type TitleFormats, viewTitle } from './view-title';
+export { jalaliViewTitle, type TitleFormats, viewTitle } from './view-title';

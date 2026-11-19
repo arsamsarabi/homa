@@ -8,17 +8,22 @@ import {
   buildEditorResult,
   type Draft,
   draftAllDay,
+  draftZone,
   formTimes,
   REPEATS,
   type Repeat,
   shownRepeat,
 } from '@/services/event-form';
-import { browserTimeZone } from '@/services/locale';
+import { timeZones } from '@/services/zones';
 
 export type EventFormModel = {
   occurrence: Occurrence | undefined;
   calendarOptions: { value: string; label: string }[];
   repeatOptions: { value: Repeat; label: string }[];
+  zones: string[];
+  /** The event's zone; timed values in the form are in it. */
+  tz: string;
+  setTz: (v: string) => void;
   allDay: boolean;
   setAllDay: (v: boolean) => void;
   calendarId: string;
@@ -39,11 +44,12 @@ const message = (err: unknown): string => (err instanceof Error ? err.message : 
 
 export function useEventForm(draft: Draft): EventFormModel {
   const { t } = useTranslation();
-  const { calendars, actions, drawer } = useCalendarPageModel();
+  const { calendars, actions, drawer, tz: viewTz } = useCalendarPageModel();
   const occurrence = draft.kind === 'edit' ? draft.occurrence : undefined;
   const series = useSeries(occurrence?.recurring ? occurrence.eventId : undefined);
 
   const [allDay, setAllDay] = useState(draftAllDay(draft));
+  const [tz, setTz] = useState(draftZone(draft, viewTz));
   const [calendarId, setCalendarId] = useState(occurrence?.calendarId ?? calendars[0]?.id ?? '');
   const [picked, setPicked] = useState<Repeat>();
   const [busy, setBusy] = useState(false);
@@ -51,7 +57,10 @@ export function useEventForm(draft: Draft): EventFormModel {
 
   const seriesRrule = series.data?.rrule;
   const repeat = shownRepeat(draft, picked, seriesRrule);
-  const times = useMemo(() => formTimes(draft, allDay), [draft, allDay]);
+  // Recomputed when the zone changes, but the inputs keep what was typed: changing the zone keeps the
+  // wall times and moves the event, as other calendars do.
+  const times = useMemo(() => formTimes(draft, allDay, tz), [draft, allDay, tz]);
+  const zones = useMemo((): string[] => timeZones(), []);
   const calendarOptions = useMemo(() => calendars.map((c) => ({ value: c.id, label: c.name })), [calendars]);
   const repeatOptions = useMemo(
     () =>
@@ -84,10 +93,11 @@ export function useEventForm(draft: Draft): EventFormModel {
         start: get('start'),
         end: get('end'),
         allDay,
+        tz,
         calendarId,
         repeat: picked,
       },
-      { seriesRrule, tz: browserTimeZone() },
+      { seriesRrule },
     );
     if (result === 'endBeforeStart') {
       setError(t('editor.endBeforeStart'));
@@ -100,6 +110,9 @@ export function useEventForm(draft: Draft): EventFormModel {
     occurrence,
     calendarOptions,
     repeatOptions,
+    zones,
+    tz,
+    setTz,
     allDay,
     setAllDay,
     calendarId,

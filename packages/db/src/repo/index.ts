@@ -31,3 +31,4 @@ export {
   type NewEventRow,
   updateEventColumns,
 } from './events';
+export { findSettings, type SettingsRow, updateSettings } from './settings';

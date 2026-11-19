@@ -1,6 +1,7 @@
-// Which occurrences go where in each view. Pure, so views only render what these return.
+// Which occurrences go where in each view, with days as wall dates in zone `tz`. Pure, so views
+// only render what these return.
 import type { Occurrence } from '@/schemas';
-import { addDays, DAY, isoDate, localSpan, type Span, startOfDay, touchesDay } from '@/services/dates';
+import { addDays, DAY, isoDate, type Span, startOfDay, touchesDay, wallSpan } from '@/services/dates';
 
 export type Placed<T> = T & { col: number; cols: number };
 export type TimedItem = Span & { o: Occurrence };
@@ -38,29 +39,36 @@ export function layoutColumns<T extends Span>(items: readonly T[]): Placed<T>[] 
   return out;
 }
 
-const onDay = (occ: readonly Occurrence[], day: Date): Occurrence[] => occ.filter((o) => touchesDay(localSpan(o), day));
+const onDay = (occ: readonly Occurrence[], day: Date, tz: string): Occurrence[] =>
+  occ.filter((o) => touchesDay(wallSpan(o, tz), day));
 
 /** The time grid's all-day row: for each day, the long and all-day occurrences on it. */
-export const allDayRowItems = (days: readonly Date[], occ: readonly Occurrence[]): Occurrence[][] => {
+export const allDayRowItems = (days: readonly Date[], occ: readonly Occurrence[], tz: string): Occurrence[][] => {
   const long = occ.filter(isAllDayRow);
-  return days.map((d) => onDay(long, d));
+  return days.map((d) => onDay(long, d, tz));
 };
 
 /** The time grid's columns: for each day, its timed occurrences placed side by side. */
-export const timedColumnItems = (days: readonly Date[], occ: readonly Occurrence[]): Placed<TimedItem>[][] => {
-  const timed = occ.filter((o) => !isAllDayRow(o)).map((o): TimedItem => ({ o, ...localSpan(o) }));
+export const timedColumnItems = (
+  days: readonly Date[],
+  occ: readonly Occurrence[],
+  tz: string,
+): Placed<TimedItem>[][] => {
+  const timed = occ.filter((o) => !isAllDayRow(o)).map((o): TimedItem => ({ o, ...wallSpan(o, tz) }));
   return days.map((d) => layoutColumns(timed.filter((x) => touchesDay(x, d))));
 };
 
 /** A month cell's occurrences: all-day ones first, then by start. */
-export const monthCellItems = (days: readonly Date[], occ: readonly Occurrence[]): Occurrence[][] =>
-  days.map((d) => onDay(occ, d).sort((a, b) => Number(b.allDay) - Number(a.allDay) || a.start.localeCompare(b.start)));
+export const monthCellItems = (days: readonly Date[], occ: readonly Occurrence[], tz: string): Occurrence[][] =>
+  days.map((d) =>
+    onDay(occ, d, tz).sort((a, b) => Number(b.allDay) - Number(a.allDay) || a.start.localeCompare(b.start)),
+  );
 
 /** The YYYY-MM-DD dates that have at least one occurrence, for the year view's dots. */
-export function busyDates(occ: readonly Occurrence[]): Set<string> {
+export function busyDates(occ: readonly Occurrence[], tz: string): Set<string> {
   const busy = new Set<string>();
   for (const o of occ) {
-    const { start, end } = localSpan(o);
+    const { start, end } = wallSpan(o, tz);
     // Mark each day the occurrence touches; the guard keeps a runaway span from looping long.
     for (let d = startOfDay(start), n = 0; (d < end || n === 0) && n < 400; d = addDays(d, 1), n++) {
       busy.add(isoDate(d));
@@ -70,5 +78,5 @@ export function busyDates(occ: readonly Occurrence[]): Set<string> {
 }
 
 /** The agenda: days that have occurrences, each with its occurrences. */
-export const agendaGroups = (days: readonly Date[], occ: readonly Occurrence[]): AgendaGroup[] =>
-  days.map((day) => ({ day, items: onDay(occ, day) })).filter((g) => g.items.length > 0);
+export const agendaGroups = (days: readonly Date[], occ: readonly Occurrence[], tz: string): AgendaGroup[] =>
+  days.map((day) => ({ day, items: onDay(occ, day, tz) })).filter((g) => g.items.length > 0);

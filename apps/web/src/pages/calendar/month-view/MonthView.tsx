@@ -10,9 +10,8 @@ import { SHOWN_PER_DAY, useMonthView } from './useMonthView';
 
 export function MonthView(): JSX.Element {
   const { t } = useTranslation();
-  const { formats, colors } = useCalendarPageModel();
+  const { formats, colors, secondary, today } = useCalendarPageModel();
   const m = useMonthView();
-  const today = new Date();
 
   return (
     <section
@@ -21,7 +20,7 @@ export function MonthView(): JSX.Element {
       style={{ '--weeks': m.days.length / 7 } as CSSProperties}
     >
       {m.days.slice(0, 7).map((d) => (
-        <Text key={`h${d.getDay()}`} size="xs" c="dimmed" ta="center" fw={500} className={classes.head}>
+        <Text key={`h${d.getUTCDay()}`} size="xs" c="dimmed" ta="center" fw={500} className={classes.head}>
           {formats.weekdayShort.format(d)}
         </Text>
       ))}
@@ -49,13 +48,23 @@ export function MonthView(): JSX.Element {
             >
               {formats.dayNumber.format(d)}
             </UnstyledButton>
+            {secondary === 'jalali' && (
+              <span className={classes.jalali} aria-hidden="true">
+                {formats.jalaliDayMonth.format(d)}
+              </span>
+            )}
+            {m.occasions[i]?.map((o) => (
+              <span key={o} className={classes.occasion}>
+                {t(`occasions.${o}`)}
+              </span>
+            ))}
             {items.slice(0, SHOWN_PER_DAY).map((o) => (
               <EventChip
                 key={`${o.eventId}${o.recurrenceId}`}
                 variant={o.allDay ? 'chip' : 'line'}
                 title={o.summary || t('calendar.untitled')}
                 color={colors[o.calendarId]}
-                time={o.allDay ? undefined : formats.time.format(new Date(o.start))}
+                time={o.allDay ? undefined : formats.time.format(m.span(o).start)}
                 onPointerDown={(e: PointerEvent<HTMLButtonElement>): void => m.beginDrag(e, o, d)}
                 onClick={(e: MouseEvent<HTMLButtonElement>): void => {
                   // Mouse clicks open through the drag handler; touch taps and the keyboard open here.

@@ -1,12 +1,18 @@
 import { describe, expect, test } from 'bun:test';
 import type { Occurrence } from '@/schemas';
+import { instantOf } from '@/services/zones';
 import { blockBox, type Drag, dragGhost, dragOutcome, dragTo, initialScrollHour, slotAt, snap } from './drag';
 
-const days = [new Date(2026, 10, 16), new Date(2026, 10, 17), new Date(2026, 10, 18)];
+// Days are wall dates in Tehran (UTC+3:30); outcomes are instants.
+const TZ = 'Asia/Tehran';
+const wall = (d: number, h = 0, m = 0): Date => new Date(Date.UTC(2026, 10, d, h, m));
+const at = (d: number, h: number, m = 0): Date => instantOf(wall(d, h, m), TZ);
+const days = [wall(16), wall(17), wall(18)];
 const o = {
   eventId: 'e1',
-  start: new Date(2026, 10, 16, 10).toISOString(),
-  end: new Date(2026, 10, 16, 11).toISOString(),
+  start: at(16, 10).toISOString(),
+  end: at(16, 11).toISOString(),
+  allDay: false,
 } as Occurrence;
 
 test('snap rounds to 15 minutes', () => {
@@ -31,17 +37,17 @@ describe('slotAt', () => {
 describe('dragOutcome', () => {
   test('a tap on empty space creates an hour', () => {
     const d: Drag = { kind: 'create', day: 1, from: 540, to: 540, moved: false, touch: false };
-    expect(dragOutcome(d, days)).toEqual({
+    expect(dragOutcome(d, days, TZ)).toEqual({
       kind: 'create',
-      start: new Date(2026, 10, 17, 9),
-      end: new Date(2026, 10, 17, 10),
+      start: at(17, 9),
+      end: at(17, 10),
     });
   });
   test('a zero-length drag still makes 15 minutes', () => {
     const d = dragTo({ kind: 'create', day: 0, from: 600, to: 600, moved: false, touch: false }, { day: 0, min: 600 });
-    expect(dragOutcome({ ...d, moved: true }, days)).toMatchObject({
-      start: new Date(2026, 10, 16, 10),
-      end: new Date(2026, 10, 16, 10, 15),
+    expect(dragOutcome({ ...d, moved: true }, days, TZ)).toMatchObject({
+      start: at(16, 10),
+      end: at(16, 10, 15),
     });
   });
   test('touch creates do not stretch', () => {
@@ -50,30 +56,30 @@ describe('dragOutcome', () => {
   });
   test('a move without movement opens the event', () => {
     const d: Drag = { kind: 'move', o, grabDay: 0, grabMin: 610, day: 0, min: 610, moved: false };
-    expect(dragOutcome(d, days)).toEqual({ kind: 'open', o });
+    expect(dragOutcome(d, days, TZ)).toEqual({ kind: 'open', o });
   });
   test('moving keeps the length and moves by calendar days', () => {
     const d = dragTo(
       { kind: 'move', o, grabDay: 0, grabMin: 610, day: 0, min: 610, moved: false },
       { day: 2, min: 700 },
     );
-    expect(dragOutcome(d, days)).toEqual({
+    expect(dragOutcome(d, days, TZ)).toEqual({
       kind: 'change',
       o,
-      start: new Date(2026, 10, 18, 11, 30),
-      end: new Date(2026, 10, 18, 12, 30),
+      start: at(18, 11, 30),
+      end: at(18, 12, 30),
     });
   });
   test('resizing never goes shorter than 15 minutes', () => {
     const d = dragTo({ kind: 'resize', o, day: 0, min: 660, moved: false }, { day: 0, min: 540 });
-    expect(dragOutcome(d, days)).toMatchObject({ end: new Date(2026, 10, 16, 10, 15) });
+    expect(dragOutcome(d, days, TZ)).toMatchObject({ end: at(16, 10, 15) });
   });
 });
 
 test('the ghost follows a move', () => {
   const d = dragTo({ kind: 'move', o, grabDay: 0, grabMin: 610, day: 0, min: 610, moved: false }, { day: 1, min: 640 });
-  expect(dragGhost(d, days)).toEqual({ day: 1, from: 630, to: 690 });
-  expect(dragGhost(undefined, days)).toBeUndefined();
+  expect(dragGhost(d, days, TZ)).toEqual({ day: 1, from: 630, to: 690 });
+  expect(dragGhost(undefined, days, TZ)).toBeUndefined();
 });
 
 test('blocks are at least 18 pixels tall', () => {
@@ -81,6 +87,6 @@ test('blocks are at least 18 pixels tall', () => {
 });
 
 test('the grid opens an hour before now on today', () => {
-  expect(initialScrollHour(days, new Date(2026, 10, 17, 14))).toBe(13);
-  expect(initialScrollHour(days, new Date(2026, 11, 1))).toBe(7);
+  expect(initialScrollHour(days, wall(17, 14))).toBe(13);
+  expect(initialScrollHour(days, wall(31))).toBe(7);
 });

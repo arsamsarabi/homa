@@ -57,6 +57,18 @@
   outline-offset: 1px;
 }
 
+.jalali {
+  padding-inline-start: 6px;
+  font-size: 11px;
+  color: var(--mantine-color-dimmed);
+}
+
+.occasion {
+  padding-inline-start: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .more {
   padding-inline-start: 4px;
   font-size: 12px;
@@ -67,5 +79,9 @@
 @media (max-width: 640px) {
   .grid {
     grid-template-rows: auto repeat(var(--weeks), minmax(64px, 1fr));
+  }
+
+  .jalali {
+    display: none;
   }
 }

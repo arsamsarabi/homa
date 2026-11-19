@@ -1,1 +1,1 @@
-export { browserTimeZone, type CalendarLocale, calendarLocale } from './locale';
+export { type CalendarLocale, calendarLocale } from './locale';

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen } from '@testing-library/react';
-import { json, renderApp, signedIn } from '@/testing/renderApp';
+import { type FakeApi, json, renderApp, signedIn, signedInWith } from '@/testing/renderApp';
 
 const calendars = [
   {
@@ -29,11 +29,11 @@ const dentist = {
 };
 
 const api =
-  (occurrences: () => Response | Promise<Response>) =>
+  (occurrences: () => Response | Promise<Response>, user: FakeApi = signedIn) =>
   (url: URL, req: Request): Response | Promise<Response> => {
     if (url.pathname === '/api/calendars') return json(calendars);
     if (url.pathname === '/api/occurrences') return occurrences();
-    return signedIn(url, req);
+    return user(url, req);
   };
 
 describe('calendar page', () => {
@@ -72,5 +72,44 @@ describe('calendar page', () => {
       api(() => json([{ eventId: 'e1' }])),
     );
     expect(await screen.findByText("Couldn't load your events")).toBeTruthy();
+  });
+
+  test('shows times in the home zone, or the zone in the URL', async () => {
+    // 10:00 UTC on 19 November 2026: 13:30 in Tehran, 05:00 in New York.
+    const meeting = {
+      ...dentist,
+      start: '2026-11-19T10:00:00Z',
+      end: '2026-11-19T11:00:00Z',
+      recurrenceId: '2026-11-19T10:00:00Z',
+    };
+    const tehran = signedInWith({ homeTz: 'Asia/Tehran', secondaryCalendar: 'none' });
+    const first = renderApp(
+      '/?view=agenda&date=2026-11-19',
+      api(() => json([meeting]), tehran),
+    );
+    expect(await screen.findByText(/13:30/)).toBeTruthy();
+    first.unmount();
+
+    renderApp(
+      '/?view=agenda&date=2026-11-19&tz=America/New_York',
+      api(() => json([meeting]), tehran),
+    );
+    expect(await screen.findByText(/\b0?5:00/)).toBeTruthy();
+  });
+
+  test('shows Jalali dates and Persian occasions when that calendar is on', async () => {
+    const yalda = {
+      ...dentist,
+      start: '2026-12-21T08:00:00Z',
+      end: '2026-12-21T09:00:00Z',
+      recurrenceId: '2026-12-21T08:00:00Z',
+    };
+    const jalali = signedInWith({ homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali' });
+    renderApp(
+      '/?view=agenda&date=2026-12-21',
+      api(() => json([yalda]), jalali),
+    );
+    expect(await screen.findByText('Yalda Night')).toBeTruthy();
+    expect(screen.getByText('30 Azar')).toBeTruthy();
   });
 });

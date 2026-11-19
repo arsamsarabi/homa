@@ -9,24 +9,23 @@ import classes from './YearView.module.css';
 
 export function YearView(): JSX.Element {
   const { t } = useTranslation();
-  const { formats } = useCalendarPageModel();
+  const { formats, today } = useCalendarPageModel();
   const { months, busy, pickDay } = useYearView();
-  const today = new Date();
   return (
     <section aria-label={t('calendar.views.year')} className={classes.grid}>
       {months.map(({ ref, days }) => (
-        <section key={ref.getMonth()} aria-label={formats.monthName.format(ref)}>
+        <section key={ref.getUTCMonth()} aria-label={formats.monthName.format(ref)}>
           <Text fw={700} mb={4}>
             {formats.monthName.format(ref)}
           </Text>
           <div className={classes.month}>
             {days.slice(0, 7).map((d) => (
-              <Text key={`h${d.getDay()}`} size="10px" c="dimmed" ta="center" aria-hidden="true">
+              <Text key={`h${d.getUTCDay()}`} size="10px" c="dimmed" ta="center" aria-hidden="true">
                 {formats.weekdayNarrow.format(d)}
               </Text>
             ))}
             {days.map((d) =>
-              d.getMonth() === ref.getMonth() ? (
+              d.getUTCMonth() === ref.getUTCMonth() ? (
                 <UnstyledButton
                   key={d.toISOString()}
                   className={classes.day}

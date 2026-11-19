@@ -32,8 +32,11 @@ test('create, drag, edit a repeating event and switch views @smoke', async ({ pa
   await page.getByLabel('Email').fill(email);
   await page.locator('input[name=password]').fill('correct horse battery');
   await page.getByRole('button', { name: 'Create account' }).click();
-  await page.getByRole('link', { name: 'Go to my calendar' }).click();
+  await page.getByLabel('Jalali (Solar Hijri), with Persian occasions').check();
+  await page.getByRole('button', { name: 'Go to my calendar' }).click();
   await expect(page.getByRole('region', { name: 'Week', exact: true })).toBeVisible();
+  // The second calendar chosen during onboarding shows under the title.
+  await expect(page.getByText(/\d{4} AP/).first()).toBeVisible();
 
   // Create today 10:00–11:00, then drag it two hours later and stretch it by half an hour.
   const today = localDay();

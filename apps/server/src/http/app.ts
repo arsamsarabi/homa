@@ -5,6 +5,7 @@ import type { Context } from 'hono';
 import { serveStatic } from 'hono/bun';
 import type { Auth } from '@/auth';
 import { calendarApi } from '@/calendar';
+import { settingsApi } from '@/settings';
 import { handleError, notFound } from './errors';
 import { healthApi } from './health';
 import { newApi, openApiConfig } from './openapi';
@@ -16,6 +17,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   const api = newApi();
   api.route('/', healthApi());
   api.route('/', calendarApi(deps));
+  api.route('/', settingsApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;

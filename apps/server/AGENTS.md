@@ -214,7 +214,7 @@ bun run typecheck
 ### Folder layout (mandatory)
 
 - Keep related modules in **domain subfolders**, not flat grab-bags of sibling files
-- One concern per folder: `apps/server/src/{calendar,auth,jobs,http,config,log}/`, `packages/db/src/repo/`, `packages/core/src/{recurrence,events,errors}/`
+- One concern per folder: `apps/server/src/{calendar,settings,auth,jobs,http,config,log}/`, `packages/db/src/repo/`, `packages/core/src/{recurrence,events,errors}/`
 - Co-locate tests next to the module they cover
 - Split a domain into several files once one grows past ~300 lines
 - Do not invent `utils/` / `misc/` / `common/` folders

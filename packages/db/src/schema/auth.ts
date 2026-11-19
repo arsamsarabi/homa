@@ -20,6 +20,9 @@ export const users = pgTable('users', {
   banned: boolean('banned').notNull().default(false),
   banReason: text('ban_reason'),
   banExpires: timestamp('ban_expires', { withTimezone: true }),
+  // Homa settings. home_tz null means "use the browser's zone"; secondary_calendar is 'none' or 'jalali'.
+  homeTz: text('home_tz'),
+  secondaryCalendar: text('secondary_calendar').notNull().default('none'),
   ...timestamps,
 });
 

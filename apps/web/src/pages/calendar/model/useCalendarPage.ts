@@ -4,8 +4,10 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useCalendars, useOccurrences } from '@/hooks/calendar';
 import { type DateFormats, useCalendarLocale, useDateFormats } from '@/hooks/locale';
-import type { Calendar, Occurrence, View } from '@/schemas';
-import { type DayRange, rangeFor } from '@/services/dates';
+import { useSettings } from '@/hooks/settings';
+import type { Calendar, Occurrence, SecondaryCalendar, View } from '@/schemas';
+import { type DayRange, rangeFor, today } from '@/services/dates';
+import { instantOf } from '@/services/zones';
 import { type CalendarUrlState, useCalendarUrlState } from './useCalendarUrlState';
 import { type EventDrawerState, useEventDrawer } from './useEventDrawer';
 import { type OccurrenceActions, useOccurrenceActions } from './useOccurrenceActions';
@@ -16,6 +18,9 @@ export type CalendarPageModel = CalendarUrlState & {
   locale: string;
   weekStart: number;
   formats: DateFormats;
+  secondary: SecondaryCalendar;
+  /** Today, as a wall date in the viewed zone. */
+  today: Date;
   calendars: Calendar[];
   /** Calendar id → color. */
   colors: Record<string, string>;
@@ -28,11 +33,14 @@ export type CalendarPageModel = CalendarUrlState & {
 
 export function useCalendarPage(): CalendarPageModel {
   const url = useCalendarUrlState();
-  const { locale, weekStart } = useCalendarLocale();
-  const formats = useDateFormats(locale);
+  const calendarLocale = useCalendarLocale();
+  const { locale, weekStart } = calendarLocale;
+  const formats = useDateFormats(calendarLocale);
+  const secondary = useSettings().data?.secondaryCalendar ?? 'none';
   const range = useMemo((): DayRange => rangeFor(url.view, url.date, weekStart), [url.view, url.date, weekStart]);
   const calendarsQuery = useCalendars();
-  const occurrences = useOccurrences(range.from, range.to);
+  // The range's wall dates, as instants in the viewed zone.
+  const occurrences = useOccurrences(instantOf(range.from, url.tz), instantOf(range.to, url.tz));
   const drawer = useEventDrawer();
   const scope = useScopePrompt();
   const actions = useOccurrenceActions(scope.ask, drawer.close);
@@ -44,5 +52,20 @@ export function useCalendarPage(): CalendarPageModel {
   );
   const pickDay = (d: Date): void => url.go({ view: 'day' satisfies View, date: d });
 
-  return { ...url, range, locale, weekStart, formats, calendars, colors, occurrences, pickDay, drawer, scope, actions };
+  return {
+    ...url,
+    range,
+    locale,
+    weekStart,
+    formats,
+    secondary,
+    today: today(url.tz),
+    calendars,
+    colors,
+    occurrences,
+    pickDay,
+    drawer,
+    scope,
+    actions,
+  };
 }
