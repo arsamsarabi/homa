@@ -1,0 +1,99 @@
+{
+  "app": {
+    "name": "Homa",
+    "tagline": "Find the day that works for everyone."
+  },
+  "nav": {
+    "calendar": "Calendar",
+    "signOut": "Sign out",
+    "language": "Language",
+    "theme": "Switch light or dark theme",
+    "signOutFailed": "Couldn't sign out: {{message}}"
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "signUpTitle": "Create your account",
+    "firstUserNote": "The first account on this Homa becomes its admin.",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 8 characters.",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "noAccount": "No account yet?",
+    "haveAccount": "Already have an account?",
+    "failed": "That didn't work: {{message}}"
+  },
+  "onboarding": {
+    "title": "Welcome to Homa, {{name}}",
+    "intro": "A few choices before you start. You can change them later in settings.",
+    "visibility": "Who can see when you're busy by default?",
+    "visibilityPrivate": "Only me",
+    "visibilityFreeBusy": "People I share with see free or busy",
+    "visibilityDetails": "People I share with see event details",
+    "comingSoon": "Saving this choice arrives with sharing; for now it's only a preview.",
+    "continue": "Go to my calendar"
+  },
+  "calendar": {
+    "today": "Today",
+    "previous": "Previous",
+    "next": "Next",
+    "newEvent": "New event",
+    "allDay": "All day",
+    "untitled": "(No title)",
+    "more": "{{count}} more",
+    "agendaEmpty": "Nothing in the next 30 days.",
+    "views": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year",
+      "agenda": "Agenda"
+    },
+    "viewLabel": "View",
+    "loading": "Loading events",
+    "loadFailed": "Couldn't load your events",
+    "moveFailed": "Couldn't move the event: {{message}}",
+    "announce": {
+      "saved": "Event saved",
+      "moved": "Event moved",
+      "deleted": "Event deleted"
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "retry": "Try again"
+  },
+  "editor": {
+    "title": "Title",
+    "titlePlaceholder": "Add a title",
+    "allDay": "All day",
+    "start": "Starts",
+    "end": "Ends",
+    "calendar": "Calendar",
+    "repeat": "Repeat",
+    "location": "Location",
+    "description": "Notes",
+    "save": "Save",
+    "delete": "Delete",
+    "endBeforeStart": "The end must be after the start.",
+    "newTitle": "New event",
+    "editTitle": "Edit event"
+  },
+  "repeat": {
+    "none": "Does not repeat",
+    "daily": "Every day",
+    "weekly": "Every week",
+    "monthly": "Every month",
+    "yearly": "Every year",
+    "custom": "Custom rule"
+  },
+  "scope": {
+    "changeTitle": "Change a repeating event",
+    "deleteTitle": "Delete a repeating event",
+    "question": "Which events should this apply to?",
+    "this": "This event",
+    "following": "This and following events",
+    "all": "All events"
+  }
+}

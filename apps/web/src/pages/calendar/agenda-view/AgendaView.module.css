@@ -1,0 +1,30 @@
+.row {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border-inline-start: 3px solid var(--c, var(--mantine-primary-color-filled));
+  background: color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 10%, transparent);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+}
+
+.time,
+.location {
+  font-size: 14px;
+  color: var(--mantine-color-dimmed);
+}
+
+.title {
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

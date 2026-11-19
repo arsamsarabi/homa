@@ -4,5 +4,6 @@ minimumReleaseAge = 604800
 exact = true
 
 [test]
-# Playwright specs run with `bun run e2e`, not bun test.
-pathIgnorePatterns = ["e2e/**"]
+# Playwright specs run with `bun run e2e`. The web app's tests need a DOM, so they run from apps/web
+# (`bun run test` at the root runs every package's tests the right way).
+pathIgnorePatterns = ["e2e/**", "apps/web/**"]

@@ -34,8 +34,8 @@ COPY --from=prod-deps /app/node_modules node_modules
 COPY --from=prod-deps /app/apps/server/node_modules apps/server/node_modules
 COPY --from=prod-deps /app/packages/db/node_modules packages/db/node_modules
 COPY --from=prod-deps /app/packages/core/node_modules packages/core/node_modules
-COPY package.json ./
-COPY apps/server/package.json apps/server/
+COPY package.json tsconfig.base.json ./
+COPY apps/server/package.json apps/server/tsconfig.json apps/server/
 COPY apps/server/src apps/server/src
 COPY packages/db/package.json packages/db/
 COPY packages/db/src packages/db/src

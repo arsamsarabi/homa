@@ -1,19 +1,19 @@
 import '@mantine/core/styles.css';
 import '@fontsource/vazirmatn/400.css';
 import '@fontsource/vazirmatn/700.css';
-import './fonts.css';
-import './styles.css';
-import './i18n';
+import '@/styles/fonts.css';
+import '@/styles/global.css';
+import '@/lib/i18n';
 import { DirectionProvider, MantineProvider } from '@mantine/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { makeRouter } from './router';
-import { cssVariablesResolver, theme } from './theme';
+import { createAppRouter } from '@/lib/router';
+import { cssVariablesResolver, theme } from '@/styles';
 
 const queryClient = new QueryClient();
-const router = makeRouter(queryClient);
+const router = createAppRouter(queryClient);
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
 
