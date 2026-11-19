@@ -31,4 +31,5 @@ export {
   type NewEventRow,
   updateEventColumns,
 } from './events';
+export { findInstanceSettings, type InstanceSettingsRow, updateInstanceSettings } from './instance';
 export { findSettings, type SettingsRow, updateSettings } from './settings';

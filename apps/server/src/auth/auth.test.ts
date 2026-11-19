@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { schema } from '@homa/db';
 import { createApp } from '@/http';
-import { freshDb, testDatabaseUrl } from '@/testing';
-import { createAuth } from './auth';
+import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 import { purgeExpiredAuth } from './maintenance';
 
 describe.skipIf(!testDatabaseUrl)('with a database', () => {
@@ -11,7 +10,7 @@ describe.skipIf(!testDatabaseUrl)('with a database', () => {
 
   beforeAll(async () => {
     t = await freshDb();
-    app = createApp({ db: t.db, auth: createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }) });
+    app = createApp({ db: t.db, auth: testAuth(t.db) });
   });
   afterAll(() => t.drop());
 

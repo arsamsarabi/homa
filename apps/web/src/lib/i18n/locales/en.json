@@ -14,7 +14,8 @@
     "palette": "Search commands",
     "shortcuts": "Keyboard shortcuts",
     "lightTheme": "Light theme",
-    "darkTheme": "Dark theme"
+    "darkTheme": "Dark theme",
+    "theme": "Switch light or dark theme"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -148,5 +149,51 @@
       "agenda": "Agenda"
     },
     "note": "Letter keys work on any keyboard layout. Shortcuts pause while you type in a field."
+  },
+  "setup": {
+    "title": "Set up your Homa",
+    "intro": "This Homa is new. Make the admin account, check how the instance works, then choose your own settings.",
+    "steps": {
+      "account": "Admin account",
+      "instance": "Instance",
+      "personal": "Your settings"
+    },
+    "accountIntro": "This account runs the instance: it can change the settings in the next step at any time.",
+    "createAdmin": "Create admin account",
+    "instanceIntro": "These apply to everyone on this Homa. The defaults suit most people; you can change them later under Settings.",
+    "personalIntro": "Now your own settings. Everyone who joins later chooses theirs too.",
+    "loadingSettings": "Loading your settings",
+    "settingsLoadFailed": "Couldn't load your settings",
+    "continue": "Continue",
+    "done": "All set. Your Homa is ready.",
+    "code": "Setup code",
+    "codeHint": "The 4 digits Homa printed in its server log when it started (look for \"first-run setup code\")."
+  },
+  "instance": {
+    "title": "Instance settings",
+    "settingsLinkHint": "You're this Homa's admin.",
+    "settingsLink": "Change the instance settings",
+    "name": "Instance name",
+    "nameHint": "Shown on the sign-in page.",
+    "nameRequired": "Give the instance a name.",
+    "signUps": "Who can create an account?",
+    "signUpsOption": {
+      "open": "Anyone who can reach this Homa",
+      "closed": "Nobody new"
+    },
+    "signUpsHint": {
+      "open": "The sign-in page links to sign-up.",
+      "closed": "Only existing accounts can sign in. The sign-up page goes away."
+    },
+    "defaultLanguage": "Default language",
+    "defaultLanguageHint": "Used until someone picks a language on their device.",
+    "defaultHomeZone": "Default home time zone",
+    "defaultsHint": "New accounts start with this; each person can change their own.",
+    "browserZone": "Each person's device zone",
+    "defaultSecondaryCalendar": "Default second calendar",
+    "loading": "Loading the instance settings",
+    "loadFailed": "Couldn't load the instance settings",
+    "saved": "Instance settings saved",
+    "saveFailed": "Couldn't save the instance settings: {{message}}"
   }
 }

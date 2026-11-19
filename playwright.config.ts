@@ -13,5 +13,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
     channel: process.env.PLAYWRIGHT_CHANNEL,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    // A new instance's first visitor becomes its admin, so that journey runs before everything else.
+    { name: 'setup', testMatch: /\.setup\.ts$/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'chromium', dependencies: ['setup'], use: { ...devices['Desktop Chrome'] } },
+  ],
 });

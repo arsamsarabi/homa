@@ -390,6 +390,135 @@
             "description": "A second calendar shown beside the Gregorian one"
           }
         }
+      },
+      "PublicInstance": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "example": "Homa",
+            "description": "The instance's name"
+          },
+          "signUpsOpen": {
+            "type": "boolean",
+            "description": "Whether new accounts can sign up"
+          },
+          "needsSetup": {
+            "type": "boolean",
+            "description": "True until the first account (the admin) exists"
+          },
+          "defaultLanguage": {
+            "type": "string",
+            "enum": [
+              "en",
+              "fa"
+            ],
+            "description": "The web app's language until someone picks one"
+          }
+        },
+        "required": [
+          "name",
+          "signUpsOpen",
+          "needsSetup",
+          "defaultLanguage"
+        ]
+      },
+      "InstanceSettings": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "example": "Homa",
+            "description": "The instance's name"
+          },
+          "signUps": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "description": "Closed: only existing accounts can sign in"
+          },
+          "defaultLanguage": {
+            "type": "string",
+            "enum": [
+              "en",
+              "fa"
+            ],
+            "description": "The web app's language until someone picks one"
+          },
+          "defaultHomeTz": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Asia/Tehran",
+            "description": "New accounts' home zone; null uses each browser's"
+          },
+          "defaultSecondaryCalendar": {
+            "type": "string",
+            "enum": [
+              "none",
+              "jalali"
+            ],
+            "description": "The second calendar new accounts start with"
+          }
+        },
+        "required": [
+          "name",
+          "signUps",
+          "defaultLanguage",
+          "defaultHomeTz",
+          "defaultSecondaryCalendar"
+        ]
+      },
+      "InstanceSettingsPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "example": "Homa",
+            "description": "The instance's name"
+          },
+          "signUps": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "description": "Closed: only existing accounts can sign in"
+          },
+          "defaultLanguage": {
+            "type": "string",
+            "enum": [
+              "en",
+              "fa"
+            ],
+            "description": "The web app's language until someone picks one"
+          },
+          "defaultHomeTz": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Asia/Tehran",
+            "description": "New accounts' home zone; null uses each browser's"
+          },
+          "defaultSecondaryCalendar": {
+            "type": "string",
+            "enum": [
+              "none",
+              "jalali"
+            ],
+            "description": "The second calendar new accounts start with"
+          }
+        }
       }
     },
     "parameters": {}
@@ -561,6 +690,16 @@
           },
           "401": {
             "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
             "content": {
               "application/json": {
                 "schema": {
@@ -811,6 +950,16 @@
               }
             }
           },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not found",
             "content": {
@@ -881,6 +1030,16 @@
           },
           "401": {
             "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1056,6 +1215,127 @@
           },
           "401": {
             "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/instance": {
+      "get": {
+        "operationId": "getInstance",
+        "tags": [
+          "Instance"
+        ],
+        "summary": "The instance's name, whether sign-ups are open and whether it still needs its admin",
+        "responses": {
+          "200": {
+            "description": "The instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicInstance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/instance": {
+      "get": {
+        "operationId": "getInstanceSettings",
+        "tags": [
+          "Instance"
+        ],
+        "summary": "The instance's settings (admin only)",
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstanceSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateInstanceSettings",
+        "tags": [
+          "Instance"
+        ],
+        "summary": "Change the instance's settings (admin only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceSettingsPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The settings after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstanceSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
             "content": {
               "application/json": {
                 "schema": {

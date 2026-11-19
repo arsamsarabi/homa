@@ -1,9 +1,10 @@
-import { Alert, Anchor, Button, Container, Group, Stack, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SettingsFields } from '@/components';
+import { useSession } from '@/hooks/session';
 import { useSettingsDraft } from '@/hooks/settings';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
@@ -14,6 +15,7 @@ export function SettingsPage(): JSX.Element {
   const { t } = useTranslation();
   const draft = useSettingsDraft();
   const announce = useAnnouncer((s) => s.announce);
+  const isAdmin = useSession().data?.user.role === 'admin';
   const save = (): void => {
     draft
       .save()
@@ -39,6 +41,19 @@ export function SettingsPage(): JSX.Element {
             {t('settings.save')}
           </Button>
         </Group>
+        {isAdmin && (
+          <Stack component="section" gap="xs" aria-labelledby="instance-settings">
+            <Title order={2} size="h4" id="instance-settings">
+              {t('instance.title')}
+            </Title>
+            <Text size="sm" c="dimmed">
+              {t('instance.settingsLinkHint')}{' '}
+              <Anchor component={Link} to="/admin">
+                {t('instance.settingsLink')}
+              </Anchor>
+            </Text>
+          </Stack>
+        )}
       </Stack>
     </Container>
   );

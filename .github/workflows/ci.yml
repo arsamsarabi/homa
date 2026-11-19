@@ -64,6 +64,11 @@ jobs:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile
       - run: bunx playwright install --with-deps chromium
+      - name: First-run setup code from the API log
+        run: |
+          code=$(docker compose logs api | grep -oE 'first-run setup code: [0-9]{4}' | head -1 | grep -oE '[0-9]{4}$')
+          test -n "$code"
+          echo "HOMA_SETUP_CODE=$code" >> "$GITHUB_ENV"
       - run: bun run e2e:smoke
         env:
           BASE_URL: http://localhost:3000

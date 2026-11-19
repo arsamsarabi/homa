@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { createAuth } from '@/auth';
 import { createApp } from '@/http';
-import { freshDb, testDatabaseUrl } from '@/testing';
+import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 
 describe.skipIf(!testDatabaseUrl)('settings', () => {
   let t: Awaited<ReturnType<typeof freshDb>>;
@@ -22,7 +21,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
 
   beforeAll(async () => {
     t = await freshDb();
-    app = createApp({ db: t.db, auth: createAuth(t.db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000' }) });
+    app = createApp({ db: t.db, auth: testAuth(t.db) });
   });
   afterAll(() => t.drop());
 

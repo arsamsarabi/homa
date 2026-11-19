@@ -12,32 +12,41 @@ export type FakeApi = (url: URL, req: Request) => Response | Promise<Response>;
 export const json = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
+/** An instance that's set up, with sign-ups open; `/api/instance` answers this unless a fake overrides it. */
+export const setUpInstance = { name: 'Homa', signUpsOpen: true, needsSetup: false, defaultLanguage: 'en' };
+
+/** Better Auth's get-session body for Ada, with `role` ('user' unless given). */
+export const sessionBody = (role = 'user'): unknown => ({
+  user: {
+    id: 'u1',
+    name: 'Ada',
+    email: 'ada@example.com',
+    emailVerified: false,
+    role,
+    createdAt: '2026-11-01T00:00:00Z',
+    updatedAt: '2026-11-01T00:00:00Z',
+  },
+  session: {
+    id: 's1',
+    userId: 'u1',
+    token: 't',
+    expiresAt: '2099-01-01T00:00:00Z',
+    createdAt: '2026-11-01T00:00:00Z',
+    updatedAt: '2026-11-01T00:00:00Z',
+  },
+});
+
 /** Signed in as Ada, with `settings` (default: the browser's zone, no second calendar). */
 export const signedInWith =
-  (settings: { homeTz: string | null; secondaryCalendar: string }): FakeApi =>
+  (settings: { homeTz: string | null; secondaryCalendar: string }, role = 'user'): FakeApi =>
   (url) =>
     url.pathname === '/api/settings'
       ? json(settings)
       : url.pathname === '/api/auth/get-session'
-        ? json({
-            user: {
-              id: 'u1',
-              name: 'Ada',
-              email: 'ada@example.com',
-              emailVerified: false,
-              createdAt: '2026-11-01T00:00:00Z',
-              updatedAt: '2026-11-01T00:00:00Z',
-            },
-            session: {
-              id: 's1',
-              userId: 'u1',
-              token: 't',
-              expiresAt: '2099-01-01T00:00:00Z',
-              createdAt: '2026-11-01T00:00:00Z',
-              updatedAt: '2026-11-01T00:00:00Z',
-            },
-          })
-        : json({ error: `unexpected ${url.pathname}` }, 404);
+        ? json(sessionBody(role))
+        : url.pathname === '/api/instance'
+          ? json(setUpInstance)
+          : json({ error: `unexpected ${url.pathname}` }, 404);
 
 export const signedIn: FakeApi = signedInWith({ homeTz: null, secondaryCalendar: 'none' });
 

@@ -9,15 +9,18 @@ export type Language = keyof typeof languages;
 
 const STORAGE_KEY = 'homa-language';
 
-function initialLanguage(): Language {
+function savedLanguage(): Language | undefined {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'en' || saved === 'fa') return saved;
   } catch {
-    // Storage blocked (private mode): fall back to the browser's language.
+    // Storage blocked (private mode): nothing saved.
   }
-  return navigator.language.startsWith('fa') ? 'fa' : 'en';
+  return undefined;
 }
+
+// Until the instance's default arrives, the browser's language.
+const initialLanguage = (): Language => savedLanguage() ?? (navigator.language.startsWith('fa') ? 'fa' : 'en');
 
 /** Sets <html lang/dir> to match; Mantine reads the direction from there. */
 function applyToDocument(lng: Language): void {
@@ -31,6 +34,13 @@ export function setLanguage(lng: Language): void {
   } catch {
     // Storage blocked: the choice lasts until reload.
   }
+  void i18n.changeLanguage(lng);
+  applyToDocument(lng);
+}
+
+/** Uses the instance's default language, unless this browser has a saved choice. */
+export function applyDefaultLanguage(lng: Language): void {
+  if (savedLanguage() || i18n.language === lng) return;
   void i18n.changeLanguage(lng);
   applyToDocument(lng);
 }
