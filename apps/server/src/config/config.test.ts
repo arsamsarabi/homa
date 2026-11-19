@@ -15,6 +15,7 @@ test('every problem is listed at once', () => {
 
 test('connected-calendar settings: an optional 32-byte key, the interval and the private-network flag', () => {
   expect(loadConfig(valid).HOMA_ENCRYPTION_KEY).toBeUndefined();
+  expect(loadConfig({ ...valid, HOMA_ENCRYPTION_KEY: '' }).HOMA_ENCRYPTION_KEY).toBeUndefined();
   expect(loadConfig(valid)).toMatchObject({
     HOMA_SYNC_INTERVAL_MINUTES: 30,
     HOMA_SYNC_ALLOW_PRIVATE_NETWORKS: false,

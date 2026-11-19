@@ -27,10 +27,14 @@ const Env = z.object({
     .optional(),
   // Encrypts connected calendars' credentials (feed URLs, later OAuth tokens) at rest. Optional until
   // someone adds a connected calendar; a server with connections refuses to start without it.
-  HOMA_ENCRYPTION_KEY: z
-    .string()
-    .refine(isKey, 'HOMA_ENCRYPTION_KEY must be 32 bytes, base64-encoded (try: openssl rand -base64 32)')
-    .optional(),
+  // Empty counts as unset: compose passes `${HOMA_ENCRYPTION_KEY:-}` through.
+  HOMA_ENCRYPTION_KEY: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z
+      .string()
+      .refine(isKey, 'HOMA_ENCRYPTION_KEY must be 32 bytes, base64-encoded (try: openssl rand -base64 32)')
+      .optional(),
+  ),
   // How often each connected calendar is synced, in minutes.
   HOMA_SYNC_INTERVAL_MINUTES: z.coerce.number().int().min(5).max(1440).default(30),
   // Lets feeds on loopback and private networks be subscribed to (refused by default: SSRF).
