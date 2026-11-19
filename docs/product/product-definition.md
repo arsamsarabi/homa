@@ -173,3 +173,4 @@ Draft → open → deadline reached or closed early → finalized. Finalizing cr
 1. Poll UI: which of the calendar and Gantt views is the default, and how they switch. To be settled in design.
 2. Mitra import: depends on Mitra's export format; check before promising it.
 3. Google OAuth app verification for hosted use: required scopes for two-way calendar access are sensitive and need Google review.
+4. Iran holiday feed licensing: the holiday catalog (`packages/sync/src/holidays/catalog.ts`) points the Iran entries at Google Calendar's public holiday feeds, which have no open license (the UK entries use GOV.UK under the Open Government Licence). Check whether that use is fine, or find an openly licensed source, before v1.
