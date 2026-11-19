@@ -6,8 +6,9 @@ import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { calendarOut } from '@/calendar';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
+import * as caldav from './caldav-service';
 import * as service from './connections-service';
-import { Connection, HolidayFeed, SubscribeInput } from './schemas';
+import { CaldavInput, ChooseCalendarsInput, Connection, HolidayFeed, RemoteCalendar, SubscribeInput } from './schemas';
 import { NO_SYNC, type SyncSettings } from './sync-settings';
 
 const tags = ['Connected calendars'];
@@ -32,6 +33,58 @@ const r = {
       'Fetches the feed, then adds a read-only calendar with its events; it syncs again on a schedule. Feeds on private networks are refused unless the server allows them.',
     request: jsonBody(SubscribeInput),
     responses: { 201: jsonContent(Connection, 'Subscribed'), 400: errors[400], 401: errors[401], 503: unavailable },
+  }),
+  addCaldav: createRoute({
+    method: 'post',
+    path: '/connections/caldav',
+    operationId: 'addCaldav',
+    tags,
+    summary: 'Connect a CalDAV account',
+    description:
+      'Checks the account with an app password (iCloud, Fastmail, Nextcloud and other CalDAV servers) and saves it without calendars; choose them next with PUT /connections/{id}/calendars. The password is stored encrypted and never returned.',
+    request: jsonBody(CaldavInput),
+    responses: { 201: jsonContent(Connection, 'Connected'), 400: errors[400], 401: errors[401], 503: unavailable },
+  }),
+  remoteCalendars: createRoute({
+    method: 'get',
+    path: '/connections/{id}/remote-calendars',
+    operationId: 'listRemoteCalendars',
+    tags,
+    summary: 'The calendars on a CalDAV account, and which of them sync',
+    request: { params: Id },
+    responses: {
+      200: jsonContent(z.array(RemoteCalendar), 'Calendars that hold events'),
+      400: errors[400],
+      401: errors[401],
+      404: errors[404],
+      503: unavailable,
+    },
+  }),
+  chooseCalendars: createRoute({
+    method: 'put',
+    path: '/connections/{id}/calendars',
+    operationId: 'chooseCalendars',
+    tags,
+    summary: 'Choose which calendars of a CalDAV account sync',
+    description:
+      'New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).',
+    request: { params: Id, ...jsonBody(ChooseCalendarsInput) },
+    responses: {
+      200: jsonContent(Connection, 'After the first sync of new calendars'),
+      400: errors[400],
+      401: errors[401],
+      404: errors[404],
+      503: unavailable,
+    },
+  }),
+  dismissNotice: createRoute({
+    method: 'delete',
+    path: '/connections/{id}/notice',
+    operationId: 'dismissConnectionNotice',
+    tags,
+    summary: "Dismiss a connection's notice",
+    request: { params: Id },
+    responses: { 204: { description: 'Dismissed' }, 401: errors[401], 404: errors[404] },
   }),
   syncNow: createRoute({
     method: 'post',
@@ -65,9 +118,12 @@ const r = {
 const connectionOut = ({ connection: c, calendars }: service.ConnectionView): z.infer<typeof Connection> => ({
   id: c.id,
   provider: c.provider,
+  label: c.label,
   status: c.status,
   lastError: c.lastError,
   lastSyncedAt: c.lastSyncedAt?.toISOString() ?? null,
+  notice: c.notice,
+  noticeAt: c.noticeAt?.toISOString() ?? null,
   createdAt: c.createdAt.toISOString(),
   calendars: calendars.map(calendarOut),
 });
@@ -91,6 +147,39 @@ export function connectionsApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings 
     .openapi(r.subscribe, async (c) =>
       c.json(connectionOut(await service.subscribe(db(), settings, c.var.userId, c.req.valid('json'))), 201),
     )
+    .openapi(r.addCaldav, async (c) =>
+      c.json(connectionOut(await caldav.addCaldav(db(), settings, c.var.userId, c.req.valid('json'))), 201),
+    )
+    .openapi(r.remoteCalendars, async (c) =>
+      c.json(
+        (await caldav.listRemoteCalendars(db(), settings, c.var.userId, c.req.valid('param').id)).map((x) => ({
+          remoteId: x.remoteId,
+          name: x.name,
+          color: x.color ?? null,
+          readOnly: x.readOnly,
+          selected: x.selected,
+        })),
+        200,
+      ),
+    )
+    .openapi(r.chooseCalendars, async (c) =>
+      c.json(
+        connectionOut(
+          await caldav.chooseCalendars(
+            db(),
+            settings,
+            c.var.userId,
+            c.req.valid('param').id,
+            c.req.valid('json').remoteIds,
+          ),
+        ),
+        200,
+      ),
+    )
+    .openapi(r.dismissNotice, async (c) => {
+      await service.dismissNotice(db(), c.var.userId, c.req.valid('param').id);
+      return c.body(null, 204);
+    })
     .openapi(r.syncNow, async (c) =>
       c.json(connectionOut(await service.syncNow(db(), settings, c.var.userId, c.req.valid('param').id)), 200),
     )

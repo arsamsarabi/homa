@@ -3,12 +3,13 @@ import type { Db } from '@homa/db';
 import { PgBoss } from 'pg-boss';
 import { purgeExpiredAuth } from '@/auth';
 import { extendHorizon } from '@/calendar';
-import { type SyncSettings, syncDueConnections } from '@/connections';
+import { pushDueOutboxes, type SyncSettings, syncDueConnections } from '@/connections';
 import { errorFields, log } from '@/log';
 
 export const PURGE_AUTH = 'maintenance.purge-auth';
 export const EXTEND_HORIZON = 'calendar.extend-horizon';
 export const SYNC_CONNECTIONS = 'sync.connections';
+export const SYNC_OUTBOX = 'sync.outbox';
 
 type Schedule = { name: string; cron: string; run: (db: Db) => Promise<unknown> };
 
@@ -21,6 +22,8 @@ const schedules = (sync: SyncSettings): Schedule[] => [
   }, // daily, 02:41 UTC
   // Every 5 minutes, syncs the connections last tried more than HOMA_SYNC_INTERVAL_MINUTES ago.
   { name: SYNC_CONNECTIONS, cron: '*/5 * * * *', run: (db: Db): Promise<unknown> => syncDueConnections(db, sync) },
+  // Every minute, pushes local changes waiting in the outbox of two-way (CalDAV) calendars.
+  { name: SYNC_OUTBOX, cron: '* * * * *', run: (db: Db): Promise<unknown> => pushDueOutboxes(db, sync) },
 ];
 
 export async function startWorker(databaseUrl: string, db: Db, sync: SyncSettings): Promise<PgBoss> {
