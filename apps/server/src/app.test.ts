@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { app } from './app';
+import { createApp } from './app';
+
+const app = createApp();
 
 describe('api', () => {
   test('GET /api/health answers ok', async () => {
