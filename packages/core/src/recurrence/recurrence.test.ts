@@ -80,6 +80,42 @@ describe('expand', () => {
   });
 });
 
+describe('RDATE', () => {
+  // Two weekly stand-ups before the clock change, plus extra dates after it (09:00 BST is 08:00 UTC).
+  const series: Series = {
+    ...standup,
+    rrule: 'FREQ=WEEKLY;BYDAY=MO;COUNT=2',
+    rdates: [d('2026-04-01T08:00:00Z'), d('2026-03-23T09:00:00Z'), d('2026-04-08T08:00:00Z')],
+  };
+
+  test('adds dates to the rule, in order, once each, with the series duration', () => {
+    const occ = expand(series, ...all);
+    expect(iso(occ)).toEqual([
+      '2026-03-16T09:00:00.000Z',
+      '2026-03-23T09:00:00.000Z',
+      '2026-04-01T08:00:00.000Z',
+      '2026-04-08T08:00:00.000Z',
+    ]);
+    expect(occ[2]?.end.toISOString()).toBe('2026-04-01T08:15:00.000Z');
+  });
+
+  test('EXDATE cancels an RDATE, and the range still applies', () => {
+    const occ = expand(
+      { ...series, exdates: [d('2026-04-01T08:00:00Z')] },
+      d('2026-03-20T00:00:00Z'),
+      d('2026-04-30T00:00:00Z'),
+    );
+    expect(iso(occ)).toEqual(['2026-03-23T09:00:00.000Z', '2026-04-08T08:00:00.000Z']);
+  });
+
+  test('works without an RRULE', () => {
+    expect(iso(expand({ ...standup, rrule: null, rdates: [d('2026-04-01T08:00:00Z')] }, ...all))).toEqual([
+      '2026-03-16T09:00:00.000Z',
+      '2026-04-01T08:00:00.000Z',
+    ]);
+  });
+});
+
 describe('splitting a series', () => {
   test('endBefore stops the series just before the occurrence', () => {
     const rrule = endBefore(standup.rrule ?? '', d('2026-03-30T08:00:00Z'));

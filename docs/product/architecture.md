@@ -67,7 +67,7 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | `instance_settings` | Not per user: one row (a check keeps it at `id = 1`, its migration inserts it) with `instance_name`, `sign_ups` (`open`, `closed`), `default_language` (`en`, `fa`) and what new accounts start with: `default_home_tz` (null: the browser's) and `default_secondary_calendar` |
 | `connections` | Provider, encrypted credentials (OAuth tokens or app password), sync state, status, last error |
 | `calendars` | `connection_id` null for native; color, visibility, remote id, sync token or ctag |
-| `events` | Master record: summary, description, location, start/end, all-day, tz, `rrule`, `exdates`, `rdates`, remote uid and etag, `source` (`native`, `routine`, `task_block`, `poll`, `hold`) |
+| `events` | Master record: summary, description, location, start/end, all-day, tz, `rrule`, `exdates`, `rdates`, iCalendar `uid` (unique per calendar), remote etag, `source` (`native`, `routine`, `task_block`, `poll`, `hold`) |
 | `event_overrides` | Per-occurrence changes keyed by `recurrence_id` |
 | `event_instances` | Expansion cache: one row per occurrence inside a rolling window (for example 18 months ahead), `tstzrange` with GiST index. Rebuilt per event on change |
 | `attendees` | Per event: email or user, role, RSVP |
@@ -85,7 +85,7 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 
 ### Recurrence and the expansion cache
 
-RRULE, EXDATE and overrides are the source of truth (RDATE comes with ICS import in phase 2d), because they round-trip with CalDAV, Google and Microsoft. Every write to an event re-expands that event into `event_instances` up to about 18 months ahead (`expanded_until` on the event); the nightly `calendar.extend-horizon` job moves that window forward, and range reads past it expand the series on the fly. Expansion walks the RRULE in local wall-clock time with `ical.js` and places each occurrence in the event's zone with `Temporal`, so no `VTIMEZONE` is needed. An occurrence whose time was never changed follows the series when the series moves. Reads for views, free/busy and polls query `event_instances` by range. Edits of "this and following" split the series into two masters, as RFC 5545 clients do.
+RRULE, RDATE, EXDATE and overrides are the source of truth, because they round-trip with CalDAV, Google and Microsoft. Every write to an event re-expands that event into `event_instances` up to about 18 months ahead (`expanded_until` on the event); the nightly `calendar.extend-horizon` job moves that window forward, and range reads past it expand the series on the fly. Expansion walks the RRULE in local wall-clock time with `ical.js` and places each occurrence in the event's zone with `Temporal`, so no `VTIMEZONE` is needed. RDATEs are stored as instants and added to the RRULE's occurrences (once each, with the series' duration); EXDATEs remove either. Series edits move the RDATEs with the series, and a "this and following" split divides them at the cut. An occurrence whose time was never changed follows the series when the series moves. Reads for views, free/busy and polls query `event_instances` by range. Edits of "this and following" split the series into two masters, as RFC 5545 clients do.
 
 The web app shows the calendar in one zone: the user's home zone (`home_tz`, or the browser's when unset), or another picked for the view (`?tz=` in the URL). It converts each instant to "wall time" in that zone, a `Date` whose UTC fields are that zone's clock, so day and week math has no clock changes and never depends on the browser's own zone; drags and the event form convert back to instants (a skipped time moves forward by the gap, a repeated one takes the earlier, as Temporal's `compatible`). New timed events take the viewed zone; the event form can change it. With `secondary_calendar = jalali`, views add Solar Hijri dates (Intl's `persian` calendar) and Persian occasions: Nowruz, Sizdah Bedar, Chaharshanbe Suri and Yalda.
 
@@ -96,6 +96,49 @@ The first account on an instance becomes its admin (`users.role = 'admin'`, set 
 The admin sign-up is gated by a 4-digit setup code, so whoever reaches a fresh instance first can't take it over. The API makes the code at start (when there are no users), prints it to the log (`first-run setup code: 1234`), and keeps it in memory. The setup page sends it in the `x-homa-setup-code` header with the sign-up, and the user-create hook rejects the first account without it (403). Five wrong codes replace it with a new one, printed again. `HOMA_SETUP_CODE` pins the code for automated tests. The code lives in one API process, so with several API replicas the first sign-up must reach the one whose log you read.
 
 The admin changes the instance settings later at `/admin`, linked from Settings for admins only; `GET`/`PATCH /api/admin/instance` check the role on the server (401 signed out, 403 for non-admins). The same hook turns self sign-ups away with a 403 while `sign_ups = closed` (accounts the admin creates still work), and gives every new account the default home zone and second calendar. The web app uses `default_language` when the browser has no saved language choice; the sign-in page hides the sign-up link while sign-ups are closed.
+
+### ICS import and JSON export
+
+`POST /api/calendars/{id}/import` takes an `.ics` file (`text/calendar`) into one of the caller's calendars; anyone else's calendar is a 404. `@homa/core` (`src/ics/`) parses it before the transaction; then one transaction inserts or replaces each event, writes its overrides and re-expands it into `event_instances`. The response counts imported, updated and skipped events, with up to 50 warnings.
+
+The file is treated as hostile:
+
+| Limit | Value |
+| --- | --- |
+| Size | 5 MB (checked on the request body before it is read whole) |
+| Components (`BEGIN:` lines) | 5,000 |
+| EXDATEs and RDATEs per event | 1,000 each |
+| Occurrences one import adds to the cache | 200,000; past that the whole import rolls back |
+| Strings | summary 500, location 500, description 10,000 characters, UID 255; control characters are dropped |
+
+Nothing in the file is fetched. VALARM, ATTACH and X- properties are ignored (X-LIC-LOCATION inside a VTIMEZONE is read only to name its zone). A file that isn't iCalendar, or breaks a limit, is a 400 with the reason; one unusable event is skipped with a warning.
+
+Mapping, per VEVENT:
+
+- SUMMARY, DESCRIPTION, LOCATION as text; DTSTART with DTEND or DURATION. An all-day event without an end lasts a day; a timed event without a length is skipped.
+- `VALUE=DATE` gives an all-day event at UTC midnights with `tz = 'UTC'`.
+- A DATE-TIME is read as wall-clock fields and placed with `Temporal`, never with the file's VTIMEZONE rules. Its TZID becomes an IANA zone: an IANA name (also behind a prefix such as `/mozilla.org/…/Europe/London`), a Windows name from CLDR's table (Outlook and Exchange often send no VTIMEZONE), or the X-LIC-LOCATION of the file's VTIMEZONE for that TZID. Otherwise the times are read as UTC and a warning names the TZID. `Z` times are UTC; floating times use the user's home zone (UTC when unset).
+- RRULE, EXDATE and RDATE as stored. An RDATE `PERIOD` keeps only its start.
+- A component with RECURRENCE-ID becomes an override in `event_overrides`, keeping only the fields that differ from the series; a cancelled one (`STATUS:CANCELLED`) becomes an EXDATE. One without its series in the file is skipped.
+- The UID matches events within the calendar (`events_calendar_uid_key`), so importing the same file twice updates the events and replaces their overrides instead of adding copies. Events without a UID, with a UID used twice, or cancelled masters are skipped.
+
+Golden fixtures in the shape of Google, Outlook and iCloud exports (`packages/core/src/ics/fixtures/`) cover DST-crossing weekly series with moved and cancelled occurrences, Windows zone names and RDATEs.
+
+`GET /api/export` downloads everything the user owns as one JSON document (`Content-Disposition: attachment`):
+
+```json
+{
+  "version": 1,
+  "exportedAt": "2026-11-19T12:00:00.000Z",
+  "settings": { "homeTz": "Europe/London", "secondaryCalendar": "none" },
+  "calendars": [{ "id": "…", "name": "Personal", "color": "#4a4e69", "createdAt": "…", "updatedAt": "…" }],
+  "events": [{ "id": "…", "calendarId": "…", "uid": "…", "summary": "…", "start": "…", "end": "…", "allDay": false,
+    "tz": "Europe/London", "rrule": "FREQ=WEEKLY;BYDAY=MO", "exdates": [], "rdates": [],
+    "overrides": [{ "recurrenceId": "…", "start": "…", "end": "…", "summary": null, "description": null, "location": null }] }]
+}
+```
+
+Events have the same fields as `GET /api/events/{id}`. `version` goes up when a field changes meaning or goes away; added fields keep it.
 
 ### Availability engine
 

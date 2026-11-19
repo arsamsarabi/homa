@@ -169,6 +169,46 @@ export interface paths {
         patch: operations["updateInstanceSettings"];
         trace?: never;
     };
+    "/calendars/{id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import an .ics file into one of your calendars
+         * @description Events are matched by UID within the calendar, so importing the same file again updates them. Alarms, attachments and X- properties are ignored, and nothing in the file is fetched.
+         */
+        post: operations["importIcs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download all of your data as JSON
+         * @description Settings, calendars, and events with their recurrence rules and overrides, as an attachment.
+         */
+        get: operations["exportData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -213,6 +253,7 @@ export interface components {
             tz: string;
             rrule: string | null;
             exdates: string[];
+            rdates: string[];
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -363,6 +404,40 @@ export interface components {
              * @enum {string}
              */
             defaultSecondaryCalendar?: "none" | "jalali";
+        };
+        ImportSummary: {
+            /** @description New events */
+            imported: number;
+            /** @description Events already in the calendar (same UID), replaced */
+            updated: number;
+            /** @description Events left out; the warnings say why */
+            skipped: number;
+            /** @description At most 50 */
+            warnings: string[];
+        };
+        DataExport: {
+            /** @enum {number} */
+            version: 1;
+            /** Format: date-time */
+            exportedAt: string;
+            settings: {
+                homeTz: string | null;
+                secondaryCalendar: string;
+            };
+            calendars: components["schemas"]["Calendar"][];
+            events: (components["schemas"]["Event"] & {
+                overrides: {
+                    /** Format: date-time */
+                    recurrenceId: string;
+                    /** Format: date-time */
+                    start: string;
+                    /** Format: date-time */
+                    end: string;
+                    summary: string | null;
+                    description: string | null;
+                    location: string | null;
+                }[];
+            })[];
         };
     };
     responses: never;
@@ -988,6 +1063,97 @@ export interface operations {
             };
             /** @description Not allowed */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    importIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/calendar": string;
+            };
+        };
+        responses: {
+            /** @description What was imported */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportSummary"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    exportData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExport"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

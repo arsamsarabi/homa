@@ -20,6 +20,7 @@ describe('planChange', () => {
       start: d('2026-03-16T10:00:00Z'),
       end: d('2026-03-16T10:15:00Z'),
       exdates: [],
+      rdates: [],
       shiftMs: 3_600_000,
       durationMs: 900_000,
     });
@@ -49,7 +50,13 @@ describe('planChange', () => {
   });
 
   test('scope=following splits the series and carries the remaining COUNT over', () => {
-    const plan = planChange(standup, { start: d('2026-03-30T08:30:00Z') }, 'following', d('2026-03-30T08:00:00Z'));
+    const rdates = [d('2026-03-18T09:00:00Z'), d('2026-04-01T08:00:00Z')];
+    const plan = planChange(
+      { ...standup, rdates },
+      { start: d('2026-03-30T08:30:00Z') },
+      'following',
+      d('2026-03-30T08:00:00Z'),
+    );
     if (plan.kind !== 'split') throw new Error(`expected a split, got ${plan.kind}`);
     expect(plan.start).toEqual(d('2026-03-30T08:30:00Z'));
     expect(plan.end).toEqual(d('2026-03-30T08:45:00Z'));
@@ -58,6 +65,9 @@ describe('planChange', () => {
     expect(plan.previousRrule).toContain('UNTIL=');
     expect(plan.previousExdates).toEqual([d('2026-03-23T09:00:00Z')]);
     expect(plan.exdates).toEqual([]);
+    // RDATEs split the same way, and the later ones move with the new series.
+    expect(plan.previousRdates).toEqual([d('2026-03-18T09:00:00Z')]);
+    expect(plan.rdates).toEqual([d('2026-04-01T08:30:00Z')]);
   });
 });
 

@@ -195,5 +195,21 @@
     "loadFailed": "Couldn't load the instance settings",
     "saved": "Instance settings saved",
     "saveFailed": "Couldn't save the instance settings: {{message}}"
+  },
+  "importExport": {
+    "title": "Import and export",
+    "importHint": "Add events from an .ics file exported from Google Calendar, Outlook, Apple Calendar or another app. Importing the same file again updates those events.",
+    "calendar": "Calendar",
+    "file": "iCalendar file (.ics)",
+    "filePlaceholder": "Choose a file",
+    "import": "Import",
+    "importing": "Importing…",
+    "calendarsFailed": "Couldn't load your calendars",
+    "failed": "Couldn't import the file: {{message}}",
+    "done": "Import finished",
+    "summary": "New events: {{imported}}. Updated: {{updated}}. Skipped: {{skipped}}.",
+    "warnings": "Notes",
+    "exportHint": "Download your settings, calendars and events as a JSON file, for a backup or to move to another Homa.",
+    "export": "Download my data (JSON)"
   }
 }

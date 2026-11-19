@@ -79,6 +79,7 @@ export function updateEvent(
           startAt: plan.start,
           endAt: plan.end,
           exdates: plan.exdates,
+          rdates: plan.rdates,
         });
         if (e.rrule) await repo.shiftOverrides(tx, id, plan.shiftMs, plan.durationMs);
         await reexpand(tx, id);
@@ -100,12 +101,17 @@ export function updateEvent(
           endAt: plan.end,
           rrule: plan.rrule,
           exdates: plan.exdates,
+          rdates: plan.rdates,
         });
         await repo.shiftOverrides(tx, id, plan.shiftMs, plan.durationMs, {
           from: plan.recurrenceId,
           toEventId: created.id,
         });
-        await repo.updateEventColumns(tx, id, { rrule: plan.previousRrule, exdates: plan.previousExdates });
+        await repo.updateEventColumns(tx, id, {
+          rrule: plan.previousRrule,
+          exdates: plan.previousExdates,
+          rdates: plan.previousRdates,
+        });
         await reexpand(tx, id);
         await reexpand(tx, created.id);
         return ownEvent(tx, userId, created.id);
@@ -132,7 +138,7 @@ export async function deleteEvent(
         await repo.deleteOverrides(tx, id, plan.recurrenceId);
         break;
       case 'following':
-        await repo.updateEventColumns(tx, id, { rrule: plan.rrule, exdates: plan.exdates });
+        await repo.updateEventColumns(tx, id, { rrule: plan.rrule, exdates: plan.exdates, rdates: plan.rdates });
         await repo.deleteOverrides(tx, id, plan.recurrenceId, true);
         break;
     }

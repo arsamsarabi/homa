@@ -25,6 +25,7 @@ export const eventOut = (e: repo.EventRow): z.infer<typeof Event> => ({
   tz: e.tz,
   rrule: e.rrule,
   exdates: e.exdates.map((d) => d.toISOString()),
+  rdates: e.rdates.map((d) => d.toISOString()),
   createdAt: e.createdAt.toISOString(),
   updatedAt: e.updatedAt.toISOString(),
 });

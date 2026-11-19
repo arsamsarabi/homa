@@ -4,6 +4,8 @@ export {
   CalendarSchema,
   EventSchema,
   type HomaEvent,
+  type ImportSummary,
+  ImportSummarySchema,
   type Occurrence,
   OccurrenceListSchema,
   OccurrenceSchema,

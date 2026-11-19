@@ -26,7 +26,7 @@ Status: done 2026-11-19 (pull requests #2 to #7). Spike results are in [architec
 
 Delivered in four pull requests: 2a events, recurrence and the API; 2b the calendar views; 2c time zones and the Jalali calendar; 2d ICS import and JSON export.
 
-Status: 2a done (#8); 2b done (#9); 2c in review.
+Status: 2a done (#8); 2b done (#9); 2c done (#11); 2d in review.
 
 - Calendars and events CRUD, RRULE with overrides and "this / this and following / all" edits.
 - Expansion cache and range queries.
