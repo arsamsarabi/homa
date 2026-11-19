@@ -26,7 +26,7 @@ Status: done 2026-11-19 (pull requests #2 to #7). Spike results are in [architec
 
 Delivered in four pull requests: 2a events, recurrence and the API; 2b the calendar views; 2c time zones and the Jalali calendar; 2d ICS import and JSON export.
 
-Status: 2a done (#8); 2b done (#9); 2c done (#11); 2d in review.
+Status: done (2a #8, 2b #9, 2c #11, 2d #14).
 
 - Calendars and events CRUD, RRULE with overrides and "this / this and following / all" edits.
 - Expansion cache and range queries.
@@ -35,6 +35,10 @@ Status: 2a done (#8); 2b done (#9); 2c done (#11); 2d in review.
 - ICS file import and JSON export.
 
 ## Phase 3: external calendars
+
+Delivered in four pull requests: 3a the connection model, encrypted credentials, the sync worker, ICS subscriptions, the holiday catalog and the connection status UI; 3b CalDAV two-way with the outbox; 3c Google; 3d Microsoft.
+
+Status: 3a in review.
 
 - Connection model, encrypted credentials, sync worker and outbox.
 - ICS subscriptions and the holiday catalog.

@@ -1,4 +1,14 @@
+import { parseCredentialKey } from '@homa/sync';
 import { z } from 'zod';
+
+const isKey = (v: string): boolean => {
+  try {
+    parseCredentialKey(v);
+    return true;
+  } catch {
+    return false; // reported by the refine below
+  }
+};
 
 const Env = z.object({
   DATABASE_URL: z.string().url(),
@@ -15,6 +25,23 @@ const Env = z.object({
     .string()
     .regex(/^\d{4}$/, 'HOMA_SETUP_CODE must be 4 digits')
     .optional(),
+  // Encrypts connected calendars' credentials (feed URLs, later OAuth tokens) at rest. Optional until
+  // someone adds a connected calendar; a server with connections refuses to start without it.
+  // Empty counts as unset: compose passes `${HOMA_ENCRYPTION_KEY:-}` through.
+  HOMA_ENCRYPTION_KEY: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z
+      .string()
+      .refine(isKey, 'HOMA_ENCRYPTION_KEY must be 32 bytes, base64-encoded (try: openssl rand -base64 32)')
+      .optional(),
+  ),
+  // How often each connected calendar is synced, in minutes.
+  HOMA_SYNC_INTERVAL_MINUTES: z.coerce.number().int().min(5).max(1440).default(30),
+  // Lets feeds on loopback and private networks be subscribed to (refused by default: SSRF).
+  HOMA_SYNC_ALLOW_PRIVATE_NETWORKS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Config = z.infer<typeof Env>;

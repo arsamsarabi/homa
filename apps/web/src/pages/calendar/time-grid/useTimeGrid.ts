@@ -1,5 +1,5 @@
 // Day and week view data: what goes in the all-day row and each column, the clock, the start scroll.
-import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { type PointerEvent as ReactPointerEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { allDayRowItems, type Placed, type TimedItem, timedColumnItems } from '@/services/calendar-layout';
@@ -25,7 +25,7 @@ export type TimeGridModel = GridDrag & {
 };
 
 export function useTimeGrid(): TimeGridModel {
-  const { range, tz, secondary, occurrences, editor, actions, pickDay } = useCalendarPageModel();
+  const { range, tz, secondary, occurrences, editor, actions, pickDay, isReadOnly } = useCalendarPageModel();
   const days = range.days;
   const occ = occurrences.data;
   const allDay = useMemo((): Occurrence[][] => allDayRowItems(days, occ ?? [], tz), [days, occ, tz]);
@@ -59,6 +59,17 @@ export function useTimeGrid(): TimeGridModel {
 
   return {
     ...gridDrag,
+    // A subscription's events don't move or resize: a press opens their details instead.
+    beginMove: (e: ReactPointerEvent, o: Occurrence): void => {
+      if (!isReadOnly(o.calendarId)) gridDrag.beginMove(e, o);
+      else {
+        e.stopPropagation();
+        if (e.button === 0 && e.pointerType !== 'touch') editor.openEdit(o);
+      }
+    },
+    beginResize: (e: ReactPointerEvent, o: Occurrence): void => {
+      if (!isReadOnly(o.calendarId)) gridDrag.beginResize(e, o);
+    },
     days,
     allDay,
     columns,

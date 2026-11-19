@@ -5,6 +5,7 @@ import type { Context } from 'hono';
 import { serveStatic } from 'hono/bun';
 import type { Auth } from '@/auth';
 import { calendarApi } from '@/calendar';
+import { connectionsApi, type SyncSettings } from '@/connections';
 import { importExportApi } from '@/import-export';
 import { instanceApi } from '@/instance';
 import { settingsApi } from '@/settings';
@@ -12,7 +13,8 @@ import { handleError, notFound } from './errors';
 import { healthApi } from './health';
 import { newApi, openApiConfig } from './openapi';
 
-export type AppDeps = { db: Db; auth: Auth };
+/** `sync` is the connected-calendar settings; without it those routes answer 503. */
+export type AppDeps = { db: Db; auth: Auth; sync?: SyncSettings };
 
 /** The /api routes. Without `deps` (tests, the OpenAPI dump) routes that need a user answer 401. */
 export function createApi(deps?: AppDeps): OpenAPIHono {
@@ -22,6 +24,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   api.route('/', settingsApi(deps));
   api.route('/', instanceApi(deps));
   api.route('/', importExportApi(deps));
+  api.route('/', connectionsApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;

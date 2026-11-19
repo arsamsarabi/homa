@@ -3,6 +3,7 @@ import { createDb, repo, runMigrations } from '@homa/db';
 import type { PgBoss } from 'pg-boss';
 import { createAuth } from './auth';
 import { type Config, loadConfig } from './config';
+import { syncSettingsFrom } from './connections';
 import { createApp } from './http';
 import { createSetupGate } from './instance';
 import { startWorker } from './jobs';
@@ -11,6 +12,7 @@ import { log } from './log';
 const config = loadConfig();
 const { db, pool } = createDb(config.DATABASE_URL);
 const role: Config['HOMA_ROLE'] = config.HOMA_ROLE;
+const sync = syncSettingsFrom(config);
 
 // Only the API applies migrations, so a separate worker never races it.
 if (role !== 'worker') {
@@ -26,18 +28,31 @@ const setupGate = createSetupGate({
 });
 if (role !== 'worker' && (await repo.countUsers(db)) === 0) setupGate.current();
 
+// Connected calendars' credentials can't be read without the key they were encrypted with.
+if (!sync.key && (await repo.countConnections(db)) > 0) {
+  log.error(
+    'HOMA_ENCRYPTION_KEY is not set, but this instance has connected calendars. Set it to the key they were added with.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 const server =
   role === 'worker'
     ? undefined
     : Bun.serve({
         port: config.PORT,
         fetch: createApp(
-          { db, auth: createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL, setupGate }) },
+          {
+            db,
+            auth: createAuth(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL, setupGate }),
+            sync,
+          },
           config.HOMA_WEB_DIR,
         ).fetch,
       });
 
-const boss: PgBoss | undefined = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db);
+const boss: PgBoss | undefined = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db, sync);
 
 log.info('homa started', { role, ...(server && { url: `http://localhost:${server.port}` }) });
 

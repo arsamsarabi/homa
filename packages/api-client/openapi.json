@@ -44,6 +44,18 @@
             "type": "string",
             "pattern": "^#[0-9a-f]{6}$/i"
           },
+          "connectionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The connection it syncs with; null for your own"
+          },
+          "readOnly": {
+            "type": "boolean",
+            "description": "Events here cannot be created, changed or deleted (subscriptions)"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -57,6 +69,8 @@
           "id",
           "name",
           "color",
+          "connectionId",
+          "readOnly",
           "createdAt",
           "updatedAt"
         ]
@@ -667,6 +681,150 @@
           "calendars",
           "events"
         ]
+      },
+      "Connection": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "ics",
+              "caldav",
+              "google",
+              "microsoft"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "syncing",
+              "ok",
+              "error"
+            ]
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the last sync failed; null after a good one"
+          },
+          "lastSyncedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the last sync ran, whether or not it worked"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "calendars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Calendar"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "status",
+          "lastError",
+          "lastSyncedAt",
+          "createdAt",
+          "calendars"
+        ]
+      },
+      "SubscribeInput": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9a-f]{6}$/i"
+              }
+            },
+            "required": [
+              "url"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "holidayId": {
+                "type": "string",
+                "maxLength": 50
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9a-f]{6}$/i"
+              }
+            },
+            "required": [
+              "holidayId"
+            ]
+          }
+        ],
+        "description": "An ICS feed by URL (http, https or webcal), or a feed from the holiday catalog by id"
+      },
+      "HolidayFeed": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "names": {
+            "type": "object",
+            "properties": {
+              "en": {
+                "type": "string"
+              },
+              "fa": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "fa"
+            ]
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "country",
+          "names",
+          "source"
+        ]
       }
     },
     "parameters": {}
@@ -847,7 +1005,7 @@
             }
           },
           "403": {
-            "description": "Not allowed",
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -874,6 +1032,7 @@
           "Calendars"
         ],
         "summary": "Delete a calendar and its events",
+        "description": "A subscribed calendar is removed with its connection (DELETE /connections/{id}) instead: 400.",
         "parameters": [
           {
             "schema": {
@@ -888,6 +1047,16 @@
         "responses": {
           "204": {
             "description": "Deleted"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "401": {
             "description": "Not signed in",
@@ -952,6 +1121,16 @@
           },
           "401": {
             "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1099,7 +1278,7 @@
             }
           },
           "403": {
-            "description": "Not allowed",
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1187,7 +1366,7 @@
             }
           },
           "403": {
-            "description": "Not allowed",
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1424,7 +1603,7 @@
             }
           },
           "403": {
-            "description": "Not allowed",
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1483,7 +1662,7 @@
             }
           },
           "403": {
-            "description": "Not allowed",
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1558,7 +1737,7 @@
             }
           },
           "403": {
-            "description": "Not allowed",
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1595,6 +1774,260 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DataExport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections": {
+      "get": {
+        "operationId": "listConnections",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Your connected calendars, with their sync status",
+        "responses": {
+          "200": {
+            "description": "Connections, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Connection"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/ics": {
+      "post": {
+        "operationId": "subscribeIcs",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Subscribe to an ICS feed",
+        "description": "Fetches the feed, then adds a read-only calendar with its events; it syncs again on a schedule. Feeds on private networks are refused unless the server allows them.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subscribed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/{id}/sync": {
+      "post": {
+        "operationId": "syncConnection",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Sync a connection now",
+        "description": "Answers with the connection after the sync; a failure shows in its status and lastError.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "After the sync",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Connection"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/{id}": {
+      "delete": {
+        "operationId": "deleteConnection",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Remove a connection, its calendars and their events",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/holiday-calendars": {
+      "get": {
+        "operationId": "listHolidayCalendars",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Public-holiday feeds you can subscribe to",
+        "responses": {
+          "200": {
+            "description": "The catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HolidayFeed"
+                  }
                 }
               }
             }

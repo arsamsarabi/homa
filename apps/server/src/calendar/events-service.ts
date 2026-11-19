@@ -10,7 +10,7 @@ import {
   type Scope,
 } from '@homa/core';
 import { type Db, type Executor, repo } from '@homa/db';
-import { requireOwnCalendar } from './calendars-service';
+import { requireWritableCalendar } from './calendars-service';
 import { reexpand } from './instance-cache';
 
 const newUid = (): string => `${crypto.randomUUID()}@homa`;
@@ -18,6 +18,13 @@ const newUid = (): string => `${crypto.randomUUID()}@homa`;
 async function ownEvent(db: Executor, userId: string, id: string): Promise<repo.EventRow> {
   const e = await repo.findOwnedEvent(db, userId, id);
   if (!e) throw new NotFoundError();
+  return e;
+}
+
+/** The user's event, if its calendar accepts changes (ReadOnlyError for a subscription's events). */
+async function writableEvent(db: Executor, userId: string, id: string): Promise<repo.EventRow> {
+  const e = await ownEvent(db, userId, id);
+  await requireWritableCalendar(db, userId, e.calendarId);
   return e;
 }
 
@@ -36,7 +43,7 @@ export const getEvent = (db: Db, userId: string, id: string): Promise<repo.Event
 
 export function createEvent(db: Db, userId: string, input: EventFields): Promise<repo.EventRow> {
   return db.transaction(async (tx) => {
-    await requireOwnCalendar(tx, userId, input.calendarId);
+    await requireWritableCalendar(tx, userId, input.calendarId);
     const row = await repo.insertEvent(tx, {
       ownerUserId: userId,
       uid: newUid(),
@@ -68,8 +75,8 @@ export function updateEvent(
   recurrenceId?: Date,
 ): Promise<repo.EventRow> {
   return db.transaction(async (tx) => {
-    const e = await ownEvent(tx, userId, id);
-    if (patch.calendarId) await requireOwnCalendar(tx, userId, patch.calendarId);
+    const e = await writableEvent(tx, userId, id);
+    if (patch.calendarId) await requireWritableCalendar(tx, userId, patch.calendarId);
     const plan = planChange(e, patch, scope, recurrenceId);
 
     switch (plan.kind) {
@@ -128,7 +135,7 @@ export async function deleteEvent(
   recurrenceId?: Date,
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    const plan = planDelete(await ownEvent(tx, userId, id), scope, recurrenceId);
+    const plan = planDelete(await writableEvent(tx, userId, id), scope, recurrenceId);
     switch (plan.kind) {
       case 'event':
         await repo.deleteEvent(tx, id);

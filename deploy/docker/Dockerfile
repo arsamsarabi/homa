@@ -9,6 +9,7 @@ COPY apps/server/package.json apps/server/
 COPY apps/web/package.json apps/web/
 COPY packages/db/package.json packages/db/
 COPY packages/core/package.json packages/core/
+COPY packages/sync/package.json packages/sync/
 COPY packages/api-client/package.json packages/api-client/
 RUN bun install --frozen-lockfile
 COPY . .
@@ -21,6 +22,7 @@ COPY apps/server/package.json apps/server/
 COPY apps/web/package.json apps/web/
 COPY packages/db/package.json packages/db/
 COPY packages/core/package.json packages/core/
+COPY packages/sync/package.json packages/sync/
 COPY packages/api-client/package.json packages/api-client/
 RUN bun install --frozen-lockfile --production --filter @homa/server
 
@@ -34,6 +36,7 @@ COPY --from=prod-deps /app/node_modules node_modules
 COPY --from=prod-deps /app/apps/server/node_modules apps/server/node_modules
 COPY --from=prod-deps /app/packages/db/node_modules packages/db/node_modules
 COPY --from=prod-deps /app/packages/core/node_modules packages/core/node_modules
+COPY --from=prod-deps /app/packages/sync/node_modules packages/sync/node_modules
 COPY package.json tsconfig.base.json ./
 COPY apps/server/package.json apps/server/tsconfig.json apps/server/
 COPY apps/server/src apps/server/src
@@ -42,6 +45,8 @@ COPY packages/db/src packages/db/src
 COPY packages/db/drizzle packages/db/drizzle
 COPY packages/core/package.json packages/core/
 COPY packages/core/src packages/core/src
+COPY packages/sync/package.json packages/sync/
+COPY packages/sync/src packages/sync/src
 COPY --from=build /app/apps/web/dist apps/web/dist
 USER bun
 EXPOSE 3000

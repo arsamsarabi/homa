@@ -3,6 +3,7 @@
 import { sql } from 'drizzle-orm';
 import { boolean, customType, index, pgTable, primaryKey, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
+import { connections } from './connections';
 
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -24,9 +25,21 @@ export const calendars = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     color: text('color').notNull().default('#4a4e69'),
+    /** The connection this calendar syncs with; null for a native calendar. */
+    connectionId: uuid('connection_id').references(() => connections.id, { onDelete: 'cascade' }),
+    /** Events can't be created, changed or deleted here (ICS subscriptions). */
+    readOnly: boolean('read_only').notNull().default(false),
+    /** The provider's id for this calendar (a CalDAV href, a Google calendar id); null for native and ICS. */
+    remoteId: text('remote_id'),
+    /** Incremental sync cursor: a Google syncToken, Graph delta link or CalDAV sync-token / ctag. */
+    syncToken: text('sync_token'),
+    /** ICS conditional GET: the feed's last ETag and Last-Modified, and a hash of its body. */
+    remoteEtag: text('remote_etag'),
+    remoteLastModified: text('remote_last_modified'),
+    contentHash: text('content_hash'),
     ...timestamps,
   },
-  (t) => [index('calendars_owner_idx').on(t.ownerUserId)],
+  (t) => [index('calendars_owner_idx').on(t.ownerUserId), index('calendars_connection_idx').on(t.connectionId)],
 );
 
 export const events = pgTable(

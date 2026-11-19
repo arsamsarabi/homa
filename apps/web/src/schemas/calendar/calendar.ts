@@ -8,6 +8,10 @@ export const CalendarSchema = z.object({
   id: z.string(),
   name: z.string(),
   color: z.string(),
+  /** The connection it syncs with; null for the user's own calendars. */
+  connectionId: z.string().nullable().default(null),
+  /** Subscriptions: events can't be created, changed or deleted. */
+  readOnly: z.boolean().default(false),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });

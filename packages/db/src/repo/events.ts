@@ -1,5 +1,5 @@
 // Events (single ones and recurring series), always filtered by owner where a user asks.
-import { and, asc, eq, inArray, isNotNull, lt } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, lt, notInArray } from 'drizzle-orm';
 import type { Executor } from '../client';
 import { events } from '../schema';
 
@@ -88,3 +88,16 @@ export async function findEventIdsByUid(
 /** Every event the user owns, oldest first: for the data export. */
 export const listOwnerEvents = (db: Executor, ownerUserId: string): Promise<EventRow[]> =>
   db.select().from(events).where(eq(events.ownerUserId, ownerUserId)).orderBy(asc(events.createdAt), asc(events.id));
+
+/** Deletes the calendar's events whose UID isn't in `keep` (a feed dropped them). Returns how many. */
+export async function deleteEventsNotInUids(
+  db: Executor,
+  calendarId: string,
+  keep: readonly string[],
+): Promise<number> {
+  const rows = await db
+    .delete(events)
+    .where(and(eq(events.calendarId, calendarId), keep.length ? notInArray(events.uid, [...keep]) : undefined))
+    .returning({ id: events.id });
+  return rows.length;
+}

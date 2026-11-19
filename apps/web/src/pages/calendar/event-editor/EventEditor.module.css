@@ -25,3 +25,7 @@
 .title {
   font-weight: 600;
 }
+
+.notes {
+  white-space: pre-wrap;
+}

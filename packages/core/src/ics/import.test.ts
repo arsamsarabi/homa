@@ -38,6 +38,11 @@ describe('Google export', () => {
     expect(r).toMatchObject({ skipped: 0, warnings: [] });
   });
 
+  test("keeps the feed's name", () => {
+    expect(r.name).toBe('Ada Lovelace');
+    expect(parseIcs(ics(), opts).name).toBeNull();
+  });
+
   test('a weekly series across the clock change, with a moved and a cancelled occurrence', () => {
     const e = byUid(r.events, '7kukuqrfedlm2f9t0vr42q4ufp');
     expect(e).toMatchObject({

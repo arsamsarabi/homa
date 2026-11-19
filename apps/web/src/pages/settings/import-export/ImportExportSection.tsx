@@ -1,5 +1,5 @@
 import { Alert, Button, FileInput, Group, List, Select, Stack, Text, Title } from '@mantine/core';
-import { type JSX, useId, useState } from 'react';
+import { type JSX, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { useCalendars, useIcsImport } from '@/hooks/calendar';
@@ -14,7 +14,9 @@ export function ImportExportSection(): JSX.Element {
   const announce = useAnnouncer((s) => s.announce);
   const [picked, setPicked] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const calendarId = picked ?? calendars.data?.[0]?.id ?? null;
+  // Subscriptions are read-only, so they can't be imported into.
+  const writable = useMemo(() => calendars.data?.filter((c) => !c.readOnly), [calendars.data]);
+  const calendarId = picked ?? writable?.[0]?.id ?? null;
 
   const run = (): void => {
     if (!calendarId || !file) return;
@@ -38,7 +40,7 @@ export function ImportExportSection(): JSX.Element {
       )}
       <Select
         label={t('importExport.calendar')}
-        data={calendars.data?.map((c) => ({ value: c.id, label: c.name })) ?? []}
+        data={writable?.map((c) => ({ value: c.id, label: c.name })) ?? []}
         value={calendarId}
         onChange={setPicked}
         disabled={!calendars.data}

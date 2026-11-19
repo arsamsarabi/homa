@@ -1,5 +1,5 @@
 // Calendars for one user.
-import { NotFoundError, ValidationError } from '@homa/core';
+import { assertWritable, NotFoundError, ValidationError } from '@homa/core';
 import { type Db, type Executor, repo } from '@homa/db';
 
 export const listCalendars = (db: Db, userId: string): Promise<repo.CalendarRow[]> => repo.listCalendars(db, userId);
@@ -18,12 +18,24 @@ export async function updateCalendar(
   return row;
 }
 
-/** Deletes a calendar; its events and their cached occurrences cascade. */
+/**
+ * Deletes a calendar; its events and their cached occurrences cascade. A connected calendar goes
+ * with its connection instead, so the next sync doesn't find it missing.
+ */
 export async function deleteCalendar(db: Db, userId: string, id: string): Promise<void> {
-  if (!(await repo.deleteCalendar(db, userId, id))) throw new NotFoundError();
+  const calendar = await repo.findOwnedCalendar(db, userId, id);
+  if (!calendar) throw new NotFoundError();
+  if (calendar.connectionId)
+    throw new ValidationError('This calendar is a subscription: remove it under Connected calendars in Settings');
+  await repo.deleteCalendar(db, userId, id);
 }
 
-/** Throws unless calendar `id` belongs to the user: events can only go in your own calendars. */
-export async function requireOwnCalendar(db: Executor, userId: string, id: string): Promise<void> {
-  if (!(await repo.calendarIsOwned(db, userId, id))) throw new ValidationError('Unknown calendar');
+/**
+ * Throws unless calendar `id` belongs to the user (ValidationError: events can only go in your own
+ * calendars) and accepts writes (ReadOnlyError for subscriptions).
+ */
+export async function requireWritableCalendar(db: Executor, userId: string, id: string): Promise<void> {
+  const calendar = await repo.findOwnedCalendar(db, userId, id);
+  if (!calendar) throw new ValidationError('Unknown calendar');
+  assertWritable(calendar);
 }

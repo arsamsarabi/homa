@@ -49,7 +49,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete a calendar and its events */
+        /**
+         * Delete a calendar and its events
+         * @description A subscribed calendar is removed with its connection (DELETE /connections/{id}) instead: 400.
+         */
         delete: operations["deleteCalendar"];
         options?: never;
         head?: never;
@@ -209,6 +212,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your connected calendars, with their sync status */
+        get: operations["listConnections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Subscribe to an ICS feed
+         * @description Fetches the feed, then adds a read-only calendar with its events; it syncs again on a schedule. Feeds on private networks are refused unless the server allows them.
+         */
+        post: operations["subscribeIcs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync a connection now
+         * @description Answers with the connection after the sync; a failure shows in its status and lastError.
+         */
+        post: operations["syncConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a connection, its calendars and their events */
+        delete: operations["deleteConnection"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/holiday-calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public-holiday feeds you can subscribe to */
+        get: operations["listHolidayCalendars"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -224,6 +318,13 @@ export interface components {
             id: string;
             name: string;
             color: string;
+            /**
+             * Format: uuid
+             * @description The connection it syncs with; null for your own
+             */
+            connectionId: string | null;
+            /** @description Events here cannot be created, changed or deleted (subscriptions) */
+            readOnly: boolean;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -439,6 +540,43 @@ export interface components {
                 }[];
             })[];
         };
+        Connection: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            provider: "ics" | "caldav" | "google" | "microsoft";
+            /** @enum {string} */
+            status: "pending" | "syncing" | "ok" | "error";
+            /** @description Why the last sync failed; null after a good one */
+            lastError: string | null;
+            /**
+             * Format: date-time
+             * @description When the last sync ran, whether or not it worked
+             */
+            lastSyncedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            calendars: components["schemas"]["Calendar"][];
+        };
+        /** @description An ICS feed by URL (http, https or webcal), or a feed from the holiday catalog by id */
+        SubscribeInput: {
+            url: string;
+            name?: string;
+            color?: string;
+        } | {
+            holidayId: string;
+            name?: string;
+            color?: string;
+        };
+        HolidayFeed: {
+            id: string;
+            country: string;
+            names: {
+                en: string;
+                fa: string;
+            };
+            source: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -557,6 +695,15 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /** @description Not signed in */
             401: {
                 headers: {
@@ -622,7 +769,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Not allowed */
+            /** @description Not allowed (or a read-only calendar) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -675,6 +822,15 @@ export interface operations {
             };
             /** @description Not signed in */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -764,7 +920,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Not allowed */
+            /** @description Not allowed (or a read-only calendar) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -830,7 +986,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Not allowed */
+            /** @description Not allowed (or a read-only calendar) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1010,7 +1166,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Not allowed */
+            /** @description Not allowed (or a read-only calendar) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1061,7 +1217,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Not allowed */
+            /** @description Not allowed (or a read-only calendar) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1114,7 +1270,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Not allowed */
+            /** @description Not allowed (or a read-only calendar) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -1150,6 +1306,206 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DataExport"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Connections, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"][];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    subscribeIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscribeInput"];
+            };
+        };
+        responses: {
+            /** @description Subscribed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    syncConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description After the sync */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connection"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    deleteConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listHolidayCalendars: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The catalog */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayFeed"][];
                 };
             };
             /** @description Not signed in */

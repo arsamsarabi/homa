@@ -32,7 +32,7 @@ const cellAt = (x: number, y: number): string | undefined =>
   (document.elementFromPoint(x, y)?.closest('[data-date]') as HTMLElement | null)?.dataset.date;
 
 export function useMonthView(): MonthViewModel {
-  const { range, date, tz, secondary, occurrences, editor, actions, pickDay } = useCalendarPageModel();
+  const { range, date, tz, secondary, occurrences, editor, actions, pickDay, isReadOnly } = useCalendarPageModel();
   const occ = occurrences.data;
   const cells = useMemo((): Occurrence[][] => monthCellItems(range.days, occ ?? [], tz), [range.days, occ, tz]);
   const occasions = useMemo(
@@ -45,6 +45,11 @@ export function useMonthView(): MonthViewModel {
   function beginDrag(e: ReactPointerEvent, o: Occurrence, day: Date): void {
     if (e.button !== 0 || e.pointerType === 'touch') return;
     e.stopPropagation();
+    // A subscription's events don't move: a press opens their details instead.
+    if (isReadOnly(o.calendarId)) {
+      editor.openEdit(o);
+      return;
+    }
     grab.current = { o, from: isoDate(day), moved: false };
     const move = (ev: PointerEvent): void => {
       const g = grab.current;

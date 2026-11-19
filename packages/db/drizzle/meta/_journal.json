@@ -36,6 +36,13 @@
       "when": 1795109790860,
       "tag": "0004_import_export",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795114970348,
+      "tag": "0005_connections",
+      "breakpoints": true
     }
   ]
 }

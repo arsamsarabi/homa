@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { type FakeApi, json, renderApp, signedIn, signedInWith } from '@/testing/renderApp';
 
 const calendars = [
@@ -9,6 +9,15 @@ const calendars = [
     color: '#4a4e69',
     createdAt: '2026-11-01T00:00:00Z',
     updatedAt: '2026-11-01T00:00:00Z',
+  },
+  {
+    id: 'c2',
+    name: 'UK holidays',
+    color: '#336699',
+    connectionId: 'k1',
+    readOnly: true,
+    createdAt: '2026-11-02T00:00:00Z',
+    updatedAt: '2026-11-02T00:00:00Z',
   },
 ];
 const today = new Date();
@@ -111,6 +120,22 @@ describe('calendar page', () => {
     );
     expect(await screen.findByText('Yalda Night')).toBeTruthy();
     expect(screen.getByText('30 Azar')).toBeTruthy();
+  });
+
+  test("a subscription's event opens as details, not a form", async () => {
+    const holiday = { ...dentist, eventId: 'e2', calendarId: 'c2', summary: 'Bank holiday', location: null };
+    renderApp(
+      '/?view=agenda',
+      api(() => json([dentist, holiday])),
+    );
+    fireEvent.click(await screen.findByText('Bank holiday'));
+    const details = await screen.findByRole('dialog', { name: 'Edit event' });
+    expect(details.textContent).toContain("This event is from a read-only calendar and can't be changed here.");
+    expect(details.textContent).toContain('UK holidays');
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Title' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   test('letter keys switch the view', async () => {

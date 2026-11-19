@@ -18,6 +18,7 @@ import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Draft, Repeat } from '@/services/event-form';
 import classes from './EventEditor.module.css';
+import { ReadOnlyDetails } from './ReadOnlyDetails';
 import { useEventForm } from './useEventForm';
 
 /** Header (calendar, type, more, close), an inline title, then times, repeat, location and notes. */
@@ -25,6 +26,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
   const { t } = useTranslation();
   const f = useEventForm(draft);
   const input = f.allDay ? 'date' : 'datetime-local';
+  if (f.readOnly && f.occurrence) return <ReadOnlyDetails occurrence={f.occurrence} onClose={f.close} />;
 
   return (
     <form onSubmit={f.submit}>
