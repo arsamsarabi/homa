@@ -16,7 +16,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       body: JSON.stringify({ email, password: 'correct horse battery', name: 'x' }),
     });
   const cookieOf = (res: Response) => res.headers.get('set-cookie')?.split(';')[0] ?? '';
-  const publicInstance = async () => (await app.request('/api/instance')).json();
+  const publicInstance = async () => (await (await app.request('/api/instance')).json()) as Record<string, unknown>;
   const getAdmin = (cookie: string) => app.request('/api/admin/instance', { headers: headers(cookie) });
   const patchAdmin = (cookie: string, body: unknown) =>
     app.request('/api/admin/instance', { method: 'PATCH', headers: headers(cookie), body: JSON.stringify(body) });

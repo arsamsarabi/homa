@@ -64,6 +64,7 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | Table | Notes |
 | --- | --- |
 | `users`, `sessions`, `accounts`, `api_keys` | Better Auth tables plus `is_admin`, `onboarding_completed`, `default_sharing_preset`, `home_tz`, `locale`, `secondary_calendar` (`jalali`) |
+| `instance_settings` | Not per user: one row (a check keeps it at `id = 1`, its migration inserts it) with `instance_name`, `sign_ups` (`open`, `closed`), `default_language` (`en`, `fa`) and what new accounts start with: `default_home_tz` (null: the browser's) and `default_secondary_calendar` |
 | `connections` | Provider, encrypted credentials (OAuth tokens or app password), sync state, status, last error |
 | `calendars` | `connection_id` null for native; color, visibility, remote id, sync token or ctag |
 | `events` | Master record: summary, description, location, start/end, all-day, tz, `rrule`, `exdates`, `rdates`, remote uid and etag, `source` (`native`, `routine`, `task_block`, `poll`, `hold`) |
@@ -87,6 +88,12 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 RRULE, EXDATE and overrides are the source of truth (RDATE comes with ICS import in phase 2d), because they round-trip with CalDAV, Google and Microsoft. Every write to an event re-expands that event into `event_instances` up to about 18 months ahead (`expanded_until` on the event); the nightly `calendar.extend-horizon` job moves that window forward, and range reads past it expand the series on the fly. Expansion walks the RRULE in local wall-clock time with `ical.js` and places each occurrence in the event's zone with `Temporal`, so no `VTIMEZONE` is needed. An occurrence whose time was never changed follows the series when the series moves. Reads for views, free/busy and polls query `event_instances` by range. Edits of "this and following" split the series into two masters, as RFC 5545 clients do.
 
 The web app shows the calendar in one zone: the user's home zone (`home_tz`, or the browser's when unset), or another picked for the view (`?tz=` in the URL). It converts each instant to "wall time" in that zone, a `Date` whose UTC fields are that zone's clock, so day and week math has no clock changes and never depends on the browser's own zone; drags and the event form convert back to instants (a skipped time moves forward by the gap, a repeated one takes the earlier, as Temporal's `compatible`). New timed events take the viewed zone; the event form can change it. With `secondary_calendar = jalali`, views add Solar Hijri dates (Intl's `persian` calendar) and Persian occasions: Nowruz, Sizdah Bedar, Chaharshanbe Suri and Yalda.
+
+### First user and instance settings
+
+The first account on an instance becomes its admin (`users.role = 'admin'`, set in Better Auth's user-create hook). Until it exists, `GET /api/instance` answers `needsSetup: true` and the web app sends signed-out visitors to `/setup` instead of sign-in: a stepper that creates the admin account, reviews the instance settings (name, sign-ups, default language, default home zone and second calendar), then the admin's own settings, then the calendar. Everyone after that signs up and onboards as usual.
+
+The admin changes the instance settings later at `/admin`, linked from Settings for admins only; `GET`/`PATCH /api/admin/instance` check the role on the server (401 signed out, 403 for non-admins). The same hook turns self sign-ups away with a 403 while `sign_ups = closed` (accounts the admin creates still work), and gives every new account the default home zone and second calendar. The web app uses `default_language` when the browser has no saved language choice; the sign-in page hides the sign-up link while sign-ups are closed.
 
 ### Availability engine
 

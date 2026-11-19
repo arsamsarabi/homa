@@ -3,12 +3,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { type FormEvent, useState } from 'react';
 import { authClient } from '@/api';
+import { instanceQuery } from '@/hooks/instance';
 import { sessionQuery } from './session-query';
 
 export type AuthMode = 'sign-in' | 'sign-up';
 export type AuthForm = { error: string | undefined; busy: boolean; submit: (e: FormEvent<HTMLFormElement>) => void };
 
-export function useAuthForm(mode: AuthMode): AuthForm {
+/** With `onDone`, calls it after signing in or up instead of moving on to the next page. */
+export function useAuthForm(mode: AuthMode, onDone?: () => void): AuthForm {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
@@ -27,7 +29,10 @@ export function useAuthForm(mode: AuthMode): AuthForm {
     }
     // Refetch now: the route guard reads the cached session, which still says signed out.
     await queryClient.fetchQuery({ ...sessionQuery, staleTime: 0 });
-    await navigate({ to: mode === 'sign-up' ? '/onboarding' : '/' });
+    // The first account finishes the instance's setup.
+    if (mode === 'sign-up') await queryClient.invalidateQueries({ queryKey: instanceQuery.queryKey });
+    if (onDone) onDone();
+    else await navigate({ to: mode === 'sign-up' ? '/onboarding' : '/' });
   }
 
   function submit(e: FormEvent<HTMLFormElement>): void {
