@@ -65,8 +65,8 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | --- | --- |
 | `users`, `sessions`, `accounts`, `api_keys` | Better Auth tables plus `is_admin`, `onboarding_completed`, `default_sharing_preset`, `home_tz`, `locale`, `secondary_calendar` (`jalali`) |
 | `instance_settings` | Not per user: one row (a check keeps it at `id = 1`, its migration inserts it) with `instance_name`, `sign_ups` (`open`, `closed`), `default_language` (`en`, `fa`) and what new accounts start with: `default_home_tz` (null: the browser's) and `default_secondary_calendar` |
-| `connections` | Provider, encrypted credentials (OAuth tokens or app password), sync state, status, last error |
-| `calendars` | `connection_id` null for native; color, visibility, remote id, sync token or ctag |
+| `connections` | `provider` (`ics` now; `caldav`, `google`, `microsoft` later), `credentials` (AES-256-GCM ciphertext: the feed URL, later OAuth tokens or an app password), `status` (`pending`, `syncing`, `ok`, `error`), `last_error`, `last_synced_at` (the last attempt), `sync_started_at` (the running sync's claim) |
+| `calendars` | `connection_id` null for native (deleting a connection deletes its calendars); `read_only` (subscriptions); color, `remote_id`, `sync_token` (CalDAV, Google, Graph), and for ICS feeds `remote_etag`, `remote_last_modified` and `content_hash` |
 | `events` | Master record: summary, description, location, start/end, all-day, tz, `rrule`, `exdates`, `rdates`, iCalendar `uid` (unique per calendar), remote etag, `source` (`native`, `routine`, `task_block`, `poll`, `hold`) |
 | `event_overrides` | Per-occurrence changes keyed by `recurrence_id` |
 | `event_instances` | Expansion cache: one row per occurrence inside a rolling window (for example 18 months ahead), `tstzrange` with GiST index. Rebuilt per event on change |
@@ -79,7 +79,6 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | `calendar_grants` | Calendar → user or circle, level `freebusy`, `read`, `edit` |
 | `polls`, `poll_options`, `poll_participants`, `poll_votes` | Mode (`slots`, `ranges`, `window`), constraints JSON, deadline, quorum, required flags, guest tokens (stored hashed) |
 | `booking_pages` | Slug, durations, rules, target calendar |
-| `holiday_catalog` | Country → ICS URL, seeded |
 
 ## Key designs
 
@@ -146,7 +145,21 @@ One function in `packages/core` answers "when is this set of people busy between
 
 ### Sync
 
-Each provider implements one adapter interface in `packages/sync`: `listCalendars`, `pullChanges(since)`, `pushChange(op)`. Pulls are incremental (Google `syncToken`, Microsoft Graph delta, CalDAV `sync-collection` with ETag fallback, ICS conditional GET with a content hash). Local writes to a connected calendar go to an outbox processed by the worker, with ETag or `If-Match` conflict detection; on conflict the remote wins and the user sees a notice. Provider credentials are encrypted at rest with an app key from the environment.
+Each provider implements one adapter interface in `packages/sync`: `listCalendars`, `pullChanges(calendar, since)`, `pushChange(op)`. Pulls are incremental (Google `syncToken`, Microsoft Graph delta, CalDAV `sync-collection` with ETag fallback, ICS conditional GET with a content hash). Local writes to a connected calendar go to an outbox processed by the worker, with ETag or `If-Match` conflict detection; on conflict the remote wins and the user sees a notice. The outbox arrives with CalDAV (phase 3b); ICS calendars are read-only, so phase 3a has none.
+
+**ICS subscriptions (phase 3a).** `POST /api/connections/ics` takes a feed URL (`http`, `https`, or `webcal`, read as `https`) or a holiday catalog id. It fetches and parses the feed first, so a bad URL is a 400 and never a broken connection, then in one transaction creates the connection, one read-only calendar (named by the request, else the feed's `X-WR-CALNAME`) and its events. Renaming and recoloring use `PATCH /api/calendars/{id}`; `DELETE /api/connections/{id}` removes the connection, its calendar and the events. `DELETE /api/calendars/{id}` on a subscribed calendar is a 400.
+
+A pull sends `If-None-Match` and `If-Modified-Since` from the last fetch. A 304, or a body whose SHA-256 matches the last one, is "unchanged": nothing is parsed or written. Otherwise the feed is parsed with the `.ics` import parser and its limits (5 MB, 5,000 components, 200,000 cached occurrences) and applied as a snapshot in one transaction: events are upserted by UID within the calendar and re-expanded, as in an import, and events whose UID is no longer in the feed are deleted. The network call never runs inside a transaction.
+
+Read-only calendars: creating, changing, moving into, deleting or importing into one is a `ReadOnlyError` from `@homa/core`, a 403. The web app opens their events as details, without a form, doesn't drag them, and leaves them out of the calendar pickers.
+
+**Worker.** `sync.connections` runs every 5 minutes and syncs, one at a time, up to 50 connections whose last attempt is older than `HOMA_SYNC_INTERVAL_MINUTES` (default 30). Each sync first claims its connection (`sync_started_at`; a claim older than 10 minutes is taken over), so overlapping runs and "sync now" never sync one connection twice at once. A failure sets `status = error` and `last_error` to a message safe to show, which never contains the URL, and the run goes on; the job logs counts only. "Sync now" (`POST /api/connections/{id}/sync`) runs the same sync in the API request and answers with the result, so it needs no queue in the `api` role.
+
+**Outbound fetches (SSRF).** Feed URLs are user input fetched by the server, so `packages/sync` only allows `http` and `https` without user info, resolves the host and refuses loopback, private (RFC 1918, unique local), link-local (including `169.254.169.254` metadata), CGNAT, multicast, documentation and reserved addresses, also as IPv4-mapped IPv6; every redirect (at most 5) is checked again. Fetches time out after 30 seconds (`AbortSignal.timeout`) and stop reading past 5 MB. `HOMA_SYNC_ALLOW_PRIVATE_NETWORKS=true` lifts the address check for self-hosters with a calendar server on their own network. Known gap: the address is checked at lookup and `fetch` resolves the name again, so a DNS-rebinding server could still answer with a private address on the second lookup.
+
+**Credentials.** A connection's secrets are stored as AES-256-GCM ciphertext (`v1.<iv>.<ciphertext and tag>`) under `HOMA_ENCRYPTION_KEY` (32 bytes, base64), with the connection id as associated data, so a ciphertext copied onto another row doesn't decrypt. ICS feed URLs count as secrets, since private links (iCloud, Google "secret address") carry a token; they are never logged or returned by the API. The key is optional until the first connection: without it, subscribing answers 503 with the reason, and a server that has connections refuses to start. Nothing is derived from `BETTER_AUTH_SECRET`, so rotating that secret doesn't lose connections. Losing or changing the key means adding each connection again (the sync reports that the key changed).
+
+**Holiday catalog.** A small list of public-holiday feeds in `packages/sync/src/holidays/catalog.ts` (a data file, not a table): the three UK bank-holiday feeds from GOV.UK (Open Government Licence v3.0) and Iran's public holidays in English and Persian from Google Calendar's public holiday calendars (Google's terms; no open license). `GET /api/holiday-calendars` lists them; subscribing with `holidayId` uses the stored URL.
 
 ### Reminders
 
