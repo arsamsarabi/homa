@@ -3,7 +3,7 @@
 // Loopback is reachable only because the policy allows private networks.
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { EMPTY_CURSOR } from '../adapter';
-import { DEFAULT_FETCH_POLICY, PushConflict, PushError, SyncError } from '../feed';
+import { CalendarGoneError, DEFAULT_FETCH_POLICY, PushConflict, PushError, SyncError } from '../feed';
 import { caldavAdapter, resourceHref } from './caldav-adapter';
 
 const ics = (uid: string, summary: string): string =>
@@ -40,6 +40,7 @@ beforeAll(() => {
       requests.push(`${req.method} ${path}`);
       if (req.headers.get('authorization') !== `Basic ${btoa('ada:pw')}`) return new Response(null, { status: 401 });
       if (path === '/') return new Response(null, { status: 404 });
+      if (path.startsWith('/dav/c/ada/gone/')) return new Response(null, { status: 404 });
       if (path === '/.well-known/caldav') return new Response(null, { status: 301, headers: { location: '/dav/' } });
       if (req.method === 'PROPFIND' && path === '/dav/')
         return ms(
@@ -144,6 +145,14 @@ describe('caldavAdapter', () => {
       deleted: [`${base()}/dav/c/ada/shared/old.ics`],
       cursor: { syncToken: 't2' },
     });
+  });
+
+  test('a calendar collection the server no longer has is a CalendarGoneError', async () => {
+    const calendar = { remoteId: `${base()}/dav/c/ada/gone/`, name: 'Gone', readOnly: false };
+    for (const mode of ['unsupported', 'expired'] as const) {
+      syncCollection = mode;
+      await expect(adapter().pullChanges(calendar, EMPTY_CURSOR)).rejects.toBeInstanceOf(CalendarGoneError);
+    }
   });
 
   test('pushes create with If-None-Match, update with If-Match; mismatches are conflicts', async () => {

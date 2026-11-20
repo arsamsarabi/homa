@@ -1,6 +1,6 @@
 // Google connections end to end against the fake Google in @homa/sync/testing: the OAuth start and
 // callback (PKCE, state bound to the user), choosing calendars, pulls, pushes through the outbox,
-// a 412 conflict, invalid_grant, and another user's access. Skipped without TEST_DATABASE_URL.
+// a 412 conflict, a calendar deleted on Google, invalid_grant, and another user's access. Skipped without TEST_DATABASE_URL.
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createHash, randomBytes } from 'node:crypto';
 import { schema } from '@homa/db';
@@ -12,7 +12,7 @@ import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 import { pushDueOutboxes } from './sync-service';
 import type { SyncSettings } from './sync-settings';
 
-type CalendarJson = { id: string; name: string; color: string; readOnly: boolean };
+type CalendarJson = { id: string; name: string; color: string; readOnly: boolean; remoteMissing: boolean };
 type ConnectionJson = {
   id: string;
   provider: string;
@@ -200,13 +200,21 @@ describe.skipIf(!testDatabaseUrl)('Google connections', () => {
       req('GET', `/connections/${conn.id}/remote-calendars`, ada),
     );
     expect(remote).toEqual([
-      { remoteId: 'ada@example.com', name: 'Ada', color: '#9fc6e7', readOnly: false, selected: false },
+      {
+        remoteId: 'ada@example.com',
+        name: 'Ada',
+        color: '#9fc6e7',
+        readOnly: false,
+        selected: false,
+        missing: false,
+      },
       {
         remoteId: 'holidays@group.v.calendar.google.com',
         name: 'Holidays',
         color: null,
         readOnly: true,
         selected: false,
+        missing: false,
       },
     ] as never);
     conn = await json<ConnectionJson>(
@@ -268,6 +276,69 @@ describe.skipIf(!testDatabaseUrl)('Google connections', () => {
     expect(after.notice).toContain('"Stand-up (mine)" conflicted with a change on the server');
     expect((await eventByUid('standup@google.com'))?.summary).toBe('Stand-up (Google)');
     expect(g.get('ada@example.com', 'standup')?.summary).toBe('Stand-up (Google)');
+  });
+
+  test('a calendar deleted on Google is marked, not a failure; it can be removed only while missing', async () => {
+    const ttrpg = 'ttrpg@group.calendar.google.com';
+    g.calendars.push({ id: ttrpg, summary: 'TTRPG', accessRole: 'owner' });
+    g.put(ttrpg, { id: 'session', summary: 'Session 12', start: { date: '2027-03-06' }, end: { date: '2027-03-07' } });
+    const ids = ['ada@example.com', 'holidays@group.v.calendar.google.com', ttrpg];
+    conn = await json<ConnectionJson>(req('PUT', `/connections/${conn.id}/calendars`, ada, { remoteIds: ids }));
+    const gone = conn.calendars.find((c) => c.name === 'TTRPG') as CalendarJson;
+    expect(gone.remoteMissing).toBe(false);
+    expect(await eventByUid('session@google.com')).toBeDefined();
+
+    // Deleted on Google: the calendar list drops it and its events listing answers 404.
+    g.calendars.splice(
+      g.calendars.findIndex((c) => c.id === ttrpg),
+      1,
+    );
+    g.state.missingCalendars.add(ttrpg);
+    const synced = await syncNow();
+    expect(synced).toMatchObject({ status: 'ok', lastError: null });
+    expect(synced.calendars.map((c) => [c.name, c.remoteMissing])).toEqual([
+      ['Ada', false],
+      ['Holidays', false],
+      ['TTRPG', true],
+    ]);
+    // The picker still lists it, marked missing; saving the same choice keeps it.
+    const remote = await json<{ remoteId: string; missing: boolean; selected: boolean }[]>(
+      req('GET', `/connections/${conn.id}/remote-calendars`, ada),
+    );
+    expect(remote.find((r) => r.remoteId === ttrpg)).toMatchObject({ missing: true, selected: true, name: 'TTRPG' });
+    expect((await req('PUT', `/connections/${conn.id}/calendars`, ada, { remoteIds: ids })).status).toBe(200);
+
+    // Back on Google: the mark clears.
+    g.state.missingCalendars.delete(ttrpg);
+    expect((await syncNow()).calendars.find((c) => c.id === gone.id)?.remoteMissing).toBe(false);
+    expect((await req('DELETE', `/calendars/${gone.id}`, ada)).status).toBe(400);
+    expect((await req('DELETE', `/calendars/${mine.id}`, ada)).status).toBe(400);
+
+    // Gone again: only the owner can delete it, and its events and outbox go with it.
+    g.state.missingCalendars.add(ttrpg);
+    await syncNow();
+    const local = await json<EventJson>(
+      req('POST', '/events', ada, {
+        calendarId: gone.id,
+        summary: 'Prep',
+        start: '2027-03-05T18:00:00Z',
+        end: '2027-03-05T19:00:00Z',
+        tz: 'UTC',
+      }),
+    );
+    expect(await t.db.select().from(schema.outbox).where(eq(schema.outbox.calendarId, gone.id))).toHaveLength(1);
+    expect((await req('DELETE', `/calendars/${gone.id}`, bob)).status).toBe(404);
+    expect((await req('DELETE', `/calendars/${gone.id}`, ada)).status).toBe(204);
+    expect(await eventByUid('session@google.com')).toBeUndefined();
+    expect(await eventByUid(local.uid)).toBeUndefined();
+    expect(await t.db.select().from(schema.outbox).where(eq(schema.outbox.calendarId, gone.id))).toEqual([]);
+    expect(
+      await t.db.select().from(schema.eventInstances).where(eq(schema.eventInstances.calendarId, gone.id)),
+    ).toEqual([]);
+    const after = await syncNow();
+    expect(after).toMatchObject({ status: 'ok' });
+    expect(after.calendars.map((c) => c.name)).toEqual(['Ada', 'Holidays']);
+    g.state.missingCalendars.clear();
   });
 
   test('refreshed tokens are stored; a revoked grant puts the connection in error with what to do', async () => {

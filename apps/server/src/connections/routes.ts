@@ -220,6 +220,7 @@ export function connectionsApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings 
           color: x.color ?? null,
           readOnly: x.readOnly,
           selected: x.selected,
+          missing: x.missing,
         })),
         200,
       ),

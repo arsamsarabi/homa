@@ -264,7 +264,12 @@
     "save": "Save",
     "calendarSaved": "Calendar saved",
     "dismissNotice": "Dismiss",
-    "calendarsOf": "Calendars of {{name}}"
+    "calendarsOf": "Calendars of {{name}}",
+    "providerServer": "the server",
+    "missing": "\"{{name}}\" was deleted on {{provider}}, or is no longer shared with this account.",
+    "deletedOn": "Deleted on {{provider}}",
+    "removeFromHoma": "Remove from Homa",
+    "removeMissingBody": "Remove \"{{name}}\" and its events from Homa?"
   },
   "caldav": {
     "add": "Connect account",

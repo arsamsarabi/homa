@@ -19,13 +19,14 @@ export async function updateCalendar(
 }
 
 /**
- * Deletes a calendar; its events and their cached occurrences cascade. A connected calendar goes
- * with its connection instead, so the next sync doesn't find it missing.
+ * Deletes a calendar; its events, their cached occurrences and its outbox cascade. A connected
+ * calendar goes with its connection instead, so the next sync doesn't find it missing, unless it's
+ * already gone at the source.
  */
 export async function deleteCalendar(db: Db, userId: string, id: string): Promise<void> {
   const calendar = await repo.findOwnedCalendar(db, userId, id);
   if (!calendar) throw new NotFoundError();
-  if (calendar.connectionId)
+  if (calendar.connectionId && !calendar.remoteMissing)
     throw new ValidationError('This calendar is a subscription: remove it under Connected calendars in Settings');
   await repo.deleteCalendar(db, userId, id);
 }

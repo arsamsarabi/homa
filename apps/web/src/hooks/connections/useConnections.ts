@@ -1,5 +1,5 @@
 // Connected calendars: the list with sync status, the holiday catalog, CalDAV accounts and their
-// calendars, and subscribe / connect / choose / sync now / remove. Every change refetches
+// calendars, and subscribe / connect / choose / sync now / remove (a connection, or one calendar gone at the source). Every change refetches
 // the calendars and occurrences, since a connection brings its own.
 import {
   type UseMutationResult,
@@ -38,6 +38,8 @@ export type ConnectionMutations = {
   syncNow: UseMutationResult<Connection, Error, string>;
   dismissNotice: UseMutationResult<void, Error, string>;
   remove: UseMutationResult<void, Error, string>;
+  /** Deletes one calendar of a connection (only one gone at the source; the server refuses others). */
+  removeCalendar: UseMutationResult<void, Error, string>;
 };
 
 /** The user's connected calendars, oldest first. */
@@ -117,5 +119,11 @@ export function useConnectionMutations(): ConnectionMutations {
     },
     onSettled: refresh,
   });
-  return { subscribe, addCaldav, choose, syncNow, dismissNotice, remove };
+  const removeCalendar = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await unwrap(homaClient.DELETE('/calendars/{id}', { params: { path: { id } } }));
+    },
+    onSettled: refresh,
+  });
+  return { subscribe, addCaldav, choose, syncNow, dismissNotice, remove, removeCalendar };
 }

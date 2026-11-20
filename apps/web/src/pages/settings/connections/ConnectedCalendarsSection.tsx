@@ -22,7 +22,7 @@ export function ConnectedCalendarsSection(): JSX.Element {
   const { t, i18n } = useTranslation();
   const headingId = useId();
   const connections = useConnections();
-  const { syncNow, remove, dismissNotice } = useConnectionMutations();
+  const { syncNow, remove, dismissNotice, removeCalendar } = useConnectionMutations();
   const announce = useAnnouncer((s) => s.announce);
   const googleOn = useInstance().data?.googleCalendar === true;
   const search = useSearch({ from: '/_app/settings' });
@@ -36,6 +36,7 @@ export function ConnectedCalendarsSection(): JSX.Element {
   }, [search.google, search.googleError, navigate]);
   const [editing, setEditing] = useState<Calendar>();
   const [removing, setRemoving] = useState<Connection>();
+  const [removingCalendar, setRemovingCalendar] = useState<Calendar>();
   const format = useMemo(
     () => new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }),
     [i18n.language],
@@ -51,6 +52,14 @@ export function ConnectedCalendarsSection(): JSX.Element {
     remove.mutate(removing.id, {
       onSuccess: () => announce(t('connections.removed')),
       onSettled: () => setRemoving(undefined),
+    });
+  };
+
+  const confirmRemoveCalendar = (): void => {
+    if (!removingCalendar) return;
+    removeCalendar.mutate(removingCalendar.id, {
+      onSuccess: () => announce(t('connections.removed')),
+      onSettled: () => setRemovingCalendar(undefined),
     });
   };
 
@@ -87,9 +96,9 @@ export function ConnectedCalendarsSection(): JSX.Element {
           onRetry={() => void connections.refetch()}
         />
       )}
-      {(syncNow.isError || remove.isError || dismissNotice.isError) && (
+      {(syncNow.isError || remove.isError || dismissNotice.isError || removeCalendar.isError) && (
         <Alert color="red" role="alert">
-          {(syncNow.error ?? remove.error ?? dismissNotice.error)?.message}
+          {(syncNow.error ?? remove.error ?? dismissNotice.error ?? removeCalendar.error)?.message}
         </Alert>
       )}
       {connections.data?.length === 0 && (
@@ -110,6 +119,7 @@ export function ConnectedCalendarsSection(): JSX.Element {
               onEditCalendar={setEditing}
               onChoose={() => setCaldav(c.id)}
               onDismissNotice={() => dismissNotice.mutate(c.id)}
+              onRemoveCalendar={setRemovingCalendar}
             />
           ))}
         </Stack>
@@ -138,6 +148,23 @@ export function ConnectedCalendarsSection(): JSX.Element {
             </Button>
             <Button color="red" onClick={confirmRemove} loading={remove.isPending}>
               {t('connections.remove')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+      <Modal
+        opened={removingCalendar !== undefined}
+        onClose={() => setRemovingCalendar(undefined)}
+        title={t('connections.removeTitle')}
+      >
+        <Stack>
+          <Text size="sm">{t('connections.removeMissingBody', { name: removingCalendar?.name ?? '' })}</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setRemovingCalendar(undefined)}>
+              {t('common.cancel')}
+            </Button>
+            <Button color="red" onClick={confirmRemoveCalendar} loading={removeCalendar.isPending}>
+              {t('connections.removeFromHoma')}
             </Button>
           </Group>
         </Stack>

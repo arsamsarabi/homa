@@ -10,7 +10,7 @@
 // PushConflict, and the caller lets the remote win.
 import { parseIcs, ValidationError } from '@homa/core';
 import type { ChangeOp, PullResult, RemoteCalendar, RemoteResource, SyncAdapter, SyncCursor } from '../adapter';
-import { DEFAULT_FETCH_POLICY, type FetchPolicy, PushConflict, PushError, SyncError } from '../feed';
+import { CalendarGoneError, DEFAULT_FETCH_POLICY, type FetchPolicy, PushConflict, PushError, SyncError } from '../feed';
 import { type DavAnswer, davClient } from './dav-client';
 import {
   APPLE,
@@ -49,6 +49,11 @@ export type CaldavAdapter = SyncAdapter & {
 const isMultistatus = (a: DavAnswer): boolean => a.status === 207;
 
 const unexpected = (a: DavAnswer): SyncError => new SyncError(`The calendar server answered ${a.status}`);
+/** Throws CalendarGoneError if the server no longer has the calendar collection (404 or 410). */
+const assertCollection = (a: DavAnswer): void => {
+  if (a.status === 404 || a.status === 410)
+    throw new CalendarGoneError('The calendar server no longer has this calendar, or this account lost access to it');
+};
 
 /** `#rrggbb` from an Apple calendar-color (`#rrggbbaa` or `#rgb`), else null. */
 function colorOf(value: string): string | null {
@@ -190,6 +195,7 @@ export function caldavAdapter(credentials: CaldavCredentials, options: CaldavAda
   /** href → ETag of every event in the calendar (the fallback when sync-collection isn't there). */
   async function listEtags(calendarUrl: string): Promise<Map<string, string | null>> {
     const answer = await dav.request(calendarUrl, { method: 'REPORT', depth: '1', body: etagQueryBody() });
+    assertCollection(answer);
     if (!isMultistatus(answer)) throw unexpected(answer);
     const out = new Map<string, string | null>();
     for (const r of parseMultistatus(answer.text).responses) {
@@ -204,6 +210,7 @@ export function caldavAdapter(credentials: CaldavCredentials, options: CaldavAda
   /** What changed since `token` (sync-collection), or null if the server doesn't support it. */
   async function syncCollection(calendarUrl: string, token: string | null): Promise<Listing | null> {
     const answer = await dav.request(calendarUrl, { method: 'REPORT', depth: '0', body: syncCollectionBody(token) });
+    assertCollection(answer);
     if (!isMultistatus(answer)) {
       // An expired or unknown token: start over with a full listing.
       const invalidToken = [403, 409].includes(answer.status) || hasPrecondition(answer.text, DAV, 'valid-sync-token');

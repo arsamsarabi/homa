@@ -264,7 +264,12 @@
     "save": "ذخیره",
     "calendarSaved": "تقویم ذخیره شد",
     "dismissNotice": "بستن",
-    "calendarsOf": "تقویم‌های {{name}}"
+    "calendarsOf": "تقویم‌های {{name}}",
+    "providerServer": "سرور",
+    "missing": "«{{name}}» در {{provider}} حذف شده یا دیگر با این حساب به اشتراک گذاشته نمی‌شود.",
+    "deletedOn": "در {{provider}} حذف شده",
+    "removeFromHoma": "حذف از Homa",
+    "removeMissingBody": "«{{name}}» و رویدادهایش از Homa حذف شوند؟"
   },
   "caldav": {
     "add": "اتصال حساب",

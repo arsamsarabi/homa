@@ -24,3 +24,8 @@ export class PushConflict extends SyncError {
     super('The server has a newer version');
   }
 }
+
+/** The calendar itself is gone at the source (deleted, or no longer shared with the account). */
+export class CalendarGoneError extends SyncError {
+  override name = 'CalendarGoneError';
+}

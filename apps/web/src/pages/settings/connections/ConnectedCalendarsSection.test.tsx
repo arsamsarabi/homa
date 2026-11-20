@@ -273,4 +273,34 @@ describe('connected calendars section', () => {
     );
     expect(await screen.findByText("Google wasn't connected: access wasn't granted.")).toBeTruthy();
   });
+
+  test('a calendar deleted on Google says so, and is removed from Homa after confirming', async () => {
+    const sent: Sent[] = [];
+    const ttrpg = { ...work, id: 'c10', name: 'TTRPG', remoteMissing: true };
+    const google = { ...account, provider: 'google', label: 'ada@gmail.com', notice: null, calendars: [work, ttrpg] };
+    const gone = { remoteId: 'ttrpg@group.calendar.google.com', name: 'TTRPG', color: '#336699' };
+    const base = api(() => json([google]), sent);
+    renderApp('/settings', (url, req) =>
+      url.pathname.endsWith('/remote-calendars')
+        ? json([...remote, { ...gone, readOnly: false, selected: true, missing: true }])
+        : base(url, req),
+    );
+    const item = await within(await section()).findByRole('listitem', { name: 'ada@gmail.com' });
+    expect(
+      within(item).getByText('"TTRPG" was deleted on Google, or is no longer shared with this account.'),
+    ).toBeTruthy();
+
+    fireEvent.click(within(item).getByRole('button', { name: 'Choose calendars' }));
+    const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
+    expect(await within(picker).findByRole('checkbox', { name: /TTRPG/ })).toBeTruthy();
+    expect(within(picker).getByText('Deleted on Google')).toBeTruthy();
+    fireEvent.click(within(picker).getByRole('button', { name: 'Cancel' }));
+
+    fireEvent.click(within(item).getByRole('button', { name: 'Remove from Homa' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Remove this calendar?' });
+    expect(within(dialog).getByText('Remove "TTRPG" and its events from Homa?')).toBeTruthy();
+    expect(sent).toEqual([]);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Remove from Homa' }));
+    await waitFor(() => expect(sent).toEqual([{ method: 'DELETE', path: '/api/calendars/c10', body: undefined }]));
+  });
 });

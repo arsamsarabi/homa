@@ -11,6 +11,7 @@ export const calendarOut = (c: repo.CalendarRow): z.infer<typeof Calendar> => ({
   connectionId: c.connectionId,
   readOnly: c.readOnly,
   hidden: c.hidden,
+  remoteMissing: c.remoteMissing,
   createdAt: c.createdAt.toISOString(),
   updatedAt: c.updatedAt.toISOString(),
 });

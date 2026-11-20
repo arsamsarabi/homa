@@ -61,6 +61,9 @@ export const RemoteCalendar = z
     color: Color.nullable(),
     readOnly: z.boolean().openapi({ description: "You can't change events in it on the server" }),
     selected: z.boolean().openapi({ description: 'It syncs with a local calendar' }),
+    missing: z.boolean().openapi({
+      description: 'Synced here but gone at the source (deleted, or no longer shared); unchoose it to remove it',
+    }),
   })
   .openapi('RemoteCalendar');
 
