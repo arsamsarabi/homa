@@ -127,9 +127,12 @@ export function fakeGoogle(): FakeGoogle {
     const body = req.method === 'POST' || req.method === 'PATCH' ? ((await req.json()) as GoogleEvent) : undefined;
     if (!id) {
       if (req.method !== 'POST' || !body) return json({ error: { code: 405 } }, 405);
+      // As Google: an insert names its id or its iCalUID, not both; without one, Google makes the iCalUID.
+      if (body.id && body.iCalUID)
+        return json({ error: { code: 400, message: 'Only one of id and iCalUID may be set.' } }, 400);
       if (c.has(body.id))
         return json({ error: { code: 409, message: 'The requested identifier already exists.' } }, 409);
-      return json(out(put(calendarId, body)));
+      return json(out(put(calendarId, { ...body, iCalUID: body.iCalUID ?? `${body.id}@google.com` })));
     }
     let e = c.get(id);
     const ifMatch = req.headers.get('if-match');

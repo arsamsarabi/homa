@@ -29,7 +29,18 @@ export type GoogleEvent = {
   recurringEventId?: string;
   originalStartTime?: GoogleTime;
   eventType?: string;
+  extendedProperties?: { private?: Record<string, string> };
 };
+
+/**
+ * Events Homa creates keep Homa's UID here. Google's insert takes an `id` or an `iCalUID`, not both,
+ * and Homa sends the id (derived from the UID) so a retried insert can't duplicate; Google then
+ * makes up its own iCalUID (`{id}@google.com`), so the pull reads the UID back from this property.
+ */
+export const HOMA_UID = 'homaUid';
+/** The UID Homa knows a Google event by. */
+export const uidOf = (e: GoogleEvent): string =>
+  e.extendedProperties?.private?.[HOMA_UID] ?? e.iCalUID ?? `${e.id}@google.com`;
 
 /** A series (or single event) as Google holds it: the master and its changed or cancelled occurrences. */
 export type GoogleSeries = { master: GoogleEvent; exceptions: GoogleEvent[] };
@@ -81,7 +92,7 @@ const recurrenceLines = (e: GoogleEvent): string[] =>
 /** The series as one VCALENDAR, in the shape parseIcs reads. */
 export function seriesIcs(series: GoogleSeries, calendarTz: string): string {
   const { master } = series;
-  const uid = esc(master.iCalUID ?? `${master.id}@google.com`);
+  const uid = esc(uidOf(master));
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Homa//Google sync//EN'];
   const vevent = (body: (string | null)[]): void => {
     lines.push('BEGIN:VEVENT', `UID:${uid}`, ...body.filter((l): l is string => l !== null), 'END:VEVENT');

@@ -18,6 +18,7 @@ import {
   type GoogleSeries,
   googleBody,
   googleEventId,
+  HOMA_UID,
   instanceBody,
   instanceId,
   readSeries,
@@ -57,9 +58,15 @@ const failed = (a: Answer): SyncError =>
     ? new SyncError('Google is limiting requests from Homa for now; the next sync tries again')
     : new SyncError(`Google Calendar answered ${a.status}`);
 
+/** Google's own explanation, if it gave one (never carries tokens). */
+const googleMessage = (a: Answer): string => {
+  const message = (a.body?.error as { message?: unknown } | undefined)?.message;
+  return typeof message === 'string' && message ? `: ${message.slice(0, 200)}` : '';
+};
+
 const pushFailed = (a: Answer): PushError =>
   new PushError(
-    `Google Calendar refused the change (${a.status})`,
+    `Google Calendar refused the change (${a.status})${googleMessage(a)}`,
     a.status >= 500 || a.status === 408 || rateLimited(a),
   );
 
@@ -325,9 +332,10 @@ export function googleAdapter(credentials: GoogleCredentials, options: GoogleAda
       a = await send('PATCH', href, { body, ifMatch: op.etag });
       if (a.status === 412 || a.status === 404 || a.status === 410) throw new PushConflict();
     } else {
-      a = await send('POST', eventsUrl(calendarId), { body: { id: eventId, iCalUID: event.uid, ...body } });
+      const homa = { extendedProperties: { private: { [HOMA_UID]: event.uid } } };
+      a = await send('POST', eventsUrl(calendarId), { body: { id: eventId, ...homa, ...body } });
       // The id is ours (from the UID): an earlier try got through, or the event was deleted and is back.
-      if (a.status === 409) a = await send('PATCH', href, { body: { ...body, status: 'confirmed' } });
+      if (a.status === 409) a = await send('PATCH', href, { body: { ...homa, ...body, status: 'confirmed' } });
     }
     if (a.status < 200 || a.status >= 300) throw pushFailed(a);
     let etag = typeof a.body?.etag === 'string' ? a.body.etag : null;
