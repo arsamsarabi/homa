@@ -26,8 +26,8 @@ export default defineConfig({
           { src: '/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      // The API is never cached by the service worker.
-      workbox: { navigateFallbackDenylist: [/^\/api\//] },
+      // The API is never cached by the service worker. push-sw.js adds web push (reminders).
+      workbox: { navigateFallbackDenylist: [/^\/api\//], importScripts: ['/push-sw.js'] },
     }),
   ],
   server: { proxy: { '/api': 'http://localhost:3000' } },

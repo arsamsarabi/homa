@@ -16,6 +16,7 @@ import {
 import { IconDots, IconTrash } from '@tabler/icons-react';
 import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ReminderChips } from '@/components';
 import type { Draft, Repeat } from '@/services/event-form';
 import classes from './EventEditor.module.css';
 import { ReadOnlyDetails } from './ReadOnlyDetails';
@@ -138,6 +139,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           disabled={f.repeatLoading}
           comboboxProps={{ withinPortal: false }}
         />
+        <ReminderChips value={f.reminders} onChange={f.setReminders} disabled={f.remindersLoading} />
         <TextInput name="location" label={t('editor.location')} size="xs" defaultValue={f.occurrence?.location ?? ''} />
         <Textarea
           name="description"

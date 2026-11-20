@@ -71,6 +71,13 @@
       "when": 1795175390887,
       "tag": "0009_calendar_remote_missing",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795185400211,
+      "tag": "0010_reminders",
+      "breakpoints": true
     }
   ]
 }

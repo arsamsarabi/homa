@@ -23,6 +23,7 @@ import {
 } from '../feed';
 import {
   type GoogleEvent,
+  type GoogleReminder,
   type GoogleSeries,
   googleBody,
   googleEventId,
@@ -30,6 +31,7 @@ import {
   instanceBody,
   instanceId,
   readSeries,
+  resolveReminders,
 } from './mapping';
 import { endpointsOf, type GoogleClient, type GoogleCredentials, RECONNECT_GOOGLE, refreshGoogleToken } from './oauth';
 
@@ -186,8 +188,9 @@ export function googleAdapter(credentials: GoogleCredentials, options: GoogleAda
         throw new CalendarGoneError('Google no longer has this calendar, or this account lost access to it');
       if (a.status !== 200) throw failed(a);
       if (typeof a.body?.timeZone === 'string') timeZone = a.body.timeZone;
+      const defaults = Array.isArray(a.body?.defaultReminders) ? (a.body.defaultReminders as GoogleReminder[]) : [];
       for (const e of (a.body?.items as GoogleEvent[] | undefined) ?? [])
-        if (typeof e?.id === 'string' && e.eventType !== 'workingLocation') items.push(e);
+        if (typeof e?.id === 'string' && e.eventType !== 'workingLocation') items.push(resolveReminders(e, defaults));
       pageToken = typeof a.body?.nextPageToken === 'string' ? a.body.nextPageToken : undefined;
       if (!pageToken)
         return {

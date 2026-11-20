@@ -3,3 +3,4 @@ export * from './calendar';
 export * from './connections';
 export * from './instance';
 export * from './outbox';
+export * from './reminders';

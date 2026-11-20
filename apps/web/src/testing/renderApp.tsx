@@ -53,7 +53,9 @@ export const signedInWith =
         ? json(sessionBody(role))
         : url.pathname === '/api/instance'
           ? json(setUpInstance)
-          : json({ error: `unexpected ${url.pathname}` }, 404);
+          : url.pathname === '/api/notifications'
+            ? json({ items: [], unread: 0 })
+            : json({ error: `unexpected ${url.pathname}` }, 404);
 
 export const signedIn: FakeApi = signedInWith({ homeTz: null, secondaryCalendar: 'none' });
 

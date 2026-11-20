@@ -30,7 +30,16 @@ export type GoogleEvent = {
   originalStartTime?: GoogleTime;
   eventType?: string;
   extendedProperties?: { private?: Record<string, string> };
+  reminders?: GoogleReminders;
 };
+
+export type GoogleReminder = { method?: string; minutes?: number };
+/** `useDefault` takes the calendar's `defaultReminders` (the listing resolves it into `overrides`). */
+export type GoogleReminders = { useDefault?: boolean; overrides?: GoogleReminder[] };
+
+/** An event's reminders with `useDefault` replaced by the calendar's defaults, as Homa stores them. */
+export const resolveReminders = (e: GoogleEvent, defaults: readonly GoogleReminder[]): GoogleEvent =>
+  e.reminders?.useDefault ? { ...e, reminders: { useDefault: false, overrides: [...defaults] } } : e;
 
 /**
  * Events Homa creates keep Homa's UID here. Google's insert takes an `id` or an `iCalUID`, not both,
@@ -85,6 +94,20 @@ const textLines = (e: GoogleEvent): string[] => [
   ...(e.location ? [`LOCATION:${esc(e.location)}`] : []),
 ];
 
+/** One VALARM per reminder override (popup and email; Homa reads both as reminders). */
+const alarmLines = (e: GoogleEvent): string[] =>
+  (e.reminders?.overrides ?? []).flatMap((r) =>
+    Number.isInteger(r.minutes) && (r.minutes ?? -1) >= 0
+      ? [
+          'BEGIN:VALARM',
+          `ACTION:${r.method === 'email' ? 'EMAIL' : 'DISPLAY'}`,
+          `TRIGGER:-PT${r.minutes}M`,
+          'DESCRIPTION:Reminder',
+          'END:VALARM',
+        ]
+      : [],
+  );
+
 /** Google's recurrence lines, minus anything that isn't RRULE, RDATE or EXDATE (EXRULE isn't supported). */
 const recurrenceLines = (e: GoogleEvent): string[] =>
   (e.recurrence ?? []).filter((l) => /^(RRULE|RDATE|EXDATE)[;:][^\r\n]*$/i.test(l));
@@ -102,6 +125,7 @@ export function seriesIcs(series: GoogleSeries, calendarTz: string): string {
     timeLine('DTEND', master.end, calendarTz),
     ...textLines(master),
     ...recurrenceLines(master),
+    ...alarmLines(master),
   ]);
   for (const x of series.exceptions) {
     const rid = timeLine('RECURRENCE-ID', x.originalStartTime, calendarTz);
@@ -149,9 +173,10 @@ export type GoogleEventBody = {
   start: GoogleTime;
   end: GoogleTime;
   recurrence?: string[];
+  reminders?: { useDefault: false; overrides: { method: 'popup' | 'email'; minutes: number }[] };
 };
 
-/** The fields Homa owns on the Google event; others (guests, reminders, meeting links) are left alone by a patch. */
+/** The fields Homa owns on the Google event; others (guests, meeting links) are left alone by a patch. */
 export function googleBody(e: IcsEvent): GoogleEventBody {
   const recurrence = [
     ...(e.rrule ? [`RRULE:${e.rrule}`] : []),
@@ -167,6 +192,10 @@ export function googleBody(e: IcsEvent): GoogleEventBody {
     end: gtime(e.end, e.allDay, e.tz),
     // Left out when empty: a series can't be turned back into a single event from Homa yet.
     ...(recurrence.length ? { recurrence } : {}),
+    reminders: {
+      useDefault: false,
+      overrides: e.reminders.map((r) => ({ method: r.action === 'email' ? 'email' : 'popup', minutes: r.minutes })),
+    },
   };
 }
 

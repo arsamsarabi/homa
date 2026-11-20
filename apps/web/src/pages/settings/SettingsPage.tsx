@@ -9,6 +9,7 @@ import { useSettingsDraft } from '@/hooks/settings';
 import { CalendarsSection } from '@/pages/settings/calendars';
 import { ConnectedCalendarsSection } from '@/pages/settings/connections';
 import { ImportExportSection } from '@/pages/settings/import-export';
+import { NotificationsSection } from '@/pages/settings/notifications';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
 import classes from './SettingsPage.module.css';
@@ -57,6 +58,7 @@ export function SettingsPage(): JSX.Element {
             </Text>
           </Stack>
         )}
+        <NotificationsSection />
         <CalendarsSection />
         <ConnectedCalendarsSection />
         <ImportExportSection />
