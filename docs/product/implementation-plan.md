@@ -57,6 +57,16 @@ Phase 3 is done. On 2026-11-20 it passed hand tests against real iCloud (CalDAV)
 - Web push, email, ntfy, Gotify and webhook channels; snooze and done.
 - Natural-language quick add.
 
+## Releases and distribution
+
+Comes right after phase 4, before phase 5. Everything that makes Homa easy to install and to trust, so people outside the project can run it.
+
+- Versioned releases: semver tags from `v0.1.0`, GitHub Releases with notes taken from a per-version `CHANGELOG`, and a short upgrade note when a release has breaking steps.
+- A published Docker image on GHCR (`ghcr.io/arsamsarabi/homa`), multi-arch (amd64 and arm64), tagged by version and `latest`, built and pushed from the release workflow. Compose files and docs switch from building locally to pulling it.
+- Supply chain: images signed with cosign (keyless), an SBOM and provenance attestation attached to each release.
+- One-click templates for home-server platforms: Unraid, TrueNAS, CasaOS, Umbrel and YunoHost.
+- A public demo instance with made-up data that resets every night, and a short demo video for the README.
+
 ## Phase 5: tasks
 
 - Tasks, projects, tags, subtasks; Inbox, Today and Upcoming lists.
