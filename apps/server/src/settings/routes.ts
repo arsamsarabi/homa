@@ -1,5 +1,5 @@
 // REST routes for the signed-in user's settings.
-import type { Db } from '@homa/db';
+import type { Db, repo } from '@homa/db';
 import { createRoute, type OpenAPIHono, type z } from '@hono/zod-openapi';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
@@ -27,8 +27,7 @@ const r = {
   }),
 };
 
-const out = (row: { homeTz: string | null; secondaryCalendar: string }): z.infer<typeof Settings> =>
-  Settings.parse(row);
+const out = (row: repo.SettingsRow): z.infer<typeof Settings> => Settings.parse(row);
 
 /** Settings routes. Without `deps` (the OpenAPI dump) they're described but answer 401. */
 export function settingsApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars> {

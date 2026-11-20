@@ -32,7 +32,11 @@ export const DataExport = z
   .object({
     version: z.literal(EXPORT_VERSION),
     exportedAt: z.iso.datetime(),
-    settings: z.object({ homeTz: z.string().nullable(), secondaryCalendar: z.string() }),
+    settings: z.object({
+      homeTz: z.string().nullable(),
+      secondaryCalendar: z.string(),
+      weekStart: z.number().int().min(0).max(6).nullable(),
+    }),
     calendars: z.array(Calendar),
     events: z.array(Event.extend({ overrides: z.array(ExportOverride) })),
   })

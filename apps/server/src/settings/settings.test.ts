@@ -28,31 +28,47 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
   test('new users use the browser zone and no second calendar', async () => {
     const res = await get(await signUp('new@example.com'));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ homeTz: null, secondaryCalendar: 'none' });
+    expect(await res.json()).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
   });
 
   test('a change is saved for that user only', async () => {
     const a = await signUp('a@example.com');
     const b = await signUp('b@example.com');
     const res = await patch(a, { homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali' });
-    expect(await res.json()).toEqual({ homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali' });
-    expect(await (await get(a)).json()).toEqual({ homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali' });
-    expect(await (await get(b)).json()).toEqual({ homeTz: null, secondaryCalendar: 'none' });
+    expect(await res.json()).toEqual({ homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali', weekStart: null });
+    expect(await (await get(a)).json()).toEqual({
+      homeTz: 'Asia/Tehran',
+      secondaryCalendar: 'jalali',
+      weekStart: null,
+    });
+    expect(await (await get(b)).json()).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
 
     // A partial change keeps the rest; null goes back to the browser's zone.
-    expect(await (await patch(a, { homeTz: null })).json()).toEqual({ homeTz: null, secondaryCalendar: 'jalali' });
+    expect(await (await patch(a, { homeTz: null })).json()).toEqual({
+      homeTz: null,
+      secondaryCalendar: 'jalali',
+      weekStart: null,
+    });
   });
 
   test('an empty change keeps the settings', async () => {
     const res = await patch(await signUp('empty@example.com'), {});
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ homeTz: null, secondaryCalendar: 'none' });
+    expect(await res.json()).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
   });
 
   test('unknown zones and calendars are rejected', async () => {
     const a = await signUp('bad@example.com');
     expect((await patch(a, { homeTz: 'Mars/Olympus' })).status).toBe(400);
     expect((await patch(a, { secondaryCalendar: 'mayan' })).status).toBe(400);
+    expect((await patch(a, { weekStart: 7 })).status).toBe(400);
+  });
+
+  test('the first day of the week can be set and cleared', async () => {
+    const a = await signUp('week@example.com');
+    expect(await (await patch(a, { weekStart: 0 })).json()).toMatchObject({ weekStart: 0 });
+    expect(await (await get(a)).json()).toMatchObject({ weekStart: 0 });
+    expect(await (await patch(a, { weekStart: null })).json()).toMatchObject({ weekStart: null });
   });
 
   test('needs a session', async () => {

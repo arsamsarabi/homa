@@ -12,7 +12,7 @@ export type SettingsDraft = {
   error: string | undefined;
 };
 
-const DEFAULTS: Settings = { homeTz: null, secondaryCalendar: 'none' };
+const DEFAULTS: Settings = { homeTz: null, secondaryCalendar: 'none', weekStart: null };
 
 export function useSettingsDraft(): SettingsDraft {
   const saved = useSettings().data ?? DEFAULTS;

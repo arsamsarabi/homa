@@ -1,6 +1,6 @@
 // Tables Better Auth needs (core + admin plugin), named for Postgres. The adapter maps
 // its models to these by key (`usePlural: true` in apps/server/src/auth.ts).
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, smallint, text, timestamp } from 'drizzle-orm/pg-core';
 
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -23,6 +23,8 @@ export const users = pgTable('users', {
   // Homa settings. home_tz null means "use the browser's zone"; secondary_calendar is 'none' or 'jalali'.
   homeTz: text('home_tz'),
   secondaryCalendar: text('secondary_calendar').notNull().default('none'),
+  /** First day of the week, 0 = Sunday … 6 = Saturday; null follows the UI language. */
+  weekStart: smallint('week_start'),
   ...timestamps,
 });
 

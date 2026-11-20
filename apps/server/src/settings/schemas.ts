@@ -14,6 +14,14 @@ const SecondaryCalendar = z
   .enum(SECONDARY_CALENDARS)
   .openapi({ description: 'A second calendar shown beside the Gregorian one' });
 
-export const Settings = z.object({ homeTz: HomeTz, secondaryCalendar: SecondaryCalendar }).openapi('Settings');
+export const WeekStart = z.number().int().min(0).max(6).nullable().openapi({
+  example: 1,
+  description:
+    'First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)',
+});
+
+export const Settings = z
+  .object({ homeTz: HomeTz, secondaryCalendar: SecondaryCalendar, weekStart: WeekStart })
+  .openapi('Settings');
 
 export const SettingsPatch = Settings.partial().openapi('SettingsPatch');
