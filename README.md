@@ -1,31 +1,302 @@
-# Homa
+<p align="center">
+  <img src="docs/media/homa-capital-320.webp" alt="Homa logo" width="200" />
+</p>
 
-A self-hostable calendar that brings your shared calendars, tasks, reminders and routines into one place, and helps a group of people agree on a date.
+<h1 align="center">Homa</h1>
 
-Homa is in early development. See [docs/product](docs/product) for the product definition, architecture and implementation plan.
+<p align="center">
+  <strong>A self-hostable calendar that puts every calendar you use on one timeline.</strong><br />
+  Two-way sync with CalDAV (iCloud, Fastmail, Nextcloud), Google and Microsoft, ICS subscriptions,
+  recurring events, a Jalali second calendar, and English and Farsi with full right-to-left support.
+</p>
 
-## Self-hosting
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20NC%201.0.0-7d7fa3?style=flat-square" alt="License: PolyForm Noncommercial 1.0.0" /></a>
+  <a href="https://github.com/arsamsarabi/homa/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/arsamsarabi/homa/ci.yml?branch=main&style=flat-square&label=CI" alt="CI status" /></a>
+  <a href="https://bun.sh"><img src="https://img.shields.io/badge/runtime-Bun-000000?style=flat-square&logo=bun&logoColor=white" alt="Bun" /></a>
+  <a href="https://hono.dev"><img src="https://img.shields.io/badge/API-Hono-E36002?style=flat-square&logo=hono&logoColor=white" alt="Hono" /></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/web-React%20%2B%20Mantine-339AF0?style=flat-square&logo=react&logoColor=white" alt="React and Mantine" /></a>
+  <a href="https://www.postgresql.org"><img src="https://img.shields.io/badge/db-Postgres%2018-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="Postgres 18" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/arsamsarabi/homa"><img src="https://api.scorecard.dev/projects/github.com/arsamsarabi/homa/badge?style=flat-square" alt="OpenSSF Scorecard" /></a>
+  <a href="deploy/docker/compose.yaml"><img src="https://img.shields.io/badge/deploy-Docker%20Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" /></a>
+</p>
 
-See [docs/self-hosting/docker.md](docs/self-hosting/docker.md): one `docker compose up` with the app, a background worker and Postgres.
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#development">Development</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#docs">Docs</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#roadmap">Roadmap</a> ·
+  <a href="#license">License</a>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/week-dark.webp" />
+    <img src="docs/media/screenshots/week-light.webp" alt="Homa's week view with work, personal, family and fitness calendars in their own colors" width="900" />
+  </picture>
+</p>
+
+<details>
+<summary><strong>AI-assisted development</strong></summary>
+
+<br />
+
+Homa is built with AI coding tools under the maintainer's supervision. The maintainer sets the architecture and the plan for each phase, and reviews every change, its tests and the CI results before it is merged.
+
+</details>
+
+---
+
+## Overview
+
+Homa is a calendar you run yourself: one Docker Compose stack with the app, a background worker and Postgres. Today it is a full calendar with two-way sync, so the calendars you already keep in iCloud, Google, Outlook or on a CalDAV server show up side by side and stay in step.
+
+It is early: pre-v1 and built in phases, and the database and API can still change between versions (upgrade steps are listed in the [changelog](docs/CHANGELOG.md)). The plan goes further than a calendar: reminders, tasks, routines, sharing between people on one instance, and finding a date that works for a group. See [Roadmap](#roadmap).
+
+---
+
+## Features
+
+Built and on `main` today:
+
+| Area | What you get |
+| --- | --- |
+| **Views** | Day, week, month, year and agenda, with drag to create, move and resize events |
+| **Recurrence** | Repeating events with per-occurrence changes, and "this / this and following / all" edits |
+| **Time zones** | A home zone for all views, viewing in any other zone, and a time zone per event |
+| **Jalali calendar** | Optional Solar Hijri dates beside the Gregorian ones, with Persian occasions (Nowruz, Sizdah Bedar, Chaharshanbe Suri, Yalda) |
+| **Languages** | English and Farsi, with the whole interface mirrored right to left in Farsi |
+| **Subscriptions** | Read-only ICS feeds by URL, and a catalog of public-holiday feeds to subscribe to in one click |
+| **Two-way sync** | CalDAV (tested with iCloud; Fastmail, Nextcloud and Radicale use the same code), Google Calendar and Microsoft (Outlook.com, Microsoft 365). Local changes go out through an outbox; on a conflict the server's copy wins and you see a notice |
+| **Calendar filter and colors** | Show or hide each calendar in the views, and pick a color per calendar from swatches that stay readable in both themes |
+| **Week start** | Choose the first day of the week, or follow the language (Monday, or Saturday in Farsi) |
+| **Import and export** | Import `.ics` files from Google, Outlook, iCloud and others; export everything you own as one JSON file |
+| **Instance admin** | The first account becomes the admin, protected by a one-time setup code from the server log. The admin sets the instance name, open or closed sign-ups, the default language and the defaults for new accounts |
+| **Self-hosting** | One image in two roles (API and worker) plus Postgres, with Docker Compose. Migrations run on start |
+| **API** | REST API with a generated OpenAPI document at `/api/openapi.json`, and a typed client generated from it |
+| **Themes** | Light and dark, following the system setting or switched by hand |
+
+---
+
+## Quick start
+
+There is no published image yet, so Compose builds it from this repository. You need Docker with Compose v2 and `openssl`.
+
+```sh
+git clone https://github.com/arsamsarabi/homa.git
+cd homa
+echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > deploy/docker/.env
+echo "HOMA_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> deploy/docker/.env
+docker compose -f deploy/docker/compose.yaml up -d --build --wait
+```
+
+Open <http://localhost:3000>. The first account you create becomes the instance admin. Creating it asks for the 4-digit setup code that the API prints in its log at start:
+
+```sh
+docker compose -f deploy/docker/compose.yaml logs api | grep 'first-run setup code'
+```
+
+Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means adding every connected calendar again. Backups, upgrades and running behind a reverse proxy are covered in [Self-hosting with Docker](docs/self-hosting/docker.md).
+
+---
+
+## Configuration
+
+Set these in `deploy/docker/.env` for Compose, or in `.env` at the repository root for development.
+
+| Variable | Required | Default | Meaning |
+| --- | --- | --- | --- |
+| `BETTER_AUTH_SECRET` | **Yes** | | Signs sessions and tokens. At least 32 characters (`openssl rand -base64 32`). Changing it signs everyone out |
+| `DATABASE_URL` | **Yes** (development) | Set by Compose | Postgres connection string |
+| `HOMA_ENCRYPTION_KEY` | Once anyone connects a calendar | | Encrypts connected calendars' credentials at rest. 32 bytes, base64 (`openssl rand -base64 32`). With connections saved, the server won't start without it |
+| `HOMA_URL` | Behind a proxy | `http://localhost:3000` | The address people use to reach Homa. Sign-ins from any other origin are refused |
+| `HOMA_PORT` | No | `3000` | Compose only: the port published on the host |
+| `PORT` | No | `3000` | The port the server listens on |
+| `HOMA_ROLE` | No | `all` | `api` (HTTP), `worker` (background jobs) or `all` (both). Compose runs one service per role |
+| `HOMA_SYNC_INTERVAL_MINUTES` | No | `30` | How often each connected calendar is synced, 5 to 1440 |
+| `HOMA_SYNC_ALLOW_PRIVATE_NETWORKS` | No | `false` | Allow feeds and CalDAV servers on loopback and private networks (a server on your LAN). Off so a feed URL can't reach the server's own network |
+| `HOMA_GOOGLE_CLIENT_ID`, `HOMA_GOOGLE_CLIENT_SECRET` | For Google Calendar | | Your Google OAuth client. Set both or neither. See [Google Calendar](docs/self-hosting/google.md) |
+| `HOMA_MICROSOFT_CLIENT_ID`, `HOMA_MICROSOFT_CLIENT_SECRET` | For Outlook and Microsoft 365 | | Your Microsoft Entra ID app. Set both or neither. See [Microsoft](docs/self-hosting/microsoft.md) |
+| `POSTGRES_PASSWORD` | No | `homa` | Compose only: the database password. Set it before the first start |
+| `HOMA_IMAGE` | No | `homa:local` | Compose only: the image name to build and run |
+| `HOMA_WEB_DIR` | No | Set in the image | The built web app to serve, relative to the working directory. Unset in development, where Vite serves it |
+| `HOMA_SETUP_CODE` | No | Random | Tests only: pins the 4-digit first-run setup code |
+| `HOMA_AUTH_RATE_LIMIT` | No | `true` | Tests only: `false` lifts the sign-in and sign-up rate limits |
+
+---
 
 ## Development
 
-Needs [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
+You need [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
 
 ```sh
 bun install
-cp .env.example .env   # then set DATABASE_URL and BETTER_AUTH_SECRET
-bun run dev        # web app on http://localhost:5173, API and worker on :3000 (/api/health, /api/openapi.json)
-bun run test       # every package; set TEST_DATABASE_URL to a Postgres server to run the database tests too
-bun run typecheck
-bun run lint       # bun run format to fix
-bun run e2e:smoke  # Playwright smoke tests against BASE_URL (default http://localhost:3000)
-bun run openapi    # regenerate packages/api-client after changing API routes
-cd packages/db && bun run generate <name>   # new migration after changing the schema
+cp .env.example .env   # set DATABASE_URL and BETTER_AUTH_SECRET
+bun run dev            # web app on http://localhost:5173; API and worker on :3000
 ```
 
-The server applies pending migrations when it starts. `HOMA_ROLE` picks what a process runs: `api` (HTTP), `worker` (background jobs) or `all` (both, the default).
+The server applies pending migrations when it starts. The API answers on `/api/health`, and its OpenAPI document is at `/api/openapi.json`.
+
+| Command | What it does |
+| --- | --- |
+| `bun run test` | Unit and integration tests in every package. Set `TEST_DATABASE_URL` to a Postgres server to include the database tests, and `TEST_CALDAV_URL` to a Radicale server for the CalDAV tests |
+| `bun run typecheck` | TypeScript in every package |
+| `bun run lint` | Biome lint and format check (`bun run format` fixes) |
+| `bun run e2e` / `bun run e2e:smoke` | Playwright against `BASE_URL` (default `http://localhost:3000`), with `HOMA_SETUP_CODE` for a new instance |
+| `bun run openapi` | Regenerates `packages/api-client` after an API route or schema change |
+| `cd packages/db && bun run generate <name>` | Generates a migration after a schema change |
+
+Contributor guidelines are in [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
+---
+
+## Architecture
+
+```text
+ Browser (PWA)
+      │
+      ▼
+ homa (HOMA_ROLE=api) ── serves the web app and /api (REST + OpenAPI)
+      │
+      ├── Postgres ◄── pg-boss job queue
+      │
+ homa (HOMA_ROLE=worker)
+      └── sync: ICS feeds, CalDAV, Google, Microsoft
+```
+
+One image runs in either role; a small install can run both in one process (`HOMA_ROLE=all`). Everything, including the job queue, lives in Postgres.
+
+| Package | Role |
+| --- | --- |
+| [`apps/web`](apps/web) | The web app: Vite, React 19, Mantine, TanStack Router and Query, i18next (English and Farsi) |
+| [`apps/server`](apps/server) | The Hono API with `@hono/zod-openapi`, Better Auth, and the pg-boss worker |
+| [`packages/core`](packages/core) | Domain rules: recurrence expansion with `ical.js` and Temporal, ICS parsing, Jalali dates |
+| [`packages/db`](packages/db) | Drizzle schema, migrations and repositories |
+| [`packages/sync`](packages/sync) | Provider adapters (ICS, CalDAV, Google, Microsoft), credential encryption and the holiday catalog |
+| [`packages/api-client`](packages/api-client) | Typed client generated from the OpenAPI document |
+| [`deploy/docker`](deploy/docker) | Dockerfile and Compose file |
+
+More in [architecture.md](docs/product/architecture.md).
+
+---
+
+## Security notes
+
+- **Connected calendar credentials** (feed URLs, CalDAV app passwords, Google and Microsoft tokens) are encrypted at rest with AES-256-GCM using `HOMA_ENCRYPTION_KEY`, and are never part of an API response.
+- **Owner scoping:** every calendar, event and connection belongs to one user, checked on every request. Someone else's calendar or event answers 404, as if it didn't exist.
+- **First-run setup code:** the admin account can only be created with the code from the server log, so whoever reaches a new instance first can't take it over.
+- **Sign-in protection:** rate limits on sign-in and sign-up, and sign-ins accepted only from `HOMA_URL`'s origin.
+- **Outbound requests:** feed and CalDAV URLs on loopback, private networks and cloud metadata addresses are refused unless you allow private networks.
+- **Hostile input:** imported `.ics` files have size, component and occurrence limits, and nothing in them is fetched.
+
+To report a vulnerability, follow the [security policy](.github/SECURITY.md). Please don't open a public issue.
+
+---
+
+## Docs
+
+| Doc | What it covers |
+| --- | --- |
+| [Self-hosting with Docker](docs/self-hosting/docker.md) | Install, settings, backups and upgrades |
+| [Google Calendar](docs/self-hosting/google.md) | Creating the Google OAuth client for Google connections |
+| [Microsoft](docs/self-hosting/microsoft.md) | Creating the Entra ID app for Outlook.com and Microsoft 365 |
+| [Changelog](docs/CHANGELOG.md) | Changes, and the steps an upgrade needs |
+| [Product definition](docs/product/product-definition.md) | What Homa is for and its full feature set |
+| [Architecture](docs/product/architecture.md) | Stack, data model and key designs |
+| [Implementation plan](docs/product/implementation-plan.md) | Delivery phases and their status |
+
+User-facing docs are at [docs.homa.day](https://docs.homa.day).
+
+---
+
+## Screenshots
+
+All screenshots use a made-up account and events.
+
+<table>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/month-jalali-dark.webp" />
+        <img src="docs/media/screenshots/month-jalali-light.webp" alt="Month view with Jalali dates under each day" />
+      </picture>
+      <p align="center"><sub>Month view with the Jalali second calendar</sub></p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/agenda-dark.webp" />
+        <img src="docs/media/screenshots/agenda-light.webp" alt="Agenda view listing the week's events by day" />
+      </picture>
+      <p align="center"><sub>Agenda</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/event-drawer-dark.webp" />
+        <img src="docs/media/screenshots/event-drawer-light.webp" alt="An event open for editing over the week view" />
+      </picture>
+      <p align="center"><sub>Editing an event</sub></p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/calendar-filter-dark.webp" />
+        <img src="docs/media/screenshots/calendar-filter-light.webp" alt="The calendar filter listing own calendars and a holiday subscription" />
+      </picture>
+      <p align="center"><sub>Calendar filter</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/settings-calendars-dark.webp" />
+        <img src="docs/media/screenshots/settings-calendars-light.webp" alt="Settings, Calendars, with the color picker open" />
+      </picture>
+      <p align="center"><sub>Calendar colors in Settings</sub></p>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/week-dark.webp" />
+        <img src="docs/media/screenshots/week-light.webp" alt="Week view" />
+      </picture>
+      <p align="center"><sub>Week view</sub></p>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Roadmap
+
+Phases 1 to 3 (the calendar and sync) are done. Next, in order:
+
+| Phase | What it adds |
+| --- | --- |
+| **4. Reminders** (in progress) | Reminders on events and on their own, delivered by web push, email, ntfy, Gotify or webhook, with snooze; quick add in plain language |
+| **Releases and distribution** | Versioned releases and a published container image, so you no longer build from source. No image is published yet |
+| **5. Tasks** | Tasks, projects, tags and subtasks; Inbox, Today and Upcoming; time-blocking tasks onto the calendar; Todoist import |
+| **6. Sharing** | Several people on one instance, invites and circles, sharing calendars at free/busy, read or edit level; OIDC and passkeys |
+| **7. Group date-finding** | Polls to find a date that works for a group, with guests by link, suggestions from everyone's availability, and tentative holds |
+| **8. Routines and planning** | Routines with streaks, and a wizard to plan a day, week, month or year |
+| **9. Platform** | Homa as a CalDAV server, public booking pages, API keys, an MCP server, and search |
+| **10. v1** | Hardening, a security review, upgrade and backup guides, and the release |
+
+Details are in the [implementation plan](docs/product/implementation-plan.md). Questions and suggestions about the plan are welcome in [Roadmap and feedback](https://github.com/arsamsarabi/homa/discussions/31).
+
+---
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome. Questions and early ideas go to [Discussions](https://github.com/arsamsarabi/homa/discussions); issues labeled [`good first issue`](https://github.com/arsamsarabi/homa/labels/good%20first%20issue) are a good place to start. Read [CONTRIBUTING.md](.github/CONTRIBUTING.md) first; it covers setup, the checks CI runs, and what a pull request needs. Everyone taking part follows the [code of conduct](.github/CODE_OF_CONDUCT.md).
+
+---
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE)
+Homa is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). © 2026 Arsam Sarabi.
+
+You may use, modify and share it for any non-commercial purpose, including running it for yourself, your family or a non-profit. Commercial use needs a separate license: contact <arsamsarabi@me.com>.
