@@ -544,6 +544,11 @@ export interface components {
              * @enum {string}
              */
             secondaryCalendar: "none" | "jalali";
+            /**
+             * @description First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)
+             * @example 1
+             */
+            weekStart: number | null;
         };
         SettingsPatch: {
             /**
@@ -556,6 +561,11 @@ export interface components {
              * @enum {string}
              */
             secondaryCalendar?: "none" | "jalali";
+            /**
+             * @description First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)
+             * @example 1
+             */
+            weekStart?: number | null;
         };
         PublicInstance: {
             /**
@@ -647,6 +657,7 @@ export interface components {
             settings: {
                 homeTz: string | null;
                 secondaryCalendar: string;
+                weekStart: number | null;
             };
             calendars: components["schemas"]["Calendar"][];
             events: (components["schemas"]["Event"] & {

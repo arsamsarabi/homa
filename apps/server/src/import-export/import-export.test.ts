@@ -185,7 +185,7 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
       events: (Json & { overrides: Json[] })[];
     };
     expect(doc.version).toBe(1);
-    expect(doc.settings).toEqual({ homeTz: null, secondaryCalendar: 'none' });
+    expect(doc.settings).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
     expect(doc.calendars.map((c) => c.id)).toEqual([adaCalendar]);
     expect(doc.events.map((e) => e.summary).sort()).toEqual(['Daily', 'Dentist']);
     const series = doc.events.find((e) => e.uid === 'standup@example.com');

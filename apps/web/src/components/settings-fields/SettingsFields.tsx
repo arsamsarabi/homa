@@ -12,16 +12,27 @@ export type SettingsFieldsProps = {
 };
 
 const BROWSER = 'browser';
+const LANGUAGE = 'language';
+// 2026-11-15 was a Sunday, so day d of that week has getUTCDay() === d.
+const weekdayOf = (d: number, locale: string): string =>
+  new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(2026, 10, 15 + d));
 
 /** The home time zone and the second calendar. */
 export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsProps): JSX.Element {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const zones = useMemo(
     (): { value: string; label: string }[] => [
       { value: BROWSER, label: t('settings.browserZone', { tz: browserTz }) },
       ...timeZones().map((z) => ({ value: z, label: z })),
     ],
     [t, browserTz],
+  );
+  const weekDays = useMemo(
+    (): { value: string; label: string }[] => [
+      { value: LANGUAGE, label: t('settings.weekStartLanguage') },
+      ...[1, 6, 0, 2, 3, 4, 5].map((d) => ({ value: String(d), label: weekdayOf(d, i18n.language) })),
+    ],
+    [t, i18n.language],
   );
   return (
     <Stack>
@@ -34,6 +45,13 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
         searchable
         allowDeselect={false}
         limit={50}
+      />
+      <Select
+        label={t('settings.weekStart')}
+        data={weekDays}
+        value={value.weekStart == null ? LANGUAGE : String(value.weekStart)}
+        onChange={(v: string | null): void => onChange({ weekStart: !v || v === LANGUAGE ? null : Number(v) })}
+        allowDeselect={false}
       />
       <Radio.Group
         label={t('settings.secondaryCalendar')}

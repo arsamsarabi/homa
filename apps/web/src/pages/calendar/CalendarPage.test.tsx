@@ -106,6 +106,16 @@ describe('calendar page', () => {
     expect(await screen.findByText(/\b0?5:00/)).toBeTruthy();
   });
 
+  test('the week starts on the day chosen in settings', async () => {
+    const sunday = signedInWith({ homeTz: 'Europe/London', secondaryCalendar: 'none', weekStart: 0 });
+    renderApp(
+      '/?view=week&date=2026-11-19',
+      api(() => json([]), sunday),
+    );
+    const week = await screen.findByRole('region', { name: /^Week$/ });
+    await waitFor(() => expect(week.textContent).toMatch(/^Sun 15.*Sat 21/));
+  });
+
   test('shows Jalali dates and Persian occasions when that calendar is on', async () => {
     const yalda = {
       ...dentist,

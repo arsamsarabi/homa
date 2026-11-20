@@ -407,11 +407,22 @@
               "jalali"
             ],
             "description": "A second calendar shown beside the Gregorian one"
+          },
+          "weekStart": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 6,
+            "example": 1,
+            "description": "First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)"
           }
         },
         "required": [
           "homeTz",
-          "secondaryCalendar"
+          "secondaryCalendar",
+          "weekStart"
         ]
       },
       "SettingsPatch": {
@@ -432,6 +443,16 @@
               "jalali"
             ],
             "description": "A second calendar shown beside the Gregorian one"
+          },
+          "weekStart": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 6,
+            "example": 1,
+            "description": "First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)"
           }
         }
       },
@@ -623,11 +644,20 @@
               },
               "secondaryCalendar": {
                 "type": "string"
+              },
+              "weekStart": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 6
               }
             },
             "required": [
               "homeTz",
-              "secondaryCalendar"
+              "secondaryCalendar",
+              "weekStart"
             ]
           },
           "calendars": {

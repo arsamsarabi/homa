@@ -24,6 +24,8 @@
   /* Reserve the body's scrollbar width too, so the day columns line up above it. */
   overflow-y: hidden;
   scrollbar-gutter: stable;
+  /* A thin bar keeps the gutter beside the last day narrow. */
+  scrollbar-width: thin;
 }
 
 .dayHead {
@@ -72,6 +74,8 @@
 .scroll {
   overflow-y: auto;
   scrollbar-gutter: stable;
+  /* A thin bar keeps the gutter beside the last day narrow. */
+  scrollbar-width: thin;
 }
 
 .body {

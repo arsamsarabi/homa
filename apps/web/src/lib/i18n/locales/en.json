@@ -115,6 +115,8 @@
     "homeZone": "Home time zone",
     "homeZoneHint": "Your calendar is shown in this zone. You can view another one from the calendar.",
     "browserZone": "This device's zone ({{tz}})",
+    "weekStart": "First day of the week",
+    "weekStartLanguage": "Language default (Monday)",
     "secondaryCalendar": "Second calendar",
     "secondary": {
       "none": "None",

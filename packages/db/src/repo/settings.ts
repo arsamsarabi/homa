@@ -3,12 +3,12 @@ import { eq } from 'drizzle-orm';
 import type { Executor } from '../client';
 import { users } from '../schema';
 
-export type SettingsRow = { homeTz: string | null; secondaryCalendar: string };
+export type SettingsRow = { homeTz: string | null; secondaryCalendar: string; weekStart: number | null };
 
 /** The user's settings, or undefined if there is no such user. */
 export async function findSettings(db: Executor, userId: string): Promise<SettingsRow | undefined> {
   const [row] = await db
-    .select({ homeTz: users.homeTz, secondaryCalendar: users.secondaryCalendar })
+    .select({ homeTz: users.homeTz, secondaryCalendar: users.secondaryCalendar, weekStart: users.weekStart })
     .from(users)
     .where(eq(users.id, userId));
   return row;
@@ -24,6 +24,6 @@ export async function updateSettings(
     .update(users)
     .set(values)
     .where(eq(users.id, userId))
-    .returning({ homeTz: users.homeTz, secondaryCalendar: users.secondaryCalendar });
+    .returning({ homeTz: users.homeTz, secondaryCalendar: users.secondaryCalendar, weekStart: users.weekStart });
   return row;
 }

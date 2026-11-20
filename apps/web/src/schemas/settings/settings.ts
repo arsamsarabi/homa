@@ -8,5 +8,7 @@ export const SettingsSchema = z.object({
   /** null: use the browser's zone. */
   homeTz: z.string().nullable(),
   secondaryCalendar: z.enum(SECONDARY_CALENDARS),
+  /** First day of the week, 0 = Sunday … 6 = Saturday; null (or absent) follows the UI language. */
+  weekStart: z.number().int().min(0).max(6).nullable().optional(),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
