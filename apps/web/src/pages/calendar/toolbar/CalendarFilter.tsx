@@ -1,11 +1,29 @@
 import { Anchor, Badge, Button, Checkbox, Divider, Group, Popover, Stack, Text } from '@mantine/core';
 import { IconStack2 } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
+import type { TFunction } from 'i18next';
 import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCalendarUpdate } from '@/hooks/calendar';
+import { useConnections } from '@/hooks/connections';
 import { useCalendarPageModel } from '@/pages/calendar/model';
-import type { Calendar } from '@/schemas';
+import type { Calendar, Connection } from '@/schemas';
+
+// CalDAV accounts are labeled "<user> on <host>"; well-known hosts get their service's name.
+const CALDAV_HOSTS: [RegExp, string][] = [
+  [/icloud\.com$/, 'iCloud'],
+  [/fastmail\.com$/, 'Fastmail'],
+];
+
+/** A connected account's group heading: the provider, and the account in its own case (e.g. Google, ada@example.com). */
+const accountHeading = (k: Connection, t: TFunction): { provider: string; account: string | null } => {
+  const caldav = k.provider === 'caldav' ? /^(.*) on (\S+)$/.exec(k.label ?? '') : null;
+  if (caldav) {
+    const [, user = '', host = ''] = caldav;
+    return { provider: CALDAV_HOSTS.find(([re]) => re.test(host))?.[1] ?? host, account: user };
+  }
+  return { provider: t(`calendars.groups.${k.provider}`), account: k.label };
+};
 
 /** Shows or hides each calendar's events in the views. The choice is saved, so it follows you across devices. */
 export function CalendarFilter(): JSX.Element {
@@ -13,9 +31,24 @@ export function CalendarFilter(): JSX.Element {
   const { calendars } = useCalendarPageModel();
   const update = useCalendarUpdate();
   const hidden = calendars.filter((c) => c.hidden);
+  const connections = useConnections().data ?? [];
+  const inConnection = (ids: ReadonlySet<string>): Calendar[] =>
+    calendars.filter((c) => c.connectionId && ids.has(c.connectionId));
+  // Your own calendars, then one group per connected account, then every feed subscription together.
   const groups = [
-    { key: 'mine', label: t('calendars.mine'), list: calendars.filter((c) => !c.connectionId) },
-    { key: 'other', label: t('calendars.other'), list: calendars.filter((c) => c.connectionId) },
+    { key: 'mine', label: t('calendars.mine'), account: null, list: calendars.filter((c) => !c.connectionId) },
+    ...connections
+      .filter((k) => k.provider !== 'ics')
+      .map((k) => {
+        const { provider, account } = accountHeading(k, t);
+        return { key: k.id, label: provider, account, list: inConnection(new Set([k.id])) };
+      }),
+    {
+      key: 'feeds',
+      label: t('calendars.groups.feeds'),
+      account: null,
+      list: inConnection(new Set(connections.filter((k) => k.provider === 'ics').map((k) => k.id))),
+    },
   ].filter((g) => g.list.length > 0);
   const set = (c: Calendar, visible: boolean): void => update.mutate({ id: c.id, hidden: !visible });
 
@@ -40,9 +73,12 @@ export function CalendarFilter(): JSX.Element {
       <Popover.Dropdown miw={240} maw={320}>
         <Stack gap="sm">
           {groups.map((g) => (
-            <Stack key={g.key} gap={6} role="group" aria-label={g.label}>
-              <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                {g.label}
+            <Stack key={g.key} gap={6} role="group" aria-label={g.account ? `${g.label} · ${g.account}` : g.label}>
+              <Text size="xs" fw={600} c="dimmed" truncate title={g.account ?? undefined}>
+                <Text span inherit tt="uppercase">
+                  {g.label}
+                </Text>
+                {g.account && ` · ${g.account}`}
               </Text>
               {g.list.map((c) => (
                 <Checkbox

@@ -325,9 +325,15 @@
     "filterHidden_one": "Calendars, {{count}} hidden",
     "filterHidden_other": "Calendars, {{count}} hidden",
     "mine": "My calendars",
-    "other": "Connected calendars",
     "showAll": "Show all",
-    "manage": "Colors and settings"
+    "manage": "Colors and settings",
+    "groups": {
+      "caldav": "CalDAV",
+      "google": "Google",
+      "microsoft": "Outlook",
+      "ics": "Subscriptions",
+      "feeds": "Subscriptions"
+    }
   },
   "google": {
     "add": "Connect Google",
