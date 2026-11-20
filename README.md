@@ -106,7 +106,7 @@ Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means 
 
 ## Configuration
 
-Set these in `deploy/docker/.env` for Compose, or in `.env` at the repository root for development. The ones most installs need:
+Set these in `deploy/docker/.env` for Compose, or in `.env.local` at the repository root for development. The ones most installs need:
 
 | Variable | Required | Default | Meaning |
 | --- | --- | --- | --- |
@@ -125,7 +125,7 @@ You need [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
 
 ```sh
 bun install
-cp .env.example .env   # set DATABASE_URL and BETTER_AUTH_SECRET
+cp .env.example .env.local   # set DATABASE_URL and BETTER_AUTH_SECRET
 bun run dev            # web app on http://localhost:5173; API and worker on :3000
 ```
 

@@ -1,6 +1,6 @@
 # Environment variables
 
-Homa is configured with environment variables only. With Docker Compose, put them in `deploy/docker/.env`; in development, put them in `.env` at the repository root (start from [`.env.example`](../../.env.example)). The server checks every value when it starts and refuses to start with a list of what is wrong.
+Homa is configured with environment variables only. With Docker Compose, put them in `deploy/docker/.env`; in development, put them in `.env.local` at the repository root (start from [`.env.example`](../../.env.example)). The server checks every value when it starts and refuses to start with a list of what is wrong.
 
 **Required** marks a variable the server won't start without. An empty value counts as unset.
 

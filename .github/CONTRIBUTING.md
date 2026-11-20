@@ -16,7 +16,7 @@ You need [Bun](https://bun.sh) 1.4 and Postgres 18.
 
 ```sh
 bun install
-cp .env.example .env   # set DATABASE_URL and BETTER_AUTH_SECRET (openssl rand -base64 32)
+cp .env.example .env.local   # set DATABASE_URL and BETTER_AUTH_SECRET (openssl rand -base64 32)
 bun run dev            # web app on http://localhost:5173; API and worker on :3000
 ```
 
