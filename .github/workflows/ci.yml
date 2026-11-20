@@ -29,8 +29,8 @@ jobs:
       TEST_DATABASE_URL: postgres://homa:homa@localhost:5432/postgres
       TEST_CALDAV_URL: http://127.0.0.1:5232/
     steps:
-      - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile
@@ -61,7 +61,7 @@ jobs:
     env:
       COMPOSE_FILE: deploy/docker/compose.yaml
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Throwaway auth secret for this run
         run: |
           secret=$(openssl rand -base64 32)
@@ -71,7 +71,7 @@ jobs:
           echo "HOMA_AUTH_RATE_LIMIT=false" >> "$GITHUB_ENV"
       - run: docker compose build
       - run: docker compose up -d --wait --wait-timeout 120
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.3
       - run: bun install --frozen-lockfile
@@ -87,7 +87,7 @@ jobs:
       - name: Container logs
         if: failure()
         run: docker compose logs --no-color
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: playwright-report
