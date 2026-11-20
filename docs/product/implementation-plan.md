@@ -38,7 +38,7 @@ Status: done (2a #8, 2b #9, 2c #11, 2d #14).
 
 Delivered in four pull requests: 3a the connection model, encrypted credentials, the sync worker, ICS subscriptions, the holiday catalog and the connection status UI; 3b CalDAV two-way with the outbox; 3c Google; 3d Microsoft.
 
-Status: 3a done (#16); 3b done (#19); 3c done (#20); 3d done (#28).
+Status: done. 3a (#16), 3b (#19), 3c (#20), 3d (#28).
 
 - Connection model, encrypted credentials, sync worker and outbox.
 - ICS subscriptions and the holiday catalog.
@@ -47,7 +47,7 @@ Status: 3a done (#16); 3b done (#19); 3c done (#20); 3d done (#28).
 - Connection status and error UI.
 - Calendar filter (show or hide each calendar in the views) and a color for every calendar in Settings.
 
-To do: hand-test sync against real accounts before calling phase 3 done. iCloud CalDAV passed a first check on 2026-11-20; still to test are Google (after 3c), Fastmail, Nextcloud and Microsoft (after 3d).
+Phase 3 is done. On 2026-11-20 it passed hand tests against real iCloud (CalDAV), Google and Microsoft accounts. Fastmail and Nextcloud weren't tested with real accounts; they use the same CalDAV code, which CI tests against Radicale.
 
 **Milestone: v1 hero is usable.** One timeline with every calendar, synced both ways.
 
