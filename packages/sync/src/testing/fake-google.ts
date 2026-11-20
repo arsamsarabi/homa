@@ -32,6 +32,8 @@ export type FakeGoogle = {
     /** 410 for every syncToken. */
     expireSyncTokens: boolean;
     pageSize: number;
+    /** Calendars deleted on Google, or no longer shared with this account: 404. */
+    missingCalendars: Set<string>;
     email: string;
     /** The scopes the token endpoint says were granted. */
     scope: string;
@@ -55,6 +57,7 @@ export function fakeGoogle(): FakeGoogle {
     expireSyncTokens: false,
     pageSize: 2,
     email: 'ada@example.com',
+    missingCalendars: new Set<string>(),
     scope: 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar',
   };
   const calendars: FakeCalendar[] = [];
@@ -99,6 +102,7 @@ export function fakeGoogle(): FakeGoogle {
   }
 
   function list(calendarId: string, q: URLSearchParams): Response {
+    if (state.missingCalendars.has(calendarId)) return json({ error: { code: 404, message: 'Not Found' } }, 404);
     const all = [...calendarOf(calendarId).values()].sort((a, b) => a.seq - b.seq);
     const syncToken = q.get('syncToken');
     const uid = q.get('iCalUID');

@@ -130,8 +130,9 @@ async function pullAll(
       conflicts.push(...(await db.transaction((tx) => applyPull(tx, calendar, result))));
       changed ||= result.kind !== 'unchanged';
     } catch (err) {
-      // One calendar failing doesn't stop the others.
-      errors.push(err);
+      // One calendar failing doesn't stop the others. Name it when the account has several.
+      const named = calendars.length > 1 && expected(err);
+      errors.push(named ? new SyncError(`"${calendar.name}": ${err.message}`) : err);
     }
   }
   return { changed, conflicts, errors };
