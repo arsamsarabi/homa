@@ -189,6 +189,14 @@ describe('push', () => {
     );
   const id = googleEventId('homa-1');
 
+  test('a calendar Google no longer has (or no longer shares) says so', async () => {
+    g.state.missingCalendars.add('gone@example.com');
+    await expect(
+      adapter().pullChanges({ remoteId: 'gone@example.com', name: 'TTRPG', readOnly: false }, EMPTY_CURSOR),
+    ).rejects.toThrow('Google no longer has this calendar, or this account lost access to it');
+    g.state.missingCalendars.clear();
+  });
+
   test('creates with an id from the UID, patches with If-Match, and a stale ETag is a conflict', async () => {
     const a = adapter();
     const target = a.newHref('ada@example.com', 'homa-1');

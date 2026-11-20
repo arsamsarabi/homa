@@ -174,6 +174,10 @@ export function googleAdapter(credentials: GoogleCredentials, options: GoogleAda
       if (pageToken) url.searchParams.set('pageToken', pageToken);
       const a = await send('GET', url.href);
       if (a.status === 410) return null;
+      if (a.status === 404)
+        throw new SyncError(
+          'Google no longer has this calendar, or this account lost access to it. Untick it under Choose calendars.',
+        );
       if (a.status !== 200) throw failed(a);
       if (typeof a.body?.timeZone === 'string') timeZone = a.body.timeZone;
       for (const e of (a.body?.items as GoogleEvent[] | undefined) ?? [])
