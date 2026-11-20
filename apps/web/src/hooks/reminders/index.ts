@@ -1,4 +1,10 @@
 export {
+  type ChannelMutations,
+  channelKeys,
+  useChannelMutations,
+  useChannels,
+} from './useChannels';
+export {
   type NotificationActions,
   notificationKeys,
   type SnoozeVars,

@@ -3,6 +3,8 @@ import { type components, createHomaClient, type HomaClient } from '@homa/api-cl
 
 export type EventInput = components['schemas']['EventInput'];
 export type EventPatch = components['schemas']['EventPatch'];
+export type ChannelInput = components['schemas']['NotificationChannelInput'];
+export type ChannelPatch = components['schemas']['NotificationChannelPatch'];
 
 /** Calls fetch at request time (not at import), so tests can swap it out. */
 export const homaClient: HomaClient = createHomaClient('/api', {

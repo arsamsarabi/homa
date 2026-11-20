@@ -38,7 +38,7 @@ To run the API and worker in one container, use a single service with `HOMA_ROLE
 
 ## Reminders and web push
 
-Reminders show in the bell in the app's header without any setup. Push notifications (to the browser even when Homa is closed) need HTTPS: browsers only allow push on secure pages, and `http://localhost` counts as secure for trying it out. Each person turns push on per browser under Settings → Notifications on this device. On iPhone and iPad, Homa must first be added to the Home Screen. The worker sends reminders, so keep it running (`HOMA_ROLE=worker` or `all`); a reminder can be up to a minute late, and one missed by more than an hour (the worker was down) is skipped.
+Reminders show in the bell in the app's header without any setup. Push notifications (to the browser even when Homa is closed) need HTTPS: browsers only allow push on secure pages, and `http://localhost` counts as secure for trying it out. Each person turns push on per browser under Settings → Notifications on this device, and can add email, ntfy, Gotify and webhook channels under Settings → Notification channels (see [Notifications](./notifications.md)). On iPhone and iPad, Homa must first be added to the Home Screen. The worker sends reminders, so keep it running (`HOMA_ROLE=worker` or `all`); a reminder can be up to a minute late, and one missed by more than an hour (the worker was down) is skipped.
 
 ## Next steps
 

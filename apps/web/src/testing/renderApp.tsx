@@ -55,7 +55,9 @@ export const signedInWith =
           ? json(setUpInstance)
           : url.pathname === '/api/notifications'
             ? json({ items: [], unread: 0 })
-            : json({ error: `unexpected ${url.pathname}` }, 404);
+            : url.pathname === '/api/notification-channels'
+              ? json({ items: [], email: false })
+              : json({ error: `unexpected ${url.pathname}` }, 404);
 
 export const signedIn: FakeApi = signedInWith({ homeTz: null, secondaryCalendar: 'none' });
 

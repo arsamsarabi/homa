@@ -49,7 +49,8 @@ Homa is configured with environment variables only. With Docker Compose, put the
 | --- | --- | --- |
 | `HOMA_VAPID_PUBLIC_KEY`, `HOMA_VAPID_PRIVATE_KEY` | (unset) | The web push keys reminders are sent with, as `bunx web-push generate-vapid-keys` prints them. Set both or neither. Without them the first process that starts generates a pair and keeps it in the database, so it survives restarts and restores. Changing them makes every browser turn push on again |
 | `HOMA_VAPID_SUBJECT` | `HOMA_URL` if https, else `mailto:admin@localhost` | A `mailto:` or `https:` address push services can contact about this server. Apple's push service refuses `localhost` addresses, so set it for Safari and iOS |
-| `HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS` | `false` | Lets notification endpoints (browser push services today) be on loopback and private networks. Off by default, so a user-supplied address can't make the server reach its own network or a cloud metadata address. Push works without it: browsers use public push services |
+| `HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS` | `false` | Lets notification addresses (browser push services, and people's ntfy, Gotify and webhook channels) be plain `http` and on loopback, private and link-local networks, for an ntfy or Gotify on your LAN. Off by default, so a user-supplied address can't make the server reach its own network or a cloud metadata address. Push and public ntfy work without it |
+| `HOMA_SMTP_URL`, `HOMA_MAIL_FROM` | (unset) | The SMTP server email reminders go through (`smtp://user:pass@host:587` with STARTTLS, or `smtps://user:pass@host:465`) and the sender (`Homa <homa@example.com>`). Set both or neither; without them email isn't offered. See [Notifications](./notifications.md) |
 
 ## Quick add
 

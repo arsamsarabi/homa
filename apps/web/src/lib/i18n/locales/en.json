@@ -72,7 +72,8 @@
     "cancel": "Cancel",
     "retry": "Try again",
     "close": "Close",
-    "loading": "Loading"
+    "loading": "Loading",
+    "done": "Done"
   },
   "editor": {
     "title": "Title",
@@ -437,5 +438,57 @@
     "enable": "Turn on push",
     "disable": "Turn off push",
     "failed": "Couldn't change push: {{message}}"
+  },
+  "channels": {
+    "title": "Notification channels",
+    "hint": "Reminders always show in the bell. Channels also send them to your email, phone or other apps.",
+    "add": "Add channel",
+    "empty": "No channels yet.",
+    "loadFailed": "Couldn't load your channels",
+    "kinds": {
+      "email": "Email",
+      "ntfy": "ntfy",
+      "gotify": "Gotify",
+      "webhook": "Webhook"
+    },
+    "reminderKinds": {
+      "event": "Event reminders",
+      "standalone": "Standalone reminders"
+    },
+    "allReminders": "All reminders",
+    "failing": "Failing",
+    "lastError": "Last error: {{message}}",
+    "enabledLabel": "Send to \"{{name}}\"",
+    "test": "Send test",
+    "testLabel": "Send a test to \"{{name}}\"",
+    "testSent": "Test sent",
+    "testFailed": "The test didn't go through: {{message}}",
+    "edit": "Edit",
+    "editLabel": "Edit \"{{name}}\"",
+    "delete": "Delete",
+    "deleteLabel": "Delete \"{{name}}\"",
+    "deleted": "Deleted \"{{name}}\"",
+    "newTitle": "New channel",
+    "editTitle": "Edit channel",
+    "kind": "Type",
+    "noEmail": "Email isn't set up on this server.",
+    "name": "Name",
+    "emailHint": "Reminders go to your account's email address.",
+    "server": "Server address",
+    "topic": "Topic",
+    "topicHint": "Anyone who knows a topic on a public server can read it, so pick one that's hard to guess.",
+    "ntfyToken": "Access token (optional)",
+    "gotifyToken": "App token",
+    "tokenKept": "Leave empty to keep the saved token.",
+    "url": "Address",
+    "urlHint": "Homa POSTs JSON here, signed with a secret you get next.",
+    "urlKept": "Sends to {{host}}. Leave empty to keep it.",
+    "which": "Which reminders",
+    "pickKind": "Pick at least one kind of reminder.",
+    "save": "Save",
+    "saveFailed": "Couldn't save the channel: {{message}}",
+    "saved": "Saved \"{{name}}\"",
+    "secret": "Signing secret",
+    "secretHint": "Copy this secret now: it won't be shown again. Use it to check the X-Homa-Signature header."
   }
 }
