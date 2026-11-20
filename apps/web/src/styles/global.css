@@ -3,3 +3,9 @@
   --mantine-font-family: Vazirmatn, system-ui, sans-serif;
   --mantine-font-family-headings: Vazirmatn, system-ui, sans-serif;
 }
+
+/* The chosen option in a dropdown, so it stands out from the hovered one. */
+.mantine-Select-option[data-checked] {
+  background: color-mix(in srgb, var(--mantine-primary-color-filled) 35%, transparent);
+  font-weight: 600;
+}

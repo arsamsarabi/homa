@@ -2,6 +2,7 @@ import { Radio, Select, Stack } from '@mantine/core';
 import { type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SECONDARY_CALENDARS, type SecondaryCalendar, type Settings } from '@/schemas';
+import { calendarLocale } from '@/services/locale';
 import { timeZones } from '@/services/zones';
 
 export type SettingsFieldsProps = {
@@ -12,7 +13,6 @@ export type SettingsFieldsProps = {
 };
 
 const BROWSER = 'browser';
-const LANGUAGE = 'language';
 // 2026-11-15 was a Sunday, so day d of that week has getUTCDay() === d.
 const weekdayOf = (d: number, locale: string): string =>
   new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(2026, 10, 15 + d));
@@ -28,11 +28,10 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
     [t, browserTz],
   );
   const weekDays = useMemo(
-    (): { value: string; label: string }[] => [
-      { value: LANGUAGE, label: t('settings.weekStartLanguage') },
-      ...[1, 6, 0, 2, 3, 4, 5].map((d) => ({ value: String(d), label: weekdayOf(d, i18n.language) })),
-    ],
-    [t, i18n.language],
+    // Monday to Sunday.
+    (): { value: string; label: string }[] =>
+      [1, 2, 3, 4, 5, 6, 0].map((d) => ({ value: String(d), label: weekdayOf(d, i18n.language) })),
+    [i18n.language],
   );
   return (
     <Stack>
@@ -49,9 +48,11 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
       <Select
         label={t('settings.weekStart')}
         data={weekDays}
-        value={value.weekStart == null ? LANGUAGE : String(value.weekStart)}
-        onChange={(v: string | null): void => onChange({ weekStart: !v || v === LANGUAGE ? null : Number(v) })}
+        // Unset follows the language (Monday, or Saturday in Farsi).
+        value={String(value.weekStart ?? calendarLocale(i18n.language).weekStart)}
+        onChange={(v: string | null): void => onChange({ weekStart: v ? Number(v) : null })}
         allowDeselect={false}
+        maxDropdownHeight={300}
       />
       <Radio.Group
         label={t('settings.secondaryCalendar')}
