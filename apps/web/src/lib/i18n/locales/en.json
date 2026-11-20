@@ -154,7 +154,8 @@
       "year": "Year view",
       "agenda": "Agenda"
     },
-    "note": "Letter keys work on any keyboard layout. Shortcuts pause while you type in a field."
+    "note": "Letter keys work on any keyboard layout. Shortcuts pause while you type in a field.",
+    "quickAdd": "Quick add"
   },
   "setup": {
     "title": "Set up your Homa",
@@ -352,5 +353,16 @@
       "state": "Outlook wasn't connected: the request expired or didn't come from this browser. Try again.",
       "failed": "Outlook wasn't connected. Try again, and allow Homa to read and write your calendars."
     }
+  },
+  "quickAdd": {
+    "label": "Quick add",
+    "placeholder": "Quick add, like “Dentist tue 3pm 45m”",
+    "more": "More options",
+    "hint": "Enter to add, Shift+Enter for more options",
+    "hintNoCalendar": "Enter to pick a calendar and add",
+    "noCalendar": "No calendar you can add to",
+    "noDate": "No date found: the next hour",
+    "weeklyOn": "Every week on {{days}}",
+    "announce": "Will add: {{preview}}"
   }
 }

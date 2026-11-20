@@ -74,7 +74,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           name="summary"
           aria-label={t('editor.title')}
           placeholder={t('editor.titlePlaceholder')}
-          defaultValue={f.occurrence?.summary ?? ''}
+          defaultValue={f.summary}
           variant="unstyled"
           size="lg"
           classNames={{ input: classes.title }}

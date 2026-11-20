@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Occurrence } from '@/schemas';
 import type { Draft } from '@/services/event-form';
+
+/** What quick add fills in beyond the times. */
+export type DraftPrefill = { summary?: string; rrule?: string | null; calendarId?: string };
+
 import type { Box } from '@/services/popover';
 
 export type EventEditorState = {
   draft: Draft | undefined;
   /** What the editor panel sits beside: the clicked event, or undefined to use the draft placeholder. */
   anchor: Box | undefined;
-  openCreate: (start: Date, end: Date, allDay: boolean) => void;
+  openCreate: (start: Date, end: Date, allDay: boolean, prefill?: DraftPrefill) => void;
   openEdit: (o: Occurrence) => void;
   close: () => void;
 };
@@ -41,9 +45,9 @@ export function useEventEditor(): EventEditorState {
   return {
     draft,
     anchor,
-    openCreate: (start: Date, end: Date, allDay: boolean): void => {
+    openCreate: (start: Date, end: Date, allDay: boolean, prefill?: DraftPrefill): void => {
       setAnchor(undefined);
-      setDraft({ kind: 'create', start, end, allDay });
+      setDraft({ kind: 'create', start, end, allDay, ...prefill });
     },
     openEdit: (occurrence: Occurrence): void => {
       // Keyboard opens have no press; use the focused event instead.

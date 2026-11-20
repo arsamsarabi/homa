@@ -18,6 +18,8 @@ import { timeZones } from '@/services/zones';
 
 export type EventFormModel = {
   occurrence: Occurrence | undefined;
+  /** The title the form starts with. */
+  summary: string;
   /** The occurrence is in a read-only calendar: show its details, not a form. */
   readOnly: boolean;
   calendarOptions: { value: string; label: string }[];
@@ -48,13 +50,23 @@ const message = (err: unknown): string => (err instanceof Error ? err.message : 
 
 export function useEventForm(draft: Draft): EventFormModel {
   const { t } = useTranslation();
-  const { writableCalendars, isReadOnly, colors, actions, editor, tz: viewTz } = useCalendarPageModel();
+  const {
+    writableCalendars,
+    defaultCalendarId,
+    isReadOnly,
+    colors,
+    actions,
+    editor,
+    tz: viewTz,
+  } = useCalendarPageModel();
   const occurrence = draft.kind === 'edit' ? draft.occurrence : undefined;
   const series = useSeries(occurrence?.recurring ? occurrence.eventId : undefined);
 
   const [allDay, setAllDay] = useState(draftAllDay(draft));
   const [tz, setTz] = useState(draftZone(draft, viewTz));
-  const [calendarId, setCalendarId] = useState(occurrence?.calendarId ?? writableCalendars[0]?.id ?? '');
+  const [calendarId, setCalendarId] = useState(
+    occurrence?.calendarId ?? (draft.kind === 'create' ? draft.calendarId : undefined) ?? defaultCalendarId ?? '',
+  );
   const [picked, setPicked] = useState<Repeat>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
@@ -115,6 +127,7 @@ export function useEventForm(draft: Draft): EventFormModel {
 
   return {
     occurrence,
+    summary: occurrence?.summary ?? (draft.kind === 'create' ? draft.summary : undefined) ?? '',
     readOnly: occurrence !== undefined && isReadOnly(occurrence.calendarId),
     calendarOptions,
     repeatOptions,

@@ -1,0 +1,10 @@
+.preview {
+  min-height: 1.75rem;
+}
+
+.dot {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: 50%;
+  flex: none;
+}

@@ -2,4 +2,6 @@ export * from './calendars';
 export * from './errors';
 export * from './events';
 export * from './ics';
+export * from './quick-add';
 export * from './recurrence';
+export * from './time';
