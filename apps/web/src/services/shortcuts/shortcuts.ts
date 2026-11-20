@@ -2,7 +2,7 @@
 // work on any keyboard layout, Farsi included) and never fire while typing in a field.
 import type { View } from '@/schemas';
 
-export type CalendarCommand = 'today' | 'previous' | 'next' | 'newEvent' | `view.${View}`;
+export type CalendarCommand = 'today' | 'previous' | 'next' | 'newEvent' | 'quickAdd' | `view.${View}`;
 export type Shortcut = { hotkey: string; label: string; command: CalendarCommand | 'palette' | 'help' };
 
 /** Shown in the help sheet in this order. `label` is what the sheet prints for the key. */
@@ -13,6 +13,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { hotkey: 'ArrowLeft', label: '←', command: 'previous' },
   { hotkey: 'ArrowRight', label: '→', command: 'next' },
   { hotkey: 'C', label: 'C', command: 'newEvent' },
+  { hotkey: 'Q', label: 'Q', command: 'quickAdd' },
   { hotkey: 'D', label: 'D', command: 'view.day' },
   { hotkey: 'W', label: 'W', command: 'view.week' },
   { hotkey: 'M', label: 'M', command: 'view.month' },

@@ -9,9 +9,17 @@ import { instantOf, wallOf } from '@/services/zones';
 export const REPEATS = ['none', 'daily', 'weekly', 'monthly', 'yearly', 'custom'] as const;
 export type Repeat = (typeof REPEATS)[number];
 
-/** What the drawer is open for. Create times are instants. */
+/** What the drawer is open for. Create times are instants; quick add can prefill a title and RRULE. */
 export type Draft =
-  | { kind: 'create'; start: Date; end: Date; allDay: boolean }
+  | {
+      kind: 'create';
+      start: Date;
+      end: Date;
+      allDay: boolean;
+      summary?: string;
+      rrule?: string | null;
+      calendarId?: string;
+    }
   | { kind: 'edit'; occurrence: Occurrence };
 
 export type EditorResult =
@@ -66,9 +74,10 @@ export function formTimes(draft: Draft, allDay: boolean, tz: string): { start: s
   };
 }
 
-/** The repeat shown in the form: what was picked, else the series' rule, else none. */
+/** The repeat shown in the form: what was picked, else the series' (or prefilled) rule, else none. */
 export const shownRepeat = (draft: Draft, picked: Repeat | undefined, seriesRrule: string | null | undefined): Repeat =>
-  picked ?? (draft.kind === 'edit' && draft.occurrence.recurring ? repeatOf(seriesRrule) : 'none');
+  picked ??
+  (draft.kind === 'create' ? repeatOf(draft.rrule) : draft.occurrence.recurring ? repeatOf(seriesRrule) : 'none');
 
 const INVALID = new Date(Number.NaN);
 
@@ -106,7 +115,7 @@ export function buildEditorResult(
   };
   const tz = input.allDay ? 'UTC' : input.tz;
   if (draft.kind === 'create') {
-    const rrule = rruleOf(shownRepeat(draft, input.repeat, null), null);
+    const rrule = rruleOf(shownRepeat(draft, input.repeat, null), draft.rrule ?? null);
     return { kind: 'create', body: { ...common, calendarId: input.calendarId, allDay: input.allDay, tz, rrule } };
   }
   const o = draft.occurrence;

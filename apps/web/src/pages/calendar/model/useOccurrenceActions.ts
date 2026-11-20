@@ -7,7 +7,7 @@ import { useEventMutations } from '@/hooks/calendar';
 import type { Occurrence, Scope } from '@/schemas';
 import type { EditorResult } from '@/services/event-form';
 import { allowedScopes, seriesPatch, shiftsSeries } from '@/services/series-change';
-import { useAnnouncer } from '@/stores';
+import { useAnnouncer, useLastCalendar } from '@/stores';
 import type { ScopePrompt } from './useScopePrompt';
 
 export type OccurrenceActions = {
@@ -23,6 +23,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
   const { t } = useTranslation();
   const { create, update, remove: removeEvent, fetchSeries } = useEventMutations();
   const announce = useAnnouncer((s) => s.announce);
+  const rememberCalendar = useLastCalendar((s) => s.remember);
   const [error, setError] = useState<string>();
 
   /** Applies a patch to an occurrence; false if the scope question was cancelled. */
@@ -44,8 +45,10 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
   }
 
   async function save(r: EditorResult): Promise<void> {
-    if (r.kind === 'create') await create.mutateAsync(r.body);
-    else if (!(await change(r.occurrence, r.patch, r.seriesChanged))) return;
+    if (r.kind === 'create') {
+      await create.mutateAsync(r.body);
+      rememberCalendar(r.body.calendarId);
+    } else if (!(await change(r.occurrence, r.patch, r.seriesChanged))) return;
     closeEditor();
     announce(t('calendar.announce.saved'));
   }

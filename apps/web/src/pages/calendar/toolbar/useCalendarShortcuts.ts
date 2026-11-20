@@ -1,6 +1,7 @@
 import { useHotkeys } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { type Language, languages } from '@/lib/i18n';
+import { QUICK_ADD_INPUT_ID } from '@/pages/calendar/quick-add';
 import { CALENDAR_SHORTCUTS, type CalendarCommand, directed } from '@/services/shortcuts';
 import type { CalendarToolbar } from './useCalendarToolbar';
 
@@ -16,6 +17,7 @@ export function useCalendarShortcuts(bar: CalendarToolbar): void {
     else if (c === 'previous') bar.previous();
     else if (c === 'next') bar.next();
     else if (c === 'newEvent') bar.newEvent();
+    else if (c === 'quickAdd') document.getElementById(QUICK_ADD_INPUT_ID)?.focus();
     else bar.pickView(c.slice('view.'.length));
   };
   useHotkeys(CALENDAR_SHORTCUTS.map((s) => [s.hotkey, (): void => run(s.command), { usePhysicalKeys: true }]));

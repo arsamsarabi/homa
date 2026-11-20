@@ -8,6 +8,7 @@ import { useSettings } from '@/hooks/settings';
 import type { Calendar, Occurrence, SecondaryCalendar, View } from '@/schemas';
 import { type DayRange, rangeFor, today } from '@/services/dates';
 import { instantOf } from '@/services/zones';
+import { defaultCalendarId, useLastCalendar } from '@/stores';
 import { type CalendarUrlState, useCalendarUrlState } from './useCalendarUrlState';
 import { type EventEditorState, useEventEditor } from './useEventEditor';
 import { type OccurrenceActions, useOccurrenceActions } from './useOccurrenceActions';
@@ -24,6 +25,8 @@ export type CalendarPageModel = CalendarUrlState & {
   calendars: Calendar[];
   /** Calendars events can be created in or moved to (not subscriptions). */
   writableCalendars: Calendar[];
+  /** Where new events go: the last calendar created in, else the first writable one. */
+  defaultCalendarId: string | undefined;
   /** True for a read-only calendar (a subscription): its events open as details, not a form. */
   isReadOnly: (calendarId: string) => boolean;
   /** Calendar id → color. */
@@ -63,6 +66,7 @@ export function useCalendarPage(): CalendarPageModel {
     (): ReadonlySet<string> => new Set(calendars.filter((c) => c.readOnly).map((c) => c.id)),
     [calendars],
   );
+  const lastCalendarId = useLastCalendar((s) => s.id);
   const pickDay = (d: Date): void => url.go({ view: 'day' satisfies View, date: d });
 
   return {
@@ -75,6 +79,10 @@ export function useCalendarPage(): CalendarPageModel {
     today: today(url.tz),
     calendars,
     writableCalendars,
+    defaultCalendarId: defaultCalendarId(
+      writableCalendars.map((c) => c.id),
+      lastCalendarId,
+    ),
     isReadOnly: (calendarId: string): boolean => readOnlyIds.has(calendarId),
     colors,
     occurrences,
