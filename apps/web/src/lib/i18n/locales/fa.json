@@ -325,9 +325,15 @@
     "filterHidden_one": "تقویم‌ها، {{count}} پنهان",
     "filterHidden_other": "تقویم‌ها، {{count}} پنهان",
     "mine": "تقویم‌های من",
-    "other": "تقویم‌های متصل",
     "showAll": "نمایش همه",
-    "manage": "رنگ‌ها و تنظیمات"
+    "manage": "رنگ‌ها و تنظیمات",
+    "groups": {
+      "caldav": "CalDAV",
+      "google": "گوگل",
+      "microsoft": "Outlook",
+      "ics": "اشتراک‌ها",
+      "feeds": "اشتراک‌ها"
+    }
   },
   "google": {
     "add": "اتصال Google",
