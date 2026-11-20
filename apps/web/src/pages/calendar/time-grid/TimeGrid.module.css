@@ -21,6 +21,9 @@
 .head,
 .allDay {
   border-bottom: 1px solid var(--mantine-color-default-border);
+  /* Reserve the body's scrollbar width too, so the day columns line up above it. */
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
 }
 
 .dayHead {
@@ -68,6 +71,7 @@
 
 .scroll {
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .body {
