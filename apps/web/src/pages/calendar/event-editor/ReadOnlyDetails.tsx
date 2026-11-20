@@ -1,6 +1,9 @@
 import { CloseButton, ColorSwatch, Group, Stack, Text, Title } from '@mantine/core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ReminderChips } from '@/components';
+import { useSeries } from '@/hooks/calendar';
+import { useSetEventReminders } from '@/hooks/reminders';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { wallOf } from '@/services/zones';
@@ -8,9 +11,11 @@ import classes from './EventEditor.module.css';
 
 export type ReadOnlyDetailsProps = { occurrence: Occurrence; onClose: () => void };
 
-/** An event from a read-only calendar (a subscription): what and when, with no editing. */
+/** An event from a read-only calendar (a subscription): what and when, and reminders that stay in Homa. */
 export function ReadOnlyDetails({ occurrence: o, onClose }: ReadOnlyDetailsProps): JSX.Element {
   const { t } = useTranslation();
+  const event = useSeries(o.eventId);
+  const setReminders = useSetEventReminders();
   const { calendars, colors, formats, tz } = useCalendarPageModel();
   const calendar = calendars.find((c) => c.id === o.calendarId);
   // All-day events are stored at UTC midnights, which are already wall dates; the end is exclusive.
@@ -41,6 +46,16 @@ export function ReadOnlyDetails({ occurrence: o, onClose }: ReadOnlyDetailsProps
       {o.description && (
         <Text size="sm" className={classes.notes}>
           {o.description}
+        </Text>
+      )}
+      <ReminderChips
+        value={event.data?.reminders ?? []}
+        onChange={(reminders: number[]): void => setReminders.mutate({ id: o.eventId, reminders })}
+        disabled={event.isPending || setReminders.isPending}
+      />
+      {setReminders.error && (
+        <Text size="xs" c="red" role="alert">
+          {t('reminders.saveFailed', { message: setReminders.error.message })}
         </Text>
       )}
       <Text size="xs" c="dimmed">

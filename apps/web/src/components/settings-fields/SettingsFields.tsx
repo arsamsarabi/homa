@@ -1,8 +1,9 @@
-import { Radio, Select, Stack } from '@mantine/core';
-import { type JSX, useMemo } from 'react';
+import { NativeSelect, Radio, Select, Stack } from '@mantine/core';
+import { type ChangeEvent, type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SECONDARY_CALENDARS, type SecondaryCalendar, type Settings } from '@/schemas';
 import { calendarLocale } from '@/services/locale';
+import { DEFAULT_REMINDER, offsetLabel, REMINDER_PRESETS } from '@/services/reminders';
 import { timeZones } from '@/services/zones';
 
 export type SettingsFieldsProps = {
@@ -13,11 +14,12 @@ export type SettingsFieldsProps = {
 };
 
 const BROWSER = 'browser';
+const NO_REMINDER = 'none';
 // 2026-11-15 was a Sunday, so day d of that week has getUTCDay() === d.
 const weekdayOf = (d: number, locale: string): string =>
   new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(2026, 10, 15 + d));
 
-/** The home time zone and the second calendar. */
+/** The home time zone, the week start, the second calendar and the default reminder. */
 export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsProps): JSX.Element {
   const { t, i18n } = useTranslation();
   const zones = useMemo(
@@ -33,6 +35,20 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
       [1, 2, 3, 4, 5, 6, 0].map((d) => ({ value: String(d), label: weekdayOf(d, i18n.language) })),
     [i18n.language],
   );
+  const reminderOptions = useMemo(
+    (): { value: string; label: string }[] => [
+      { value: NO_REMINDER, label: t('reminders.none') },
+      ...REMINDER_PRESETS.map((m) => {
+        const l = offsetLabel(m);
+        return {
+          value: String(m),
+          label: l.key === 'atStart' ? t('reminders.atStart') : t(`reminders.${l.key}`, { count: l.count }),
+        };
+      }),
+    ],
+    [t],
+  );
+  const reminder = value.defaultReminderMinutes === undefined ? DEFAULT_REMINDER : value.defaultReminderMinutes;
   return (
     <Stack>
       <Select
@@ -65,6 +81,16 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
           ))}
         </Stack>
       </Radio.Group>
+      <NativeSelect
+        label={t('reminders.default')}
+        description={t('reminders.defaultHint')}
+        data={reminderOptions}
+        value={reminder === null ? NO_REMINDER : String(reminder)}
+        onChange={(e: ChangeEvent<HTMLSelectElement>): void => {
+          const v = e.currentTarget.value;
+          onChange({ defaultReminderMinutes: v === NO_REMINDER ? null : Number(v) });
+        }}
+      />
     </Stack>
   );
 }

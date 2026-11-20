@@ -1,6 +1,6 @@
 # Microsoft (Outlook.com and Microsoft 365)
 
-People on your instance can connect a Microsoft account (a personal Outlook.com, Hotmail or Live account, or a work or school Microsoft 365 account) and sync its calendars both ways. Microsoft only lets an app reach calendars through an app registered in Microsoft Entra ID, so each self-hosted instance registers its own. It takes about ten minutes, and a free Microsoft account is enough: you don't need an Azure subscription.
+People on your instance can connect a Microsoft account (a personal Outlook.com, Hotmail or Live account, or a work or school Microsoft 365 account) and sync its calendars both ways. Microsoft only lets an app reach calendars through an app registered in Microsoft Entra ID, so each self-hosted instance registers its own. It takes about ten minutes and costs nothing, but the account that registers the app must belong to a Microsoft Entra directory (a tenant).
 
 You need:
 
@@ -10,6 +10,13 @@ You need:
 ## 1. Register the app
 
 1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/) (or the [Azure portal](https://portal.azure.com/), where it's under **Microsoft Entra ID**) with the account that will own the app.
+
+   A personal Microsoft account (Outlook.com, Hotmail, Live) on its own has no directory, and signing in fails with "Selected user account does not exist in tenant 'Microsoft Services'". To get one:
+
+   - **Free Azure account:** create one at [azure.microsoft.com/free](https://azure.microsoft.com/free) with the same personal account. Microsoft asks for a card to verify your identity, but registering an app is free. This creates a "Default Directory" that your account owns. Then sign in to the Azure portal and continue.
+   - **Work or school account:** use one that's allowed to register apps in its organization's directory.
+
+   Either way, the app you register can still be used by personal accounts, because of the supported account types chosen in step 4.
 2. Go to **Entra ID → App registrations** and click **New registration**.
 3. **Name:** one people will recognize on the consent screen, such as your instance's name.
 4. **Supported account types:** choose **Accounts in any organizational directory (Any Microsoft Entra ID tenant - Multitenant) and personal Microsoft accounts (e.g. Skype, Xbox)**. Newer portals word it **Any Entra ID Tenant + Personal Microsoft accounts**. Homa signs in through the `common` endpoint, so any other choice turns away either personal or work accounts.
@@ -54,6 +61,7 @@ Set both or neither: the server won't start with only one. Once they're set, **S
 
 ## Troubleshooting
 
+- **"Selected user account does not exist in tenant 'Microsoft Services'" when opening the admin center or App registrations:** the account has no Entra directory. Create a free Azure account with it, or use a work or school account (see step 1).
 - **"The redirect URI … does not match" (AADSTS50011) on Microsoft's page:** the Web redirect URI doesn't match `HOMA_URL` + `/api/connections/microsoft/callback` exactly (scheme, host, port, no trailing slash), or it was added under Single-page application instead of Web.
 - **"… is not configured as a multi-tenant application" or personal accounts refused (AADSTS50020, AADSTS700016):** the supported account types aren't the multitenant-plus-personal option. Change it under **Authentication** (or the app's **Manifest**, `signInAudience: AzureADandPersonalMicrosoftAccount`).
 - **"Need admin approval" for a work account:** that organization doesn't let people consent to apps themselves. Its admin has to approve the app (they'll see its name and the permissions above).

@@ -1,5 +1,14 @@
 import { expect, test } from 'bun:test';
-import { basicUtc, googleBody, googleEventId, instanceBody, instanceId, readSeries, seriesIcs } from './mapping';
+import {
+  basicUtc,
+  googleBody,
+  googleEventId,
+  instanceBody,
+  instanceId,
+  readSeries,
+  resolveReminders,
+  seriesIcs,
+} from './mapping';
 
 const weekly = {
   id: 'abc123',
@@ -103,6 +112,10 @@ test('push bodies: a series with its zone, EXDATEs and an override instance', ()
     exdates: [new Date('2027-03-08T18:00:00Z')],
     rdates: [],
     overrides: [],
+    reminders: [
+      { minutes: 10, action: 'display' as const },
+      { minutes: 1440, action: 'email' as const },
+    ],
   };
   expect(googleBody(event)).toEqual({
     summary: 'Gym',
@@ -111,6 +124,13 @@ test('push bodies: a series with its zone, EXDATEs and an override instance', ()
     start: { dateTime: '2027-03-01T18:00:00.000Z', timeZone: 'Europe/London' },
     end: { dateTime: '2027-03-01T19:00:00.000Z', timeZone: 'Europe/London' },
     recurrence: ['RRULE:FREQ=WEEKLY', 'EXDATE:20270308T180000Z'],
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: 'popup', minutes: 10 },
+        { method: 'email', minutes: 1440 },
+      ],
+    },
   });
   const o = {
     recurrenceId: new Date('2027-03-15T18:00:00Z'),
@@ -131,4 +151,31 @@ test('event ids are valid base32hex and stable per UID', () => {
   expect(googleEventId('a@b')).toMatch(/^[0-9a-v]{5,1024}$/);
   expect(googleEventId('a@b')).toBe(googleEventId('a@b'));
   expect(googleEventId('a@b')).not.toBe(googleEventId('a@c'));
+});
+
+test('reminders: overrides and the calendar defaults become VALARMs', () => {
+  const master = {
+    id: 'g1',
+    summary: 'Gym',
+    start: { dateTime: '2027-03-01T18:00:00Z' },
+    end: { dateTime: '2027-03-01T19:00:00Z' },
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: 'email', minutes: 60 },
+        { method: 'popup', minutes: 5 },
+      ],
+    },
+  };
+  const read = (e: typeof master | ReturnType<typeof resolveReminders>) =>
+    readSeries({ master: e, exceptions: [] }, 'UTC', 'UTC').events[0]?.reminders;
+  expect(read(master)).toEqual([
+    { minutes: 5, action: 'display' },
+    { minutes: 60, action: 'email' },
+  ]);
+  const usesDefault = resolveReminders({ ...master, reminders: { useDefault: true } }, [
+    { method: 'popup', minutes: 30 },
+  ]);
+  expect(read(usesDefault)).toEqual([{ minutes: 30, action: 'display' }]);
+  expect(read({ ...master, reminders: { useDefault: false, overrides: [] } })).toEqual([]);
 });

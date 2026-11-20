@@ -6,6 +6,7 @@ export * from './locale';
 export * from './month-drag';
 export * from './popover';
 export * from './quick-add';
+export * from './reminders';
 export * from './series-change';
 export * from './shortcuts';
 export * from './time-grid';

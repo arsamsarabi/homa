@@ -2,6 +2,7 @@
 import { ICS_LIMITS } from '@homa/core';
 import { z } from '@hono/zod-openapi';
 import { Calendar, Event } from '@/calendar';
+import { Reminder } from '@/reminders';
 
 export const IcsBody = z.string().openapi({
   description: `An iCalendar (.ics) file, at most ${ICS_LIMITS.maxBytes / 1024 / 1024} MB and ${ICS_LIMITS.maxComponents} components`,
@@ -36,8 +37,10 @@ export const DataExport = z
       homeTz: z.string().nullable(),
       secondaryCalendar: z.string(),
       weekStart: z.number().int().min(0).max(6).nullable(),
+      defaultReminderMinutes: z.number().int().nullable(),
     }),
     calendars: z.array(Calendar),
     events: z.array(Event.extend({ overrides: z.array(ExportOverride) })),
+    reminders: z.array(Reminder),
   })
   .openapi('DataExport');

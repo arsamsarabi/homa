@@ -137,3 +137,14 @@ test('new events start at the next whole hour on the shown day', () => {
   const slot = newEventSlot(new Date('2026-11-21T00:00:00Z'), new Date('2026-11-19T14:20:00Z'));
   expect(slot).toEqual({ start: new Date('2026-11-21T15:00:00Z'), end: new Date('2026-11-21T16:00:00Z') });
 });
+
+test('reminders: a new event sends them, an edit only when they changed', () => {
+  const created = buildEditorResult(
+    create,
+    input({ allDay: false, start: '2026-11-19T09:00', end: '2026-11-19T10:00', tz: 'Asia/Tehran', reminders: [10] }),
+    ctx,
+  );
+  expect(created).toMatchObject({ kind: 'create', body: { reminders: [10] } });
+  expect(buildEditorResult(edit, input({}), ctx)).not.toHaveProperty('reminders');
+  expect(buildEditorResult(edit, input({ reminders: [0, 1440] }), ctx)).toMatchObject({ reminders: [0, 1440] });
+});

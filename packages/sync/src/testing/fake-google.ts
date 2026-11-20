@@ -121,6 +121,7 @@ export function fakeGoogle(): FakeGoogle {
     const more = start + state.pageSize < items.length;
     return json({
       timeZone: 'Europe/London',
+      defaultReminders: [{ method: 'popup', minutes: 30 }],
       items: page.map(out),
       ...(more ? { nextPageToken: String(start + state.pageSize) } : uid ? {} : { nextSyncToken: `s${seq}` }),
     });

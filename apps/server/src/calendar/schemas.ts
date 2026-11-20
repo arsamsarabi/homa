@@ -1,6 +1,6 @@
 // Request and response schemas for calendars, events and occurrences. They drive validation and
 // the OpenAPI document (and so the generated web client).
-import { isTimeZone, parseRrule } from '@homa/core';
+import { isTimeZone, parseRrule, REMINDER_LIMITS } from '@homa/core';
 import { z } from '@hono/zod-openapi';
 
 const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #7d7fa3');
@@ -44,6 +44,15 @@ const Rrule = z
   .openapi({ example: 'FREQ=WEEKLY;BYDAY=MO' });
 const When = z.iso.datetime({ offset: true }).transform((v) => new Date(v));
 
+export const Reminders = z
+  .array(z.int().min(0).max(REMINDER_LIMITS.maxMinutes))
+  .max(REMINDER_LIMITS.perEvent)
+  .openapi({
+    example: [10, 1440],
+    description: `Minutes before each occurrence's start, at most ${REMINDER_LIMITS.perEvent}; whole days keep the wall time across clock changes`,
+  });
+export const RemindersInput = z.object({ reminders: Reminders }).openapi('RemindersInput');
+
 export const Event = z
   .object({
     id: z.uuid(),
@@ -59,6 +68,7 @@ export const Event = z
     rrule: z.string().nullable(),
     exdates: z.array(z.iso.datetime()),
     rdates: z.array(z.iso.datetime()),
+    reminders: Reminders,
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -80,6 +90,7 @@ export const EventInput = EventFields.extend({
   location: EventFields.shape.location.optional(),
   allDay: EventFields.shape.allDay.default(false),
   rrule: EventFields.shape.rrule.optional(),
+  reminders: Reminders.optional(),
 })
   .refine((v) => v.end > v.start, { message: 'end must be after start', path: ['end'] })
   .openapi('EventInput');

@@ -1,0 +1,17 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+/* The arrow points back in the reading direction. */
+:global([dir="rtl"]) .arrow {
+  transform: scaleX(-1);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

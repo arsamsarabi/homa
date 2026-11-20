@@ -16,7 +16,10 @@ export const calendarOut = (c: repo.CalendarRow): z.infer<typeof Calendar> => ({
   updatedAt: c.updatedAt.toISOString(),
 });
 
-export const eventOut = (e: repo.EventRow): z.infer<typeof Event> => ({
+/** An event with its reminders' minutes. */
+export type EventWithReminders = repo.EventRow & { reminders: number[] };
+
+export const eventOut = (e: EventWithReminders): z.infer<typeof Event> => ({
   id: e.id,
   calendarId: e.calendarId,
   uid: e.uid,
@@ -30,6 +33,7 @@ export const eventOut = (e: repo.EventRow): z.infer<typeof Event> => ({
   rrule: e.rrule,
   exdates: e.exdates.map((d) => d.toISOString()),
   rdates: e.rdates.map((d) => d.toISOString()),
+  reminders: e.reminders,
   createdAt: e.createdAt.toISOString(),
   updatedAt: e.updatedAt.toISOString(),
 });

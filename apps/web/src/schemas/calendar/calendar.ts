@@ -51,6 +51,8 @@ export const EventSchema = z.object({
   tz: z.string(),
   rrule: z.string().nullable(),
   exdates: z.array(isoDateTime),
+  /** Minutes before each occurrence's start. */
+  reminders: z.array(z.number().int()).default([]),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });

@@ -40,6 +40,9 @@ Put these in `deploy/docker/.env`:
 | `HOMA_ENCRYPTION_KEY` | (unset) | Encrypts connected calendars' saved details (feed URLs, CalDAV app passwords, Google and Microsoft tokens). 32 bytes, base64: `openssl rand -base64 32`. Needed before anyone adds a connected calendar; once there are connections the server won't start without it. Back it up with the database: changing or losing it means removing and adding every connected calendar again |
 | `HOMA_SYNC_INTERVAL_MINUTES` | `30` | How often each connected calendar is synced (5 to 1440). The worker checks every 5 minutes; local changes to CalDAV, Google and Microsoft calendars are pushed within about a minute either way |
 | `HOMA_SYNC_ALLOW_PRIVATE_NETWORKS` | `false` | Lets people subscribe to feeds and connect CalDAV servers on loopback and private networks (a Radicale or Nextcloud on your LAN). Off by default, so a feed URL can't make the server reach its own network or a cloud metadata address |
+| `HOMA_VAPID_PUBLIC_KEY`, `HOMA_VAPID_PRIVATE_KEY` | (unset) | The web push keys reminders are sent with, as `bunx web-push generate-vapid-keys` prints them. Set both or neither. Without them the first process that starts generates a pair and keeps it in the database, so it survives restarts and restores. Changing them makes every browser turn push on again |
+| `HOMA_VAPID_SUBJECT` | `HOMA_URL` if https, else `mailto:admin@localhost` | A `mailto:` or `https:` address push services can contact about this server. Apple's push service refuses `localhost` addresses, so set it for Safari and iOS |
+| `HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS` | `false` | Lets notification endpoints (browser push services today) be on loopback and private networks. Off by default, so a user-supplied address can't make the server reach its own network or a cloud metadata address. Push works without it: browsers use public push services |
 | `HOMA_GOOGLE_CLIENT_ID`, `HOMA_GOOGLE_CLIENT_SECRET` | (unset) | Your own Google OAuth client, so people can connect Google Calendar accounts. Set both or neither; without them the Google option is hidden. Needs `HOMA_ENCRYPTION_KEY` and the right `HOMA_URL`. See [Google Calendar](./google.md) |
 | `HOMA_MICROSOFT_CLIENT_ID`, `HOMA_MICROSOFT_CLIENT_SECRET` | (unset) | Your own Microsoft Entra ID app, so people can connect Outlook.com and Microsoft 365 calendars. Set both or neither; without them the Outlook option is hidden. Needs `HOMA_ENCRYPTION_KEY` and the right `HOMA_URL`. The secret expires (at most 24 months): renew it before then. See [Microsoft](./microsoft.md) |
 | `HOMA_AUTH_RATE_LIMIT` | `true` | Per-address limits on sign-in and sign-up attempts. Leave it on; `false` is for automated tests that sign up several accounts within seconds |
@@ -48,6 +51,10 @@ Put these in `deploy/docker/.env`:
 ## Small installs
 
 To run the API and worker in one container, use a single service with `HOMA_ROLE=all` (the default when `HOMA_ROLE` is unset).
+
+## Reminders and web push
+
+Reminders show in the bell in the app's header without any setup. Push notifications (to the browser even when Homa is closed) need HTTPS: browsers only allow push on secure pages, and `http://localhost` counts as secure for trying it out. Each person turns push on per browser under Settings → Notifications on this device. On iPhone and iPad, Homa must first be added to the Home Screen. The worker sends reminders, so keep it running (`HOMA_ROLE=worker` or `all`); a reminder can be up to a minute late, and one missed by more than an hour (the worker was down) is skipped.
 
 ## Backups
 
