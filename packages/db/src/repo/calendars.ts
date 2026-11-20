@@ -87,3 +87,7 @@ export async function updateFeedState(db: Executor, id: string, state: FeedState
 export async function updateSyncToken(db: Executor, id: string, syncToken: string | null): Promise<void> {
   await db.update(calendars).set({ syncToken }).where(eq(calendars.id, id));
 }
+
+export async function setRemoteMissing(db: Executor, id: string, remoteMissing: boolean): Promise<void> {
+  await db.update(calendars).set({ remoteMissing }).where(eq(calendars.id, id));
+}

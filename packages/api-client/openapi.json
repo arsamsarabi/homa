@@ -60,6 +60,10 @@
             "type": "boolean",
             "description": "Left out of the calendar views; its events still sync"
           },
+          "remoteMissing": {
+            "type": "boolean",
+            "description": "Deleted at the source, or no longer shared with the account; it can be deleted here"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -76,6 +80,7 @@
           "connectionId",
           "readOnly",
           "hidden",
+          "remoteMissing",
           "createdAt",
           "updatedAt"
         ]
@@ -926,6 +931,10 @@
           "selected": {
             "type": "boolean",
             "description": "It syncs with a local calendar"
+          },
+          "missing": {
+            "type": "boolean",
+            "description": "Synced here but gone at the source (deleted, or no longer shared); unchoose it to remove it"
           }
         },
         "required": [
@@ -933,7 +942,8 @@
           "name",
           "color",
           "readOnly",
-          "selected"
+          "selected",
+          "missing"
         ]
       },
       "ChooseCalendarsInput": {

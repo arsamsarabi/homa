@@ -1,0 +1,1 @@
+ALTER TABLE "calendars" ADD COLUMN "remote_missing" boolean DEFAULT false NOT NULL;

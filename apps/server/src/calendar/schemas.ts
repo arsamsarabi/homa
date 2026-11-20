@@ -12,6 +12,9 @@ export const Calendar = z
     connectionId: z.uuid().nullable().openapi({ description: 'The connection it syncs with; null for your own' }),
     readOnly: z.boolean().openapi({ description: 'Events here cannot be created, changed or deleted (subscriptions)' }),
     hidden: z.boolean().openapi({ description: 'Left out of the calendar views; its events still sync' }),
+    remoteMissing: z.boolean().openapi({
+      description: 'Deleted at the source, or no longer shared with the account; it can be deleted here',
+    }),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })

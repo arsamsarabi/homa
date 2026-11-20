@@ -10,6 +10,7 @@ export {
   insertCalendar,
   listCalendars,
   listConnectionCalendars,
+  setRemoteMissing,
   updateCalendar,
   updateFeedState,
   updateSyncToken,

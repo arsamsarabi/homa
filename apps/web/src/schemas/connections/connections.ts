@@ -35,6 +35,8 @@ export const RemoteCalendarSchema = z.object({
   color: z.string().nullable(),
   readOnly: z.boolean(),
   selected: z.boolean(),
+  /** Synced here but gone at the source (deleted, or no longer shared). */
+  missing: z.boolean().default(false),
 });
 export type RemoteCalendar = z.infer<typeof RemoteCalendarSchema>;
 export const RemoteCalendarListSchema = z.array(RemoteCalendarSchema);

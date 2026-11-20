@@ -1,5 +1,6 @@
 import { ActionIcon, Alert, Badge, Button, CloseButton, ColorSwatch, Group, Paper, Stack, Text } from '@mantine/core';
 import { IconPencil } from '@tabler/icons-react';
+import type { TFunction } from 'i18next';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Calendar, Connection } from '@/schemas';
@@ -16,6 +17,8 @@ export type ConnectionItemProps = {
   /** CalDAV and Google: choose which of the account's calendars sync. */
   onChoose: () => void;
   onDismissNotice: () => void;
+  /** Removes a calendar that's gone at the source. */
+  onRemoveCalendar: (calendar: Calendar) => void;
 };
 
 const STATUS_COLOR = { pending: 'gray', syncing: 'blue', ok: 'green', error: 'red' } as const;
@@ -26,6 +29,10 @@ export const isAccount = (c: Connection): boolean => c.provider !== 'ics';
 /** The name a connection is listed by: the account, or the calendar for a feed. */
 export const connectionName = (c: Connection, untitled: string): string =>
   (isAccount(c) ? c.label : c.calendars[0]?.name) ?? untitled;
+
+/** Where an account's calendars live, for "deleted on …": Google, or the CalDAV server. */
+export const providerName = (provider: Connection['provider'] | undefined, t: TFunction): string =>
+  provider === 'google' ? t('google.provider') : t('connections.providerServer');
 
 /**
  * One connection: its name, sync status, last check, last error and notice, its calendars (each
@@ -40,6 +47,7 @@ export function ConnectionItem({
   onEditCalendar,
   onChoose,
   onDismissNotice,
+  onRemoveCalendar,
 }: ConnectionItemProps): JSX.Element {
   const { t } = useTranslation();
   const name = connectionName(c, t('connections.untitled'));
@@ -91,6 +99,20 @@ export function ConnectionItem({
             </Group>
           </Alert>
         )}
+        {c.calendars
+          .filter((cal) => cal.remoteMissing)
+          .map((cal) => (
+            <Alert key={cal.id} color="yellow" p="xs">
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="xs">
+                  {t('connections.missing', { name: cal.name, provider: providerName(c.provider, t) })}
+                </Text>
+                <Button size="xs" variant="default" color="red" onClick={() => onRemoveCalendar(cal)}>
+                  {t('connections.removeFromHoma')}
+                </Button>
+              </Group>
+            </Alert>
+          ))}
         {caldav && c.calendars.length === 0 && (
           <Text size="xs" c="dimmed">
             {t('caldav.noneChosen')}

@@ -31,6 +31,8 @@ export const calendars = pgTable(
     readOnly: boolean('read_only').notNull().default(false),
     /** Left out of the calendar views (the user's filter); its events still sync. */
     hidden: boolean('hidden').notNull().default(false),
+    /** The last pull found the calendar gone at the source (deleted, or no longer shared). */
+    remoteMissing: boolean('remote_missing').notNull().default(false),
     /** The provider's id for this calendar (a CalDAV href, a Google calendar id); null for native and ICS. */
     remoteId: text('remote_id'),
     /** Incremental sync cursor: a Google syncToken, Graph delta link or CalDAV sync-token / ctag. */

@@ -1,4 +1,4 @@
-export { PushConflict, PushError, SyncError } from './errors';
+export { CalendarGoneError, PushConflict, PushError, SyncError } from './errors';
 export {
   DEFAULT_FETCH_POLICY,
   type FeedResponse,

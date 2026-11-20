@@ -6,6 +6,7 @@ import { UnavailableError, ValidationError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 import {
   type CaldavCredentials,
+  CalendarGoneError,
   caldavAdapter,
   decryptCredentials,
   encryptCredentials,
@@ -110,7 +111,10 @@ const cursorOf = (c: repo.CalendarRow): SyncCursor => ({
 
 export type SyncOutcome = 'changed' | 'unchanged' | 'failed' | 'busy';
 
-/** Pulls every calendar of the connection; returns whether anything changed and conflicted titles. */
+/**
+ * Pulls every calendar of the connection; returns whether anything changed and conflicted titles.
+ * A calendar gone at the source is marked missing (and unmarked once a pull works again).
+ */
 async function pullAll(
   db: Db,
   adapter: SyncAdapter,
@@ -128,8 +132,14 @@ async function pullAll(
         known,
       );
       conflicts.push(...(await db.transaction((tx) => applyPull(tx, calendar, result))));
+      if (calendar.remoteMissing) await repo.setRemoteMissing(db, calendar.id, false); // access is back
       changed ||= result.kind !== 'unchanged';
     } catch (err) {
+      // Gone at the source: marked for the user to remove, not a failure of the connection.
+      if (err instanceof CalendarGoneError) {
+        if (!calendar.remoteMissing) await repo.setRemoteMissing(db, calendar.id, true);
+        continue;
+      }
       // One calendar failing doesn't stop the others. Name it when the account has several.
       const named = calendars.length > 1 && expected(err);
       errors.push(named ? new SyncError(`"${calendar.name}": ${err.message}`) : err);

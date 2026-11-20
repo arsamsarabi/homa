@@ -441,6 +441,8 @@ export interface components {
             readOnly: boolean;
             /** @description Left out of the calendar views; its events still sync */
             hidden: boolean;
+            /** @description Deleted at the source, or no longer shared with the account; it can be deleted here */
+            remoteMissing: boolean;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -724,6 +726,8 @@ export interface components {
             readOnly: boolean;
             /** @description It syncs with a local calendar */
             selected: boolean;
+            /** @description Synced here but gone at the source (deleted, or no longer shared); unchoose it to remove it */
+            missing: boolean;
         };
         /** @description Exactly the remote calendars to sync */
         ChooseCalendarsInput: {

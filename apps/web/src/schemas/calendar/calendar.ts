@@ -13,6 +13,8 @@ export const CalendarSchema = z.object({
   /** Subscriptions: events can't be created, changed or deleted. */
   readOnly: z.boolean().default(false),
   hidden: z.boolean().default(false),
+  /** Deleted at the source, or no longer shared with the account: the user can remove it. */
+  remoteMissing: z.boolean().default(false),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });

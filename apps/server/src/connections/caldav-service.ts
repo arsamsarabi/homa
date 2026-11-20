@@ -17,7 +17,7 @@ import { adapterFor, credentialsOf, failureMessage, floatingTzOf, requireKey, sy
 import type { SyncSettings } from './sync-settings';
 
 export type CaldavInput = { serverUrl: string; username: string; password: string };
-export type RemoteCalendarView = RemoteCalendar & { remoteId: string; selected: boolean };
+export type RemoteCalendarView = RemoteCalendar & { remoteId: string; selected: boolean; missing: boolean };
 
 const asValidation = (err: unknown): never => {
   if (err instanceof SyncError || err instanceof ValidationError)
@@ -91,7 +91,10 @@ function fallbackName(remoteId: string): string {
   }
 }
 
-/** The account's calendars on the server, with the ones that sync marked. */
+/**
+ * The account's calendars on the server, with the ones that sync marked, then the synced ones the
+ * server no longer has (marked missing).
+ */
 export async function listRemoteCalendars(
   db: Db,
   settings: SyncSettings,
@@ -99,10 +102,18 @@ export async function listRemoteCalendars(
   id: string,
 ): Promise<RemoteCalendarView[]> {
   const connection = await accountConnection(db, userId, id);
-  const local = new Set((await repo.listConnectionCalendars(db, [id])).map((c) => c.remoteId));
-  return (await remoteList(db, settings, connection)).flatMap((c) =>
-    c.remoteId ? [{ ...c, remoteId: c.remoteId, selected: local.has(c.remoteId) }] : [],
+  const local = await repo.listConnectionCalendars(db, [id]);
+  const synced = new Set(local.map((c) => c.remoteId));
+  const remote = (await remoteList(db, settings, connection)).flatMap((c) =>
+    c.remoteId ? [{ ...c, remoteId: c.remoteId, selected: synced.has(c.remoteId), missing: false }] : [],
   );
+  const listed = new Set(remote.map((c) => c.remoteId));
+  const gone = local.flatMap((c) =>
+    c.remoteId && c.remoteMissing && !listed.has(c.remoteId)
+      ? [{ remoteId: c.remoteId, name: c.name, color: c.color, readOnly: c.readOnly, selected: true, missing: true }]
+      : [],
+  );
+  return [...remote, ...gone];
 }
 
 /**
@@ -119,9 +130,11 @@ export async function chooseCalendars(
   const connection = await accountConnection(db, userId, id);
   const remote = new Map((await remoteList(db, settings, connection)).map((c) => [c.remoteId, c]));
   const wanted = new Set(remoteIds);
-  for (const remoteId of wanted)
-    if (!remote.has(remoteId)) throw new ValidationError('Unknown calendar on this account');
   const local = await repo.listConnectionCalendars(db, [id]);
+  // A calendar already synced may stay chosen even when the server no longer lists it.
+  const synced = new Set(local.map((c) => c.remoteId));
+  for (const remoteId of wanted)
+    if (!remote.has(remoteId) && !synced.has(remoteId)) throw new ValidationError('Unknown calendar on this account');
   await db.transaction(async (tx) => {
     for (const c of local) if (!c.remoteId || !wanted.has(c.remoteId)) await repo.deleteCalendar(tx, userId, c.id);
     const have = new Set(local.map((c) => c.remoteId));

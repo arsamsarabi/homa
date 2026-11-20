@@ -4,7 +4,7 @@
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { serializeEvent } from '@homa/core';
 import { EMPTY_CURSOR, type PullResult, type RemoteResource, type SyncCursor } from '../adapter';
-import { PushConflict, SyncError } from '../feed';
+import { CalendarGoneError, PushConflict, SyncError } from '../feed';
 import { type FakeGoogle, fakeGoogle } from '../testing';
 import { googleAdapter } from './google-adapter';
 import { googleEventId } from './mapping';
@@ -189,11 +189,11 @@ describe('push', () => {
     );
   const id = googleEventId('homa-1');
 
-  test('a calendar Google no longer has (or no longer shares) says so', async () => {
+  test('a calendar Google no longer has (or no longer shares) is a CalendarGoneError', async () => {
     g.state.missingCalendars.add('gone@example.com');
-    await expect(
-      adapter().pullChanges({ remoteId: 'gone@example.com', name: 'TTRPG', readOnly: false }, EMPTY_CURSOR),
-    ).rejects.toThrow('Google no longer has this calendar, or this account lost access to it');
+    const pull = adapter().pullChanges({ remoteId: 'gone@example.com', name: 'TTRPG', readOnly: false }, EMPTY_CURSOR);
+    await expect(pull).rejects.toBeInstanceOf(CalendarGoneError);
+    await expect(pull).rejects.toThrow('Google no longer has this calendar, or this account lost access to it');
     g.state.missingCalendars.clear();
   });
 
