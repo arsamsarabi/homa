@@ -71,6 +71,22 @@ describe.skipIf(!testDatabaseUrl)('calendars and events', () => {
     expect((await call('DELETE', `/calendars/${made.body.id}`)).status).toBe(404);
   });
 
+  test('a calendar can be recolored, hidden and shown; only by its owner', async () => {
+    const made = await call('POST', '/calendars', { name: 'Gym' });
+    expect(made.body.hidden).toBe(false);
+    const path = `/calendars/${made.body.id}`;
+    expect((await call('PATCH', path, { color: '#b23a48', hidden: true })).body).toMatchObject({
+      color: '#b23a48',
+      hidden: true,
+    });
+    expect((await call('GET', '/calendars')).body.find((c) => c.id === made.body.id)?.hidden).toBe(true);
+    expect((await call('PATCH', path, { hidden: false })).body.hidden).toBe(false);
+    expect((await call('PATCH', path, {})).status).toBe(400);
+    const eve = await signUp('eve-hide@example.com');
+    expect((await call('PATCH', path, { hidden: true }, eve)).status).toBe(404);
+    await call('DELETE', path);
+  });
+
   test('validation errors are 400s with a message', async () => {
     const bad = await call('POST', '/events', { ...standup(), tz: 'Mars/Olympus', rrule: 'BYDAY=MO' });
     expect(bad.status).toBe(400);

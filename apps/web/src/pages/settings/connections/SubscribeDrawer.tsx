@@ -14,8 +14,8 @@ import { type FormEvent, type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { type SubscribeVars, useConnectionMutations, useHolidayCalendars } from '@/hooks/connections';
+import { SWATCHES } from '@/pages/settings/calendars';
 import { useAnnouncer } from '@/stores';
-import { SWATCHES } from './swatches';
 
 export type SubscribeDrawerProps = { opened: boolean; onClose: () => void };
 
@@ -105,8 +105,7 @@ export function SubscribeDrawer({ opened, onClose }: SubscribeDrawerProps): JSX.
             onChange={setColor}
             format="hex"
             swatches={[...SWATCHES]}
-            swatchesPerRow={8}
-            withPicker={false}
+            swatchesPerRow={7}
             closeOnColorSwatchClick
           />
           {subscribe.isError && (

@@ -56,6 +56,10 @@
             "type": "boolean",
             "description": "Events here cannot be created, changed or deleted (subscriptions)"
           },
+          "hidden": {
+            "type": "boolean",
+            "description": "Left out of the calendar views; its events still sync"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -71,6 +75,7 @@
           "color",
           "connectionId",
           "readOnly",
+          "hidden",
           "createdAt",
           "updatedAt"
         ]
@@ -102,6 +107,23 @@
         "required": [
           "name"
         ]
+      },
+      "CalendarPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$/i"
+          },
+          "hidden": {
+            "type": "boolean"
+          }
+        }
       },
       "Event": {
         "type": "object",
@@ -1045,7 +1067,7 @@
         "tags": [
           "Calendars"
         ],
-        "summary": "Rename or recolor a calendar",
+        "summary": "Rename, recolor, hide or show a calendar",
         "parameters": [
           {
             "schema": {
@@ -1062,18 +1084,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#[0-9a-f]{6}$/i"
-                  }
-                }
+                "$ref": "#/components/schemas/CalendarPatch"
               }
             }
           }

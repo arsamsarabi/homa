@@ -1,5 +1,5 @@
 // Connected calendars: the list with sync status, the holiday catalog, CalDAV accounts and their
-// calendars, and subscribe / connect / choose / sync now / rename / remove. Every change refetches
+// calendars, and subscribe / connect / choose / sync now / remove. Every change refetches
 // the calendars and occurrences, since a connection brings its own.
 import {
   type UseMutationResult,
@@ -11,8 +11,6 @@ import {
 import { homaClient, unwrap } from '@/api';
 import { calendarKeys } from '@/hooks/calendar';
 import {
-  type Calendar,
-  CalendarSchema,
   type Connection,
   ConnectionListSchema,
   ConnectionSchema,
@@ -32,7 +30,6 @@ export type SubscribeVars = ({ url: string } | { holidayId: string }) & { name?:
 
 export type CaldavVars = { serverUrl: string; username: string; password: string };
 export type ChooseVars = { id: string; remoteIds: string[] };
-export type CalendarEditVars = { id: string; name: string; color: string };
 
 export type ConnectionMutations = {
   subscribe: UseMutationResult<Connection, Error, SubscribeVars>;
@@ -40,7 +37,6 @@ export type ConnectionMutations = {
   choose: UseMutationResult<Connection, Error, ChooseVars>;
   syncNow: UseMutationResult<Connection, Error, string>;
   dismissNotice: UseMutationResult<void, Error, string>;
-  editCalendar: UseMutationResult<Calendar, Error, CalendarEditVars>;
   remove: UseMutationResult<void, Error, string>;
 };
 
@@ -110,13 +106,6 @@ export function useConnectionMutations(): ConnectionMutations {
     },
     onSettled: refresh,
   });
-  const editCalendar = useMutation({
-    mutationFn: async ({ id, name, color }: CalendarEditVars): Promise<Calendar> =>
-      CalendarSchema.parse(
-        await unwrap(homaClient.PATCH('/calendars/{id}', { params: { path: { id } }, body: { name, color } })),
-      ),
-    onSuccess: refresh,
-  });
   const syncNow = useMutation({
     mutationFn: async (id: string): Promise<Connection> =>
       ConnectionSchema.parse(await unwrap(homaClient.POST('/connections/{id}/sync', { params: { path: { id } } }))),
@@ -128,5 +117,5 @@ export function useConnectionMutations(): ConnectionMutations {
     },
     onSettled: refresh,
   });
-  return { subscribe, addCaldav, choose, syncNow, dismissNotice, editCalendar, remove };
+  return { subscribe, addCaldav, choose, syncNow, dismissNotice, remove };
 }

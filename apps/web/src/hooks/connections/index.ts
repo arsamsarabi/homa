@@ -1,6 +1,5 @@
 export {
   type CaldavVars,
-  type CalendarEditVars,
   type ChooseVars,
   type ConnectionMutations,
   connectionKeys,
