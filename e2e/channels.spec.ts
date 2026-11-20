@@ -47,7 +47,7 @@ test('add, test, edit and delete a webhook channel @smoke', async ({ page }) => 
   // Mantine's switch input is visually hidden behind its track.
   const toggle = page.getByRole('switch', { name: 'Send to "Hook"' });
   await expect(toggle).toBeChecked();
-  await toggle.uncheck({ force: true });
+  await toggle.click({ force: true }); // it follows the saved state, so it changes once the PATCH lands
   await expect(toggle).not.toBeChecked();
   await page.getByRole('button', { name: 'Delete "Hook"' }).click();
   await expect(list).not.toContainText('Hook');
