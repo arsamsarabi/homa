@@ -45,7 +45,7 @@
 
 <br />
 
-Homa is built with AI coding tools under the maintainer's supervision. The maintainer sets the architecture and the plan for each phase, and reviews every change, its tests and the CI results before it is merged.
+Development used AI tooling under staff-engineer supervision (~20 years experience, 13 commercial). Architecture, logic, CI/CD, tests, and coverage were reviewed by the maintainer. AI accelerated implementation; technical decisions and review remained human-owned.
 
 </details>
 
