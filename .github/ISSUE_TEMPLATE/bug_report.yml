@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in Homa doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please leave out anything private, such as event details, feed URLs, account emails or tokens. Security problems go through the [security policy](https://github.com/arsamsarabi/homa/blob/main/.github/SECURITY.md), not a public issue.
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The steps that lead to the problem.
+      placeholder: |
+        1. Open the week view
+        2. Drag an event to another day
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: Include error messages, and screenshots if they help.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Calendar views or event editing
+        - Recurring events
+        - Time zones or the Jalali calendar
+        - ICS subscriptions or holiday feeds
+        - CalDAV sync (iCloud, Fastmail, Nextcloud, other)
+        - Google Calendar sync
+        - Microsoft (Outlook.com, Microsoft 365) sync
+        - Import or export
+        - Sign-in, setup or instance settings
+        - Language or right-to-left layout
+        - Self-hosting (Docker, configuration, upgrades)
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The commit you built from (`git rev-parse --short HEAD`).
+      placeholder: 7c065b2
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and operating system
+      placeholder: Firefox 140 on macOS
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server logs
+      description: Relevant lines from `docker compose -f deploy/docker/compose.yaml logs api worker`. Remove anything private first.
+      render: text
