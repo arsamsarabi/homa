@@ -16,6 +16,22 @@ export {
   updateSyncToken,
 } from './calendars';
 export {
+  type ChannelRow,
+  type ChannelValues,
+  countChannels,
+  deleteOwnedChannel,
+  findChannel,
+  findOwnedChannel,
+  findRecipient,
+  insertChannel,
+  listChannels,
+  listEnabledChannels,
+  type NewChannel,
+  type Recipient,
+  recordChannelResult,
+  updateOwnedChannel,
+} from './channels';
+export {
   type ConnectionRow,
   claimConnection,
   clearConnectionNotice,

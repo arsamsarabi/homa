@@ -53,7 +53,7 @@ Deliveries reuse 4a's `notification_deliveries`. The `channel` column is `push` 
 - `POST /api/notification-channels` with `{ kind, name, reminderKinds, ...config }` creates one. A webhook's answer includes its `secret`, the only time it is shown.
 - `PATCH /api/notification-channels/{id}` changes `name`, `enabled`, `reminderKinds` or the config fields. Omitted secret fields are kept; ntfy's `token: null` removes it. A webhook's `rotateSecret: true` makes a new secret and returns it.
 - `DELETE /api/notification-channels/{id}`.
-- `POST /api/notification-channels/{id}/test` sends a test message now and answers 204, or 422 with the reason. It records the result like a delivery.
+- `POST /api/notification-channels/{id}/test` sends a test message now and answers `{ ok, error }`. It records the result like a delivery.
 
 Another user's channel is a 404. The JSON export leaves channels out, since their config is secret.
 
