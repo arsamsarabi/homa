@@ -460,13 +460,18 @@
               "fa"
             ],
             "description": "The web app's language until someone picks one"
+          },
+          "googleCalendar": {
+            "type": "boolean",
+            "description": "Whether Google Calendar accounts can be connected"
           }
         },
         "required": [
           "name",
           "signUpsOpen",
           "needsSetup",
-          "defaultLanguage"
+          "defaultLanguage",
+          "googleCalendar"
         ]
       },
       "InstanceSettings": {
@@ -725,7 +730,7 @@
               "string",
               "null"
             ],
-            "description": "The account, such as \"ada on caldav.fastmail.com\"; null for ICS feeds"
+            "description": "The account, such as \"ada on caldav.fastmail.com\" or a Google email; null for ICS feeds"
           },
           "status": {
             "type": "string",
@@ -869,7 +874,7 @@
         "properties": {
           "remoteId": {
             "type": "string",
-            "description": "The calendar's URL on the server"
+            "description": "The calendar's URL on the CalDAV server, or its Google calendar id"
           },
           "name": {
             "type": [
@@ -2081,13 +2086,128 @@
         }
       }
     },
+    "/connections/google/start": {
+      "get": {
+        "operationId": "startGoogle",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Connect a Google account: redirects to Google",
+        "description": "Open it in the browser (it isn't an API call): it redirects to Google's consent screen, and Google sends the user back to the callback.",
+        "responses": {
+          "302": {
+            "description": "To Google's consent screen"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/google/callback": {
+      "get": {
+        "operationId": "googleCallback",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Where Google sends the user back",
+        "description": "Saves the account without calendars and redirects to /settings?google={connection id}, where the user chooses them; on failure to /settings?googleError=denied|state|failed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "required": false,
+            "name": "code",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "state",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "error",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Back to the settings page"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/connections/{id}/remote-calendars": {
       "get": {
         "operationId": "listRemoteCalendars",
         "tags": [
           "Connected calendars"
         ],
-        "summary": "The calendars on a CalDAV account, and which of them sync",
+        "summary": "The calendars on a CalDAV or Google account, and which of them sync",
         "parameters": [
           {
             "schema": {
@@ -2170,7 +2290,7 @@
         "tags": [
           "Connected calendars"
         ],
-        "summary": "Choose which calendars of a CalDAV account sync",
+        "summary": "Choose which calendars of a CalDAV or Google account sync",
         "description": "New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).",
         "parameters": [
           {

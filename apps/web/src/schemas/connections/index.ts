@@ -3,10 +3,13 @@ export {
   type Connection,
   ConnectionListSchema,
   ConnectionSchema,
+  GOOGLE_ERRORS,
   type HolidayFeed,
   HolidayFeedListSchema,
   HolidayFeedSchema,
   type RemoteCalendar,
   RemoteCalendarListSchema,
   RemoteCalendarSchema,
+  type SettingsSearch,
+  SettingsSearchSchema,
 } from './connections';

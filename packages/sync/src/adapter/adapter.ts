@@ -1,4 +1,4 @@
-// The interface every provider implements (ICS and CalDAV now; Google and Microsoft later).
+// The interface every provider implements (ICS, CalDAV and Google now; Microsoft later).
 // The worker drives it: listCalendars when a connection is added, pullChanges on every sync, and
 // pushChange for each outbox entry of a writable calendar. See docs/product/architecture.md ("Sync").
 import type { IcsEvent } from '@homa/core';
@@ -22,7 +22,7 @@ export const EMPTY_CURSOR: SyncCursor = {
 };
 
 export type RemoteCalendar = {
-  /** The provider's id for the calendar (CalDAV: the collection's URL); null for an ICS feed. */
+  /** The provider's id for the calendar (CalDAV: the collection's URL; Google: the calendar id); null for an ICS feed. */
   remoteId: string | null;
   name: string | null;
   /** `#rrggbb`, when the provider has one. */
@@ -30,7 +30,7 @@ export type RemoteCalendar = {
   readOnly: boolean;
 };
 
-/** One remote resource (a CalDAV object): its URL, ETag and the events in it (a series with its overrides). */
+/** One remote resource (a CalDAV object, a Google event): its URL, ETag and the events in it (a series with its overrides). */
 export type RemoteResource = { href: string; etag: string | null; events: IcsEvent[] };
 
 /**
@@ -79,4 +79,6 @@ export interface SyncAdapter {
   pushChange(op: ChangeOp): Promise<{ etag: string | null }>;
   /** The resource as the server has it now, or null if it's gone. */
   fetchResource(href: string): Promise<RemoteResource | null>;
+  /** Where a new event with `uid` goes in the calendar `calendarRemoteId` (stable, so a retried create can't duplicate it). */
+  newHref(calendarRemoteId: string, uid: string): string;
 }

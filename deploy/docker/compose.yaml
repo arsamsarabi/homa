@@ -20,6 +20,9 @@ x-homa: &homa
     HOMA_ENCRYPTION_KEY: ${HOMA_ENCRYPTION_KEY:-}
     HOMA_SYNC_INTERVAL_MINUTES: ${HOMA_SYNC_INTERVAL_MINUTES:-30}
     HOMA_SYNC_ALLOW_PRIVATE_NETWORKS: ${HOMA_SYNC_ALLOW_PRIVATE_NETWORKS:-false}
+    # Optional: your Google OAuth client, for Google Calendar connections (docs/self-hosting/google.md).
+    HOMA_GOOGLE_CLIENT_ID: ${HOMA_GOOGLE_CLIENT_ID:-}
+    HOMA_GOOGLE_CLIENT_SECRET: ${HOMA_GOOGLE_CLIENT_SECRET:-}
     # Only for automated tests: false lifts the sign-in and sign-up rate limits.
     HOMA_AUTH_RATE_LIMIT: ${HOMA_AUTH_RATE_LIMIT:-true}
 

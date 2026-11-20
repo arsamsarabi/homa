@@ -13,16 +13,19 @@ export type ConnectionItemProps = {
   onSync: () => void;
   onRemove: () => void;
   onEditCalendar: (calendar: Calendar) => void;
-  /** CalDAV: choose which of the account's calendars sync. */
+  /** CalDAV and Google: choose which of the account's calendars sync. */
   onChoose: () => void;
   onDismissNotice: () => void;
 };
 
 const STATUS_COLOR = { pending: 'gray', syncing: 'blue', ok: 'green', error: 'red' } as const;
 
-/** The name a connection is listed by: the account for CalDAV, the calendar for a feed. */
+/** Accounts (CalDAV, Google) hold calendars to choose and sync both ways; feeds are one read-only calendar. */
+export const isAccount = (c: Connection): boolean => c.provider !== 'ics';
+
+/** The name a connection is listed by: the account, or the calendar for a feed. */
 export const connectionName = (c: Connection, untitled: string): string =>
-  (c.provider === 'caldav' ? c.label : c.calendars[0]?.name) ?? untitled;
+  (isAccount(c) ? c.label : c.calendars[0]?.name) ?? untitled;
 
 /**
  * One connection: its name, sync status, last check, last error and notice, its calendars (each
@@ -40,7 +43,7 @@ export function ConnectionItem({
 }: ConnectionItemProps): JSX.Element {
   const { t } = useTranslation();
   const name = connectionName(c, t('connections.untitled'));
-  const caldav = c.provider === 'caldav';
+  const caldav = isAccount(c);
   return (
     <Paper withBorder p="sm" radius="md" component="li" aria-label={name}>
       <Stack gap="xs">
@@ -48,6 +51,11 @@ export function ConnectionItem({
           <Group gap="xs" wrap="nowrap">
             {!caldav && <ColorSwatch color={c.calendars[0]?.color ?? 'gray'} size={12} aria-hidden />}
             <Text fw={600}>{name}</Text>
+            {c.provider === 'google' && (
+              <Text span size="xs" c="dimmed">
+                {t('google.provider')}
+              </Text>
+            )}
             <Badge size="sm" variant="light" color={STATUS_COLOR[c.status]}>
               {t(`connections.status.${c.status}`)}
             </Badge>

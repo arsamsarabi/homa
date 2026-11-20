@@ -1,11 +1,11 @@
-// Pushes a connection's outbox: each due op uploads an event's current state (PUT with If-Match,
-// or If-None-Match: * when it's new) or deletes a resource at the ETag it had. Ops are independent:
+// Pushes a connection's outbox: each due op uploads an event's current state (CalDAV: PUT with
+// If-Match, or If-None-Match: * when it's new; Google: patch with If-Match, or insert) or deletes a resource at the ETag it had. Ops are independent:
 // one failing waits with backoff and the rest go on. On a conflict the server's copy wins: it is
 // fetched again and written over the local event (or the local event goes, if the server deleted
 // it). A change the server refuses outright is dropped with a notice on the connection.
 import { serializeEvent, ValidationError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
-import { PushConflict, PushError, resourceHref, type SyncAdapter } from '@homa/sync';
+import { PushConflict, PushError, type SyncAdapter } from '@homa/sync';
 import { errorFields, log } from '@/log';
 import { applyResources } from './apply-pull';
 
@@ -33,7 +33,7 @@ async function pushOne(
   }
   const e = op.eventId ? await repo.findEvent(db, op.eventId) : undefined;
   if (!e || e.calendarId !== op.calendarId) return null; // deleted or moved since: a later op covers it
-  const href = e.remoteHref ?? resourceHref(calendar.remoteId, e.uid);
+  const href = e.remoteHref ?? adapter.newHref(calendar.remoteId, e.uid);
   const ics = serializeEvent(e, await repo.listOverrides(db, [e.id]));
   const pushed = { href, title: e.summary };
   const { etag } = await adapter.pushChange({ kind: 'put', href, ics, etag: e.remoteHref ? e.remoteEtag : null });
@@ -78,7 +78,7 @@ export async function pushOutbox(
       const e = op.eventId ? await repo.findEvent(db, op.eventId) : undefined;
       const title = e?.summary ?? '';
       if (err instanceof PushConflict) {
-        const href = op.kind === 'delete' ? op.href : (e?.remoteHref ?? resourceHref(target.remoteId, op.uid));
+        const href = op.kind === 'delete' ? op.href : (e?.remoteHref ?? adapter.newHref(target.remoteId, op.uid));
         if (href) await takeRemote(db, adapter, calendar, href);
         await repo.completeOutbox(db, op.id, op.version);
         conflicts.push(title);

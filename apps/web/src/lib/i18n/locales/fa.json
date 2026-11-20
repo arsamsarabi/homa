@@ -219,7 +219,7 @@
   },
   "connections": {
     "title": "تقویم‌های متصل",
-    "hint": "به خوراک یک تقویم (نشانی ‎.ics‎ یا webcal از Google Calendar، Outlook، Apple Calendar، یک تیم ورزشی یا یک مدرسه) مشترک شوید، تعطیلات رسمی را اضافه کنید، یا یک حساب CalDAV (iCloud، Fastmail، Nextcloud) را برای همگام‌سازی دوطرفه وصل کنید.",
+    "hint": "به خوراک یک تقویم (نشانی ‎.ics‎ یا webcal از Google Calendar، Outlook، Apple Calendar، یک تیم ورزشی یا یک مدرسه) مشترک شوید، تعطیلات رسمی را اضافه کنید، یا یک حساب CalDAV (iCloud، Fastmail، Nextcloud) یا حساب Google را برای همگام‌سازی دوطرفه وصل کنید.",
     "add": "افزودن تقویم",
     "addTitle": "افزودن تقویم",
     "byAddress": "با نشانی",
@@ -322,5 +322,14 @@
     "other": "تقویم‌های متصل",
     "showAll": "نمایش همه",
     "manage": "رنگ‌ها و تنظیمات"
+  },
+  "google": {
+    "add": "اتصال Google",
+    "provider": "Google",
+    "errors": {
+      "denied": "Google وصل نشد: اجازهٔ دسترسی داده نشد.",
+      "state": "Google وصل نشد: درخواست منقضی شده یا از این مرورگر نبوده است. دوباره امتحان کنید.",
+      "failed": "Google وصل نشد. دوباره امتحان کنید و به Homa اجازه دهید تقویم‌هایتان را ببیند و ویرایش کند."
+    }
   }
 }

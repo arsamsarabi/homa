@@ -36,6 +36,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       signUpsOpen: true,
       needsSetup: true,
       defaultLanguage: 'en',
+      googleCalendar: false,
     });
   });
 
@@ -83,6 +84,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       signUpsOpen: true,
       needsSetup: false,
       defaultLanguage: 'fa',
+      googleCalendar: false,
     });
   });
 

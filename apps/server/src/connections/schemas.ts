@@ -8,10 +8,9 @@ export const Connection = z
   .object({
     id: z.uuid(),
     provider: z.enum(CONNECTION_PROVIDERS),
-    label: z
-      .string()
-      .nullable()
-      .openapi({ description: 'The account, such as "ada on caldav.fastmail.com"; null for ICS feeds' }),
+    label: z.string().nullable().openapi({
+      description: 'The account, such as "ada on caldav.fastmail.com" or a Google email; null for ICS feeds',
+    }),
     status: z.enum(CONNECTION_STATUSES),
     lastError: z.string().nullable().openapi({ description: 'Why the last sync failed; null after a good one' }),
     lastSyncedAt: z.iso
@@ -57,7 +56,7 @@ export const CaldavInput = z
 
 export const RemoteCalendar = z
   .object({
-    remoteId: z.string().openapi({ description: "The calendar's URL on the server" }),
+    remoteId: z.string().openapi({ description: "The calendar's URL on the CalDAV server, or its Google calendar id" }),
     name: z.string().nullable(),
     color: Color.nullable(),
     readOnly: z.boolean().openapi({ description: "You can't change events in it on the server" }),
@@ -68,3 +67,9 @@ export const RemoteCalendar = z
 export const ChooseCalendarsInput = z
   .object({ remoteIds: z.array(z.string().max(2000)).max(100) })
   .openapi('ChooseCalendarsInput', { description: 'Exactly the remote calendars to sync' });
+
+export const GoogleCallbackQuery = z.object({
+  code: z.string().max(2000).optional(),
+  state: z.string().max(200).optional(),
+  error: z.string().max(200).optional(),
+});

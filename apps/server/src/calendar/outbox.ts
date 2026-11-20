@@ -1,4 +1,4 @@
-// Queues local changes for calendars that sync two ways (CalDAV), inside the transaction of the
+// Queues local changes for calendars that sync two ways (CalDAV, Google), inside the transaction of the
 // change, so a write and its outbox op commit together. Native calendars (no connection) and
 // read-only ones (ICS feeds have no remote id) are left out. The sync worker pushes the ops.
 import type { OutboxOp } from '@homa/core';

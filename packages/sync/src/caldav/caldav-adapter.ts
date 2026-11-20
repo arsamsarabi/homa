@@ -276,7 +276,7 @@ export function caldavAdapter(credentials: CaldavCredentials, options: CaldavAda
     return got.resources.find((r) => r.href === href) ?? null;
   }
 
-  return { discover, listCalendars, pullChanges, pushChange, fetchResource };
+  return { discover, listCalendars, pullChanges, pushChange, fetchResource, newHref: resourceHref };
 }
 
 /** The href for a new event in a calendar: the UID made safe for a path segment. */

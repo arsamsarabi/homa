@@ -9,7 +9,13 @@ export type InstanceSettings = {
   defaultSecondaryCalendar: string;
 };
 
-export type PublicInstance = { name: string; signUpsOpen: boolean; needsSetup: boolean; defaultLanguage: string };
+export type PublicInstance = {
+  name: string;
+  signUpsOpen: boolean;
+  needsSetup: boolean;
+  defaultLanguage: string;
+  googleCalendar: boolean;
+};
 
 const fromRow = ({ instanceName, ...rest }: repo.InstanceSettingsRow): InstanceSettings => ({
   name: instanceName,
@@ -28,7 +34,8 @@ export async function updateInstanceSettings(db: Db, patch: Partial<InstanceSett
   );
 }
 
-export async function getPublicInstance(db: Db): Promise<PublicInstance> {
+/** `googleCalendar`: whether the server is set up for Google connections. */
+export async function getPublicInstance(db: Db, googleCalendar = false): Promise<PublicInstance> {
   const [s, users] = await Promise.all([getInstanceSettings(db), repo.countUsers(db)]);
   const needsSetup = users === 0;
   return {
@@ -36,6 +43,7 @@ export async function getPublicInstance(db: Db): Promise<PublicInstance> {
     signUpsOpen: needsSetup || s.signUps === 'open',
     needsSetup,
     defaultLanguage: s.defaultLanguage,
+    googleCalendar,
   };
 }
 
