@@ -20,6 +20,9 @@ export type SerializableEvent = {
   rdates: readonly Date[];
 };
 
+/** A reminder as a VALARM: `minutes` before the start. */
+export type SerializableReminder = { minutes: number; action: 'display' | 'email' };
+
 export type SerializableOverride = {
   recurrenceId: Date;
   /** Null inherits the series' value. */
@@ -62,6 +65,18 @@ function addText(c: ICAL.Component, name: string, value: string | null): void {
   if (value) c.addPropertyWithValue(name, value);
 }
 
+/** One VALARM per reminder. DISPLAY needs a DESCRIPTION; EMAIL a SUMMARY too (RFC 5545 3.6.6). */
+function addAlarms(c: ICAL.Component, reminders: readonly SerializableReminder[], summary: string): void {
+  for (const r of reminders) {
+    const alarm = new ICAL.Component('valarm');
+    alarm.addPropertyWithValue('action', r.action === 'email' ? 'EMAIL' : 'DISPLAY');
+    alarm.addPropertyWithValue('trigger', ICAL.Duration.fromSeconds(-r.minutes * 60));
+    alarm.addPropertyWithValue('description', summary || 'Reminder');
+    if (r.action === 'email') alarm.addPropertyWithValue('summary', summary || 'Reminder');
+    c.addSubcomponent(alarm);
+  }
+}
+
 function vevent(e: SerializableEvent, stamp: ICAL.Time): ICAL.Component {
   const c = new ICAL.Component('vevent');
   c.addPropertyWithValue('uid', e.uid);
@@ -77,6 +92,7 @@ export function serializeEvent(
   e: SerializableEvent,
   overrides: readonly SerializableOverride[] = [],
   now = new Date(),
+  reminders: readonly SerializableReminder[] = [],
 ): string {
   const cal = new ICAL.Component('vcalendar');
   cal.addPropertyWithValue('version', '2.0');
@@ -92,6 +108,7 @@ export function serializeEvent(
   if (e.rrule) master.addPropertyWithValue('rrule', ICAL.Recur.fromString(e.rrule));
   for (const d of e.exdates) addTime(master, 'exdate', d, e);
   for (const d of e.rdates) addTime(master, 'rdate', d, e);
+  addAlarms(master, reminders, e.summary);
   cal.addSubcomponent(master);
 
   for (const o of overrides) {
@@ -102,6 +119,8 @@ export function serializeEvent(
     c.addPropertyWithValue('summary', o.summary ?? e.summary);
     addText(c, 'description', o.description ?? e.description);
     addText(c, 'location', o.location ?? e.location);
+    // Clients read alarms per VEVENT, so a moved occurrence carries the series' alarms too.
+    addAlarms(c, reminders, o.summary ?? e.summary);
     cal.addSubcomponent(c);
   }
   return `${cal.toString()}\r\n`;

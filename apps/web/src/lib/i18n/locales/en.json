@@ -71,7 +71,8 @@
   "common": {
     "cancel": "Cancel",
     "retry": "Try again",
-    "close": "Close"
+    "close": "Close",
+    "loading": "Loading"
   },
   "editor": {
     "title": "Title",
@@ -364,5 +365,77 @@
     "noDate": "No date found: the next hour",
     "weeklyOn": "Every week on {{days}}",
     "announce": "Will add: {{preview}}"
+  },
+  "reminders": {
+    "label": "Reminders",
+    "hint": "For every occurrence. Up to 5.",
+    "atStart": "At start",
+    "minutes_one": "{{count}} minute before",
+    "minutes_other": "{{count}} minutes before",
+    "hours_one": "{{count}} hour before",
+    "hours_other": "{{count}} hours before",
+    "days_one": "{{count}} day before",
+    "days_other": "{{count}} days before",
+    "weeks_one": "{{count}} week before",
+    "weeks_other": "{{count}} weeks before",
+    "none": "None",
+    "default": "Default reminder",
+    "defaultHint": "New timed events start with this reminder. You can change it on each event.",
+    "saveFailed": "Couldn't save the reminder: {{message}}",
+    "badTime": "Enter a date and time.",
+    "saved": "Reminder saved",
+    "newTitle": "New reminder",
+    "editTitle": "Edit reminder",
+    "title": "What to remind you of",
+    "when": "When",
+    "zone": "In {{tz}}",
+    "save": "Save",
+    "past": "Won't fire again",
+    "deleted": "Deleted \"{{title}}\"",
+    "deleteFailed": "Couldn't delete the reminder: {{message}}",
+    "pageTitle": "Reminders",
+    "new": "New reminder",
+    "pageHint": "Reminders without an event, like \"call mum at 5pm\". Event reminders are set on each event.",
+    "empty": "No reminders yet.",
+    "edit": "Edit",
+    "editLabel": "Edit \"{{title}}\"",
+    "delete": "Delete",
+    "deleteLabel": "Delete \"{{title}}\"",
+    "loadFailed": "Couldn't load your reminders"
+  },
+  "notifications": {
+    "bell": "Notifications",
+    "bellUnread_one": "Notifications, {{count}} unread",
+    "bellUnread_other": "Notifications, {{count}} unread",
+    "title": "Notifications",
+    "loadFailed": "Couldn't load notifications: {{message}}",
+    "empty": "Nothing to remind you of right now.",
+    "untitled": "(No title)",
+    "snooze": "Snooze…",
+    "snoozeLabel": "Snooze \"{{title}}\"",
+    "snoozeFor": {
+      "5": "5 minutes",
+      "10": "10 minutes",
+      "30": "30 minutes",
+      "60": "1 hour",
+      "tomorrow": "Tomorrow at 9:00"
+    },
+    "done": "Done",
+    "doneLabel": "Mark \"{{title}}\" done",
+    "manage": "Manage reminders",
+    "actionFailed": "Couldn't change the notification: {{message}}",
+    "snoozed": "Snoozed",
+    "markedDone": "Marked done"
+  },
+  "push": {
+    "title": "Notifications on this device",
+    "hint": "Reminders always show in the bell. Turn on push to get them on this browser even when Homa is closed.",
+    "unsupported": "This browser can't receive push notifications. On iPhone and iPad, add Homa to the Home Screen first.",
+    "denied": "Notifications are blocked for Homa in this browser's settings.",
+    "on": "Push is on for this browser.",
+    "off": "Push is off for this browser.",
+    "enable": "Turn on push",
+    "disable": "Turn off push",
+    "failed": "Couldn't change push: {{message}}"
   }
 }

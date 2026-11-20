@@ -53,3 +53,12 @@ test('the Microsoft app: both values or neither', () => {
     /HOMA_MICROSOFT_CLIENT_SECRET: set both/,
   );
 });
+
+test('VAPID keys come in pairs, and the subject is a mailto: or https: URL', () => {
+  expect(() => loadConfig({ ...valid, HOMA_VAPID_PUBLIC_KEY: 'pub' })).toThrow(/HOMA_VAPID_PRIVATE_KEY: set both/);
+  expect(() => loadConfig({ ...valid, HOMA_VAPID_SUBJECT: 'admin@example.com' })).toThrow(/HOMA_VAPID_SUBJECT/);
+  expect(loadConfig({ ...valid, HOMA_VAPID_SUBJECT: 'mailto:admin@example.com' })).toMatchObject({
+    HOMA_VAPID_SUBJECT: 'mailto:admin@example.com',
+    HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS: false,
+  });
+});

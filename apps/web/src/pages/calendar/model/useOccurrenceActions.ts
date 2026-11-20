@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EventPatch } from '@/api';
 import { useEventMutations } from '@/hooks/calendar';
-import type { Occurrence, Scope } from '@/schemas';
+import { useSetEventReminders } from '@/hooks/reminders';
+import type { HomaEvent, Occurrence, Scope } from '@/schemas';
 import type { EditorResult } from '@/services/event-form';
 import { allowedScopes, seriesPatch, shiftsSeries } from '@/services/series-change';
 import { useAnnouncer, useLastCalendar } from '@/stores';
@@ -22,33 +23,38 @@ export type OccurrenceActions = {
 export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () => void): OccurrenceActions {
   const { t } = useTranslation();
   const { create, update, remove: removeEvent, fetchSeries } = useEventMutations();
+  const setReminders = useSetEventReminders();
   const announce = useAnnouncer((s) => s.announce);
   const rememberCalendar = useLastCalendar((s) => s.remember);
   const [error, setError] = useState<string>();
 
-  /** Applies a patch to an occurrence; false if the scope question was cancelled. */
-  async function change(o: Occurrence, patch: EventPatch, seriesChanged = false): Promise<boolean> {
+  /** Applies a patch to an occurrence; the changed event or series, or undefined if the scope question was cancelled. */
+  async function change(o: Occurrence, patch: EventPatch, seriesChanged = false): Promise<HomaEvent | undefined> {
     let scope: Scope = 'all';
     if (o.recurring) {
       const picked = await ask('change', allowedScopes(seriesChanged));
-      if (!picked) return false;
+      if (!picked) return undefined;
       scope = picked;
     }
     const body = shiftsSeries(o, scope, patch) ? seriesPatch(o, patch, (await fetchSeries(o.eventId)).start) : patch;
-    await update.mutateAsync({
+    return update.mutateAsync({
       id: o.eventId,
       patch: body,
       scope,
       recurrenceId: o.recurring ? o.recurrenceId : undefined,
     });
-    return true;
   }
 
   async function save(r: EditorResult): Promise<void> {
     if (r.kind === 'create') {
       await create.mutateAsync(r.body);
       rememberCalendar(r.body.calendarId);
-    } else if (!(await change(r.occurrence, r.patch, r.seriesChanged))) return;
+    } else {
+      const changed = await change(r.occurrence, r.patch, r.seriesChanged);
+      if (!changed) return;
+      // Reminders belong to the series: "this and following" changes the new series' ones.
+      if (r.reminders) await setReminders.mutateAsync({ id: changed.id, reminders: r.reminders });
+    }
     closeEditor();
     announce(t('calendar.announce.saved'));
   }
@@ -68,7 +74,9 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
   function move(o: Occurrence, start: Date, end: Date): void {
     setError(undefined);
     change(o, { start: start.toISOString(), end: end.toISOString() })
-      .then((done) => done && announce(t('calendar.announce.moved')))
+      .then((done) => {
+        if (done) announce(t('calendar.announce.moved'));
+      })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         setError(message);

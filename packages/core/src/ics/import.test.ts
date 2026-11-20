@@ -260,3 +260,40 @@ describe('hostile and broken input', () => {
     expect(r.warnings).toHaveLength(ICS_LIMITS.maxWarnings);
   });
 });
+
+describe('alarms', () => {
+  const alarm = (...lines: string[]): string[] => ['BEGIN:VALARM', ...lines, 'END:VALARM'];
+  const event = (...alarms: string[][]): IcsEvent =>
+    parseIcs(ics(...vevent('UID:a', 'DTSTART:20260316T090000Z', 'DTEND:20260316T091500Z', ...alarms.flat())), opts)
+      .events[0] as IcsEvent;
+
+  test('triggers before the start become reminders', () => {
+    expect(
+      event(
+        alarm('ACTION:DISPLAY', 'TRIGGER:-PT10M', 'DESCRIPTION:x'),
+        alarm('ACTION:EMAIL', 'TRIGGER;RELATED=START:-P1D', 'DESCRIPTION:x'),
+        alarm('ACTION:AUDIO', 'TRIGGER:PT0S'),
+      ).reminders,
+    ).toEqual([
+      { minutes: 0, action: 'display' },
+      { minutes: 10, action: 'display' },
+      { minutes: 1440, action: 'email' },
+    ]);
+  });
+
+  test('absolute, end-relative and after-start triggers are skipped', () => {
+    expect(
+      event(
+        alarm('ACTION:DISPLAY', 'TRIGGER;VALUE=DATE-TIME:20260316T080000Z'),
+        alarm('ACTION:DISPLAY', 'TRIGGER;RELATED=END:-PT5M'),
+        alarm('ACTION:DISPLAY', 'TRIGGER:PT5M'),
+        alarm('ACTION:DISPLAY', 'TRIGGER:-P5W'),
+      ).reminders,
+    ).toEqual([]);
+  });
+
+  test('keeps at most five, one per offset', () => {
+    const many = [1, 2, 3, 4, 5, 6, 2].map((m) => alarm('ACTION:DISPLAY', `TRIGGER:-PT${m}M`));
+    expect(event(...many).reminders.map((r) => r.minutes)).toEqual([1, 2, 3, 4, 5]);
+  });
+});

@@ -99,6 +99,26 @@ export interface paths {
         patch: operations["updateEvent"];
         trace?: never;
     };
+    "/events/{id}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace an event's reminders
+         * @description They apply to every occurrence. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.
+         */
+        put: operations["setEventReminders"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/occurrences": {
         parameters: {
             query?: never;
@@ -457,6 +477,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your standalone reminders that are not done, soonest first */
+        get: operations["listReminders"];
+        put?: never;
+        /** Create a standalone reminder, optionally repeating */
+        post: operations["createReminder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reminders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a standalone reminder */
+        delete: operations["deleteReminder"];
+        options?: never;
+        head?: never;
+        /** Change a standalone reminder */
+        patch: operations["updateReminder"];
+        trace?: never;
+    };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open notifications (not done, not snoozed), newest first, and how many are unread */
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark every open notification read */
+        post: operations["readNotifications"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/{id}/snooze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hide a notification for some minutes or until a time; then it comes back */
+        post: operations["snoozeNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/{id}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a notification done (a one-off standalone reminder is done with it) */
+        post: operations["doneNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The server's VAPID public key, to subscribe a browser to web push */
+        get: operations["getPushKey"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save this browser's push subscription */
+        post: operations["subscribePush"];
+        /** Remove this browser's push subscription */
+        delete: operations["unsubscribePush"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -518,6 +677,14 @@ export interface components {
             rrule: string | null;
             exdates: string[];
             rdates: string[];
+            /**
+             * @description Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes
+             * @example [
+             *       10,
+             *       1440
+             *     ]
+             */
+            reminders: number[];
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -539,6 +706,14 @@ export interface components {
             tz: string;
             /** @example FREQ=WEEKLY;BYDAY=MO */
             rrule?: string | null;
+            /**
+             * @description Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes
+             * @example [
+             *       10,
+             *       1440
+             *     ]
+             */
+            reminders?: number[];
         };
         EventPatch: {
             /** Format: uuid */
@@ -555,6 +730,16 @@ export interface components {
             tz?: string;
             /** @example FREQ=WEEKLY;BYDAY=MO */
             rrule?: string | null;
+        };
+        RemindersInput: {
+            /**
+             * @description Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes
+             * @example [
+             *       10,
+             *       1440
+             *     ]
+             */
+            reminders: number[];
         };
         Occurrence: {
             /** Format: uuid */
@@ -591,6 +776,11 @@ export interface components {
              * @example 1
              */
             weekStart: number | null;
+            /**
+             * @description The reminder the event form adds to new timed events, in minutes before; null for none
+             * @example 10
+             */
+            defaultReminderMinutes: number | null;
         };
         SettingsPatch: {
             /**
@@ -608,6 +798,11 @@ export interface components {
              * @example 1
              */
             weekStart?: number | null;
+            /**
+             * @description The reminder the event form adds to new timed events, in minutes before; null for none
+             * @example 10
+             */
+            defaultReminderMinutes?: number | null;
         };
         PublicInstance: {
             /**
@@ -702,6 +897,7 @@ export interface components {
                 homeTz: string | null;
                 secondaryCalendar: string;
                 weekStart: number | null;
+                defaultReminderMinutes: number | null;
             };
             calendars: components["schemas"]["Calendar"][];
             events: (components["schemas"]["Event"] & {
@@ -717,6 +913,26 @@ export interface components {
                     location: string | null;
                 }[];
             })[];
+            reminders: components["schemas"]["Reminder"][];
+        };
+        Reminder: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /**
+             * Format: date-time
+             * @description The first (or only) time it fires
+             */
+            at: string;
+            tz: string;
+            rrule: string | null;
+            /**
+             * Format: date-time
+             * @description Null once it will not fire again
+             */
+            nextFireAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
         };
         Connection: {
             /** Format: uuid */
@@ -783,6 +999,69 @@ export interface components {
                 fa: string;
             };
             source: string;
+        };
+        ReminderInput: {
+            title: string;
+            /** Format: date-time */
+            at: string;
+            /** @example Europe/London */
+            tz: string;
+            /** @example FREQ=WEEKLY;BYDAY=MO */
+            rrule?: string | null;
+        };
+        ReminderPatch: {
+            title?: string;
+            /** Format: date-time */
+            at?: string;
+            /** @example Europe/London */
+            tz?: string;
+            /** @example FREQ=WEEKLY;BYDAY=MO */
+            rrule?: string | null;
+        };
+        NotificationList: {
+            items: components["schemas"]["Notification"][];
+            unread: number;
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "event" | "standalone";
+            title: string;
+            /**
+             * Format: date-time
+             * @description The occurrence's start, or when the standalone reminder was due
+             */
+            start: string;
+            allDay: boolean;
+            /** Format: uuid */
+            eventId: string | null;
+            /** Format: date-time */
+            recurrenceId: string | null;
+            /** Format: date-time */
+            fireAt: string;
+            read: boolean;
+        };
+        SnoozeInput: {
+            minutes?: number;
+            /** Format: date-time */
+            until?: string;
+        };
+        PushKey: {
+            /** @description The VAPID public key (base64url) for PushManager.subscribe's applicationServerKey */
+            publicKey: string;
+        };
+        PushSubscriptionInput: {
+            /** Format: uri */
+            endpoint: string;
+            keys: {
+                p256dh: string;
+                auth: string;
+            };
+        };
+        PushUnsubscribe: {
+            /** Format: uri */
+            endpoint: string;
         };
     };
     responses: never;
@@ -1192,6 +1471,59 @@ export interface operations {
             };
             /** @description Not allowed (or a read-only calendar) */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    setEventReminders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemindersInput"];
+            };
+        };
+        responses: {
+            /** @description The event with its reminders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2085,6 +2417,448 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HolidayFeed"][];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listReminders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reminders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reminder"][];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reminder"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderPatch"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reminder"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notifications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    readNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    snoozeNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnoozeInput"];
+            };
+        };
+        responses: {
+            /** @description Snoozed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    doneNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getPushKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushKey"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Web push is not set up */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    subscribePush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionInput"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Web push is not set up */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    unsubscribePush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushUnsubscribe"];
+            };
+        };
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
             /** @description Not signed in */

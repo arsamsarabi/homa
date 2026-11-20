@@ -58,6 +58,8 @@ export type GraphEvent = {
   singleValueExtendedProperties?: { id: string; value: string }[];
   exceptionOccurrences?: GraphEvent[];
   cancelledOccurrences?: string[];
+  isReminderOn?: boolean;
+  reminderMinutesBeforeStart?: number;
 };
 
 /**
@@ -236,6 +238,13 @@ export function cancelledStarts(master: GraphEvent, zone: string): Date[] {
   return out;
 }
 
+/** Outlook's one reminder as a VALARM, when it's on. */
+const alarmLines = (e: GraphEvent): string[] => {
+  const minutes = e.reminderMinutesBeforeStart;
+  if (!e.isReminderOn || !Number.isInteger(minutes) || (minutes ?? -1) < 0) return [];
+  return ['BEGIN:VALARM', 'ACTION:DISPLAY', `TRIGGER:-PT${minutes}M`, 'DESCRIPTION:Reminder', 'END:VALARM'];
+};
+
 /** The series (or single event) as one VCALENDAR, in the shape parseIcs reads. */
 export function seriesIcs(master: GraphEvent, floatingTz: string): string {
   const allDay = master.isAllDay === true;
@@ -251,6 +260,7 @@ export function seriesIcs(master: GraphEvent, floatingTz: string): string {
     timeLine('DTSTART', instantOf(master.start), allDay, zone),
     timeLine('DTEND', instantOf(master.end), allDay, zone),
     ...textLines(master),
+    ...alarmLines(master),
     ...(rrule ? [`RRULE:${rrule}`] : []),
     ...(rrule ? cancelledStarts(master, zone).map((d) => timeLine('EXDATE', d, allDay, zone)) : []),
   ]);
@@ -419,9 +429,14 @@ export type GraphEventBody = {
   end: GraphTime;
   isAllDay: boolean;
   recurrence?: PatternedRecurrence | null;
+  isReminderOn: boolean;
+  reminderMinutesBeforeStart?: number;
 };
 
-/** The fields Homa owns on the Graph event; others (attendees, reminders, online meetings) are left alone by a PATCH. */
+/**
+ * The fields Homa owns on the Graph event; others (attendees, online meetings) are left alone by a
+ * PATCH. Outlook holds one reminder, so only the one closest to the start goes.
+ */
 export function graphBody(e: IcsEvent): GraphEventBody {
   if (e.rdates.length) throw new UnsupportedRecurrence("Outlook can't add single extra dates (RDATE) to a series");
   return {
@@ -431,13 +446,18 @@ export function graphBody(e: IcsEvent): GraphEventBody {
     start: graphTime(e.start, e.allDay, e.tz),
     end: graphTime(e.end, e.allDay, e.tz),
     isAllDay: e.allDay,
+    isReminderOn: e.reminders.length > 0,
+    ...(e.reminders[0] ? { reminderMinutesBeforeStart: e.reminders[0].minutes } : {}),
     // Left out when there's none: a series can't be turned back into a single event from Homa yet.
     ...(e.rrule ? { recurrence: recurrenceOf(e.rrule, e.start, e.allDay, e.tz) } : {}),
   };
 }
 
 /** One changed occurrence, as a PATCH of that occurrence. Null fields take the series' value. */
-export const occurrenceBody = (e: IcsEvent, o: IcsOverride): Omit<GraphEventBody, 'recurrence' | 'isAllDay'> => ({
+export const occurrenceBody = (
+  e: IcsEvent,
+  o: IcsOverride,
+): Omit<GraphEventBody, 'recurrence' | 'isAllDay' | 'isReminderOn' | 'reminderMinutesBeforeStart'> => ({
   subject: o.summary ?? e.summary,
   body: { contentType: 'text', content: o.description ?? e.description ?? '' },
   location: { displayName: o.location ?? e.location ?? '' },

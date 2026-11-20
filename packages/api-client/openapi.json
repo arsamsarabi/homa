@@ -193,6 +193,20 @@
               "format": "date-time"
             }
           },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              10,
+              1440
+            ],
+            "description": "Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -216,6 +230,7 @@
           "rrule",
           "exdates",
           "rdates",
+          "reminders",
           "createdAt",
           "updatedAt"
         ]
@@ -268,6 +283,20 @@
             ],
             "maxLength": 1000,
             "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              10,
+              1440
+            ],
+            "description": "Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes"
           }
         },
         "required": [
@@ -327,6 +356,28 @@
             "example": "FREQ=WEEKLY;BYDAY=MO"
           }
         }
+      },
+      "RemindersInput": {
+        "type": "object",
+        "properties": {
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              10,
+              1440
+            ],
+            "description": "Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes"
+          }
+        },
+        "required": [
+          "reminders"
+        ]
       },
       "Occurrence": {
         "type": "object",
@@ -422,12 +473,23 @@
             "maximum": 6,
             "example": 1,
             "description": "First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)"
+          },
+          "defaultReminderMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 40320,
+            "example": 10,
+            "description": "The reminder the event form adds to new timed events, in minutes before; null for none"
           }
         },
         "required": [
           "homeTz",
           "secondaryCalendar",
-          "weekStart"
+          "weekStart",
+          "defaultReminderMinutes"
         ]
       },
       "SettingsPatch": {
@@ -458,6 +520,16 @@
             "maximum": 6,
             "example": 1,
             "description": "First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)"
+          },
+          "defaultReminderMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 40320,
+            "example": 10,
+            "description": "The reminder the event form adds to new timed events, in minutes before; null for none"
           }
         }
       },
@@ -662,12 +734,19 @@
                 ],
                 "minimum": 0,
                 "maximum": 6
+              },
+              "defaultReminderMinutes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
               }
             },
             "required": [
               "homeTz",
               "secondaryCalendar",
-              "weekStart"
+              "weekStart",
+              "defaultReminderMinutes"
             ]
           },
           "calendars": {
@@ -739,6 +818,12 @@
                 }
               ]
             }
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reminder"
+            }
           }
         },
         "required": [
@@ -746,7 +831,55 @@
           "exportedAt",
           "settings",
           "calendars",
-          "events"
+          "events",
+          "reminders"
+        ]
+      },
+      "Reminder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The first (or only) time it fires"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "rrule": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextFireAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Null once it will not fire again"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "at",
+          "tz",
+          "rrule",
+          "nextFireAt",
+          "createdAt"
         ]
       },
       "Connection": {
@@ -1001,6 +1134,212 @@
           "country",
           "names",
           "source"
+        ]
+      },
+      "ReminderInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tz": {
+            "type": "string",
+            "example": "Europe/London"
+          },
+          "rrule": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "example": "FREQ=WEEKLY;BYDAY=MO"
+          }
+        },
+        "required": [
+          "title",
+          "at",
+          "tz"
+        ]
+      },
+      "ReminderPatch": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tz": {
+            "type": "string",
+            "example": "Europe/London"
+          },
+          "rrule": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "example": "FREQ=WEEKLY;BYDAY=MO"
+          }
+        }
+      },
+      "NotificationList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          },
+          "unread": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "unread"
+        ]
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "event",
+              "standalone"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The occurrence's start, or when the standalone reminder was due"
+          },
+          "allDay": {
+            "type": "boolean"
+          },
+          "eventId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "recurrenceId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "fireAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "read": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "start",
+          "allDay",
+          "eventId",
+          "recurrenceId",
+          "fireAt",
+          "read"
+        ]
+      },
+      "SnoozeInput": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 43200
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PushKey": {
+        "type": "object",
+        "properties": {
+          "publicKey": {
+            "type": "string",
+            "description": "The VAPID public key (base64url) for PushManager.subscribe's applicationServerKey"
+          }
+        },
+        "required": [
+          "publicKey"
+        ]
+      },
+      "PushSubscriptionInput": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "maxLength": 2000,
+            "format": "uri"
+          },
+          "keys": {
+            "type": "object",
+            "properties": {
+              "p256dh": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "auth": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "p256dh",
+              "auth"
+            ]
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ]
+      },
+      "PushUnsubscribe": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "maxLength": 2000,
+            "format": "uri"
+          }
+        },
+        "required": [
+          "endpoint"
         ]
       }
     },
@@ -1533,6 +1872,79 @@
           },
           "403": {
             "description": "Not allowed (or a read-only calendar)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events/{id}/reminders": {
+      "put": {
+        "operationId": "setEventReminders",
+        "tags": [
+          "Events"
+        ],
+        "summary": "Replace an event's reminders",
+        "description": "They apply to every occurrence. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemindersInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The event with its reminders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
             "content": {
               "application/json": {
                 "schema": {
@@ -2713,6 +3125,536 @@
                   "items": {
                     "$ref": "#/components/schemas/HolidayFeed"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reminders": {
+      "get": {
+        "operationId": "listReminders",
+        "tags": [
+          "Reminders"
+        ],
+        "summary": "Your standalone reminders that are not done, soonest first",
+        "responses": {
+          "200": {
+            "description": "Reminders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Reminder"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createReminder",
+        "tags": [
+          "Reminders"
+        ],
+        "summary": "Create a standalone reminder, optionally repeating",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReminderInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reminder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reminders/{id}": {
+      "patch": {
+        "operationId": "updateReminder",
+        "tags": [
+          "Reminders"
+        ],
+        "summary": "Change a standalone reminder",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReminderPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reminder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteReminder",
+        "tags": [
+          "Reminders"
+        ],
+        "summary": "Delete a standalone reminder",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "listNotifications",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Open notifications (not done, not snoozed), newest first, and how many are unread",
+        "responses": {
+          "200": {
+            "description": "Notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read": {
+      "post": {
+        "operationId": "readNotifications",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark every open notification read",
+        "responses": {
+          "204": {
+            "description": "Done"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{id}/snooze": {
+      "post": {
+        "operationId": "snoozeNotification",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Hide a notification for some minutes or until a time; then it comes back",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnoozeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Snoozed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{id}/done": {
+      "post": {
+        "operationId": "doneNotification",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark a notification done (a one-off standalone reminder is done with it)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push/key": {
+      "get": {
+        "operationId": "getPushKey",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "The server's VAPID public key, to subscribe a browser to web push",
+        "responses": {
+          "200": {
+            "description": "The key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Web push is not set up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push/subscriptions": {
+      "post": {
+        "operationId": "subscribePush",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Save this browser's push subscription",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Saved"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Web push is not set up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unsubscribePush",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Remove this browser's push subscription",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushUnsubscribe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Removed"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

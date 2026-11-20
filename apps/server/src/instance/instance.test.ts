@@ -101,7 +101,12 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
     expect(res.status).toBe(200);
     user = cookieOf(res);
     const settings = await app.request('/api/settings', { headers: headers(user) });
-    expect(await settings.json()).toEqual({ homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali', weekStart: null });
+    expect(await settings.json()).toEqual({
+      homeTz: 'Asia/Tehran',
+      secondaryCalendar: 'jalali',
+      weekStart: null,
+      defaultReminderMinutes: 10,
+    });
   });
 
   test('only an admin reaches the admin settings', async () => {

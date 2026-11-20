@@ -286,3 +286,32 @@ describe('tokens', () => {
     await expect(failed).rejects.toThrow(RECONNECT_MICROSOFT);
   });
 });
+
+test('reminders: only the one closest to the start goes to Outlook, and it comes back', async () => {
+  const a = adapter();
+  const ics = serializeEvent(
+    {
+      uid: 'homa-rem',
+      summary: 'Dentist',
+      description: null,
+      location: null,
+      startAt: new Date('2027-03-01T18:00:00Z'),
+      endAt: new Date('2027-03-01T19:00:00Z'),
+      allDay: false,
+      tz: 'UTC',
+      rrule: null,
+      exdates: [],
+      rdates: [],
+    },
+    [],
+    new Date(),
+    [
+      { minutes: 15, action: 'display' },
+      { minutes: 1440, action: 'display' },
+    ],
+  );
+  const { href: at } = await a.pushChange({ kind: 'put', href: a.newHref('cal-1', 'homa-rem'), ics, etag: null });
+  const stored = [...g.events.values()].find((e) => e.subject === 'Dentist');
+  expect(stored).toMatchObject({ isReminderOn: true, reminderMinutesBeforeStart: 15 });
+  expect((await a.fetchResource(at ?? ''))?.events[0]?.reminders).toEqual([{ minutes: 15, action: 'display' }]);
+});
