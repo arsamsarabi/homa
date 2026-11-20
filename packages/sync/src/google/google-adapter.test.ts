@@ -195,7 +195,8 @@ describe('push', () => {
     expect(target).toBe(href(id));
     const created = await a.pushChange({ kind: 'put', href: target, ics: ics('Gym'), etag: null });
     expect(g.get('ada@example.com', id)).toMatchObject({
-      iCalUID: 'homa-1',
+      iCalUID: `${id}@google.com`,
+      extendedProperties: { private: { homaUid: 'homa-1' } },
       summary: 'Gym',
       recurrence: ['RRULE:FREQ=WEEKLY'],
     });

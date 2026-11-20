@@ -239,12 +239,18 @@ describe.skipIf(!testDatabaseUrl)('Google connections', () => {
     );
     expect(await pushDueOutboxes(t.db, settings)).toEqual({ connections: 1, busy: 0, failed: 0 });
     const id = googleEventId(created.uid);
-    expect(g.get('ada@example.com', id)).toMatchObject({ summary: 'Lunch', iCalUID: created.uid });
+    expect(g.get('ada@example.com', id)).toMatchObject({
+      summary: 'Lunch',
+      extendedProperties: { private: { homaUid: created.uid } },
+    });
     expect((await eventByUid(created.uid))?.remoteEtag).toBe(g.get('ada@example.com', id)?.etag ?? 'missing');
 
     await req('PATCH', `/events/${created.id}`, ada, { summary: 'Team lunch' });
     expect(await syncNow()).toMatchObject({ status: 'ok', notice: null });
     expect(g.get('ada@example.com', id)?.summary).toBe('Team lunch');
+    // The pull reads Homa's UID back, so the event isn't duplicated under Google's own iCalUID.
+    expect((await eventByUid(created.uid))?.summary).toBe('Team lunch');
+    expect(await eventByUid(`${id}@google.com`)).toBeUndefined();
 
     expect((await req('DELETE', `/events/${created.id}`, ada)).status).toBe(204);
     expect(await pushDueOutboxes(t.db, settings)).toMatchObject({ connections: 1 });
