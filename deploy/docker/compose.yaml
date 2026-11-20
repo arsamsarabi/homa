@@ -23,6 +23,9 @@ x-homa: &homa
     # Optional: your Google OAuth client, for Google Calendar connections (docs/self-hosting/google.md).
     HOMA_GOOGLE_CLIENT_ID: ${HOMA_GOOGLE_CLIENT_ID:-}
     HOMA_GOOGLE_CLIENT_SECRET: ${HOMA_GOOGLE_CLIENT_SECRET:-}
+    # Optional: your Microsoft Entra ID app, for Outlook.com and Microsoft 365 (docs/self-hosting/microsoft.md).
+    HOMA_MICROSOFT_CLIENT_ID: ${HOMA_MICROSOFT_CLIENT_ID:-}
+    HOMA_MICROSOFT_CLIENT_SECRET: ${HOMA_MICROSOFT_CLIENT_SECRET:-}
     # Only for automated tests: false lifts the sign-in and sign-up rate limits.
     HOMA_AUTH_RATE_LIMIT: ${HOMA_AUTH_RATE_LIMIT:-true}
 

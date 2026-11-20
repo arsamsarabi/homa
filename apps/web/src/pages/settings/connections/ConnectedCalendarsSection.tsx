@@ -14,9 +14,10 @@ import { ConnectionItem, connectionName } from './ConnectionItem';
 import { SubscribeDrawer } from './SubscribeDrawer';
 
 /**
- * Settings section: connected calendars (ICS feeds, public holidays, CalDAV and Google accounts) with
- * their sync status. Google's OAuth callback lands here with ?google={id} (open its calendar picker)
- * or ?googleError=…; both are read once and cleared from the URL.
+ * Settings section: connected calendars (ICS feeds, public holidays, CalDAV, Google and Microsoft
+ * accounts) with their sync status. The OAuth callbacks land here with ?google={id} or
+ * ?microsoft={id} (open its calendar picker), or ?googleError=… / ?microsoftError=…; they're read
+ * once and cleared from the URL.
  */
 export function ConnectedCalendarsSection(): JSX.Element {
   const { t, i18n } = useTranslation();
@@ -24,16 +25,26 @@ export function ConnectedCalendarsSection(): JSX.Element {
   const connections = useConnections();
   const { syncNow, remove, dismissNotice, removeCalendar } = useConnectionMutations();
   const announce = useAnnouncer((s) => s.announce);
-  const googleOn = useInstance().data?.googleCalendar === true;
+  const instance = useInstance().data;
+  const googleOn = instance?.googleCalendar === true;
+  const microsoftOn = instance?.microsoftCalendar === true;
   const search = useSearch({ from: '/_app/settings' });
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
   // The account drawer: closed, adding a CalDAV account (null) or choosing an account's calendars (its id).
-  const [caldav, setCaldav] = useState<string | null | undefined>(search.google);
-  const [googleError, setGoogleError] = useState(search.googleError);
+  const [caldav, setCaldav] = useState<string | null | undefined>(search.google ?? search.microsoft);
+  // The i18n key of why a Google or Microsoft connect failed.
+  const [oauthError, setOauthError] = useState(
+    search.googleError
+      ? `google.errors.${search.googleError}`
+      : search.microsoftError
+        ? `microsoft.errors.${search.microsoftError}`
+        : undefined,
+  );
+  const fromCallback = Boolean(search.google || search.googleError || search.microsoft || search.microsoftError);
   useEffect(() => {
-    if (search.google || search.googleError) void navigate({ to: '/settings', search: {}, replace: true });
-  }, [search.google, search.googleError, navigate]);
+    if (fromCallback) void navigate({ to: '/settings', search: {}, replace: true });
+  }, [fromCallback, navigate]);
   const [editing, setEditing] = useState<Calendar>();
   const [removing, setRemoving] = useState<Connection>();
   const [removingCalendar, setRemovingCalendar] = useState<Calendar>();
@@ -82,10 +93,15 @@ export function ConnectedCalendarsSection(): JSX.Element {
             {t('google.add')}
           </Button>
         )}
+        {microsoftOn && (
+          <Button variant="default" component="a" href="/api/connections/microsoft/start">
+            {t('microsoft.add')}
+          </Button>
+        )}
       </Group>
-      {googleError && (
-        <Alert color="red" role="alert" withCloseButton onClose={() => setGoogleError(undefined)}>
-          {t(`google.errors.${googleError}`)}
+      {oauthError && (
+        <Alert color="red" role="alert" withCloseButton onClose={() => setOauthError(undefined)}>
+          {t(oauthError)}
         </Alert>
       )}
       {connections.isPending && <Loader size="sm" aria-label={t('connections.loading')} />}

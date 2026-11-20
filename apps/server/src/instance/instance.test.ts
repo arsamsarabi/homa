@@ -37,6 +37,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       needsSetup: true,
       defaultLanguage: 'en',
       googleCalendar: false,
+      microsoftCalendar: false,
     });
   });
 
@@ -85,6 +86,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       needsSetup: false,
       defaultLanguage: 'fa',
       googleCalendar: false,
+      microsoftCalendar: false,
     });
   });
 

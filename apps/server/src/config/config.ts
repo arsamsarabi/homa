@@ -40,6 +40,10 @@ const Env = z
     // them Google isn't offered. Its redirect URI is ${HOMA_URL}/api/connections/google/callback.
     HOMA_GOOGLE_CLIENT_ID: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
     HOMA_GOOGLE_CLIENT_SECRET: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    // The instance's Microsoft Entra ID app, for Outlook.com and Microsoft 365 calendars. Both or
+    // neither; its redirect URI is ${HOMA_URL}/api/connections/microsoft/callback.
+    HOMA_MICROSOFT_CLIENT_ID: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    HOMA_MICROSOFT_CLIENT_SECRET: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
     // How often each connected calendar is synced, in minutes.
     HOMA_SYNC_INTERVAL_MINUTES: z.coerce.number().int().min(5).max(1440).default(30),
     // Lets feeds on loopback and private networks be subscribed to (refused by default: SSRF).
@@ -57,6 +61,10 @@ const Env = z
   .refine((env) => !env.HOMA_GOOGLE_CLIENT_ID === !env.HOMA_GOOGLE_CLIENT_SECRET, {
     message: 'set both HOMA_GOOGLE_CLIENT_ID and HOMA_GOOGLE_CLIENT_SECRET, or neither',
     path: ['HOMA_GOOGLE_CLIENT_SECRET'],
+  })
+  .refine((env) => !env.HOMA_MICROSOFT_CLIENT_ID === !env.HOMA_MICROSOFT_CLIENT_SECRET, {
+    message: 'set both HOMA_MICROSOFT_CLIENT_ID and HOMA_MICROSOFT_CLIENT_SECRET, or neither',
+    path: ['HOMA_MICROSOFT_CLIENT_SECRET'],
   });
 
 export type Config = z.infer<typeof Env>;

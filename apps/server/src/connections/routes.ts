@@ -3,19 +3,20 @@
 import type { Db } from '@homa/db';
 import { HOLIDAY_CATALOG } from '@homa/sync';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
+import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { calendarOut } from '@/calendar';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
 import * as caldav from './caldav-service';
 import * as service from './connections-service';
-import { finishGoogle, GOOGLE_FLOW_TTL_MS, startGoogle } from './google-service';
+import { finishOAuth, OAUTH_FLOW_TTL_MS, type OAuthProvider, startOAuth } from './oauth-service';
 import {
   CaldavInput,
   ChooseCalendarsInput,
   Connection,
-  GoogleCallbackQuery,
   HolidayFeed,
+  OAuthCallbackQuery,
   RemoteCalendar,
   SubscribeInput,
 } from './schemas';
@@ -28,9 +29,13 @@ const googleUnavailable = jsonContent(
   z.object({ error: z.string() }),
   'HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server',
 );
-/** Holds the state and PKCE verifier of a Google connect between start and callback. */
-const GOOGLE_COOKIE = 'homa_google_oauth';
-const GOOGLE_COOKIE_PATH = '/api/connections/google';
+const microsoftUnavailable = jsonContent(
+  z.object({ error: z.string() }),
+  'HOMA_ENCRYPTION_KEY, or the Microsoft app (HOMA_MICROSOFT_CLIENT_ID), is not set on the server',
+);
+/** Holds the state and PKCE verifier of a Google or Microsoft connect between start and callback. */
+const cookieName = (provider: OAuthProvider): string => `homa_${provider}_oauth`;
+const cookiePath = (provider: OAuthProvider): string => `/api/connections/${provider}`;
 const SETTINGS = '/settings';
 const r = {
   listConnections: createRoute({
@@ -81,15 +86,36 @@ const r = {
     summary: 'Where Google sends the user back',
     description:
       'Saves the account without calendars and redirects to /settings?google={connection id}, where the user chooses them; on failure to /settings?googleError=denied|state|failed.',
-    request: { query: GoogleCallbackQuery },
+    request: { query: OAuthCallbackQuery },
     responses: { 302: { description: 'Back to the settings page' }, 401: errors[401], 503: googleUnavailable },
+  }),
+  startMicrosoft: createRoute({
+    method: 'get',
+    path: '/connections/microsoft/start',
+    operationId: 'startMicrosoft',
+    tags,
+    summary: 'Connect a Microsoft account (Outlook.com or Microsoft 365): redirects to Microsoft',
+    description:
+      "Open it in the browser (it isn't an API call): it redirects to Microsoft's sign-in and consent, and Microsoft sends the user back to the callback.",
+    responses: { 302: { description: "To Microsoft's sign-in" }, 401: errors[401], 503: microsoftUnavailable },
+  }),
+  microsoftCallback: createRoute({
+    method: 'get',
+    path: '/connections/microsoft/callback',
+    operationId: 'microsoftCallback',
+    tags,
+    summary: 'Where Microsoft sends the user back',
+    description:
+      'Saves the account without calendars and redirects to /settings?microsoft={connection id}, where the user chooses them; on failure to /settings?microsoftError=denied|state|failed.',
+    request: { query: OAuthCallbackQuery },
+    responses: { 302: { description: 'Back to the settings page' }, 401: errors[401], 503: microsoftUnavailable },
   }),
   remoteCalendars: createRoute({
     method: 'get',
     path: '/connections/{id}/remote-calendars',
     operationId: 'listRemoteCalendars',
     tags,
-    summary: 'The calendars on a CalDAV or Google account, and which of them sync',
+    summary: 'The calendars on a CalDAV, Google or Microsoft account, and which of them sync',
     request: { params: Id },
     responses: {
       200: jsonContent(z.array(RemoteCalendar), 'Calendars that hold events'),
@@ -104,7 +130,7 @@ const r = {
     path: '/connections/{id}/calendars',
     operationId: 'chooseCalendars',
     tags,
-    summary: 'Choose which calendars of a CalDAV or Google account sync',
+    summary: 'Choose which calendars of a CalDAV, Google or Microsoft account sync',
     description:
       'New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).',
     request: { params: Id, ...jsonBody(ChooseCalendarsInput) },
@@ -179,6 +205,33 @@ export function connectionsApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings 
     return deps.db;
   };
 
+  /** Sets the flow cookie and returns where to send the browser. */
+  const start = (c: Context<UserVars>, provider: OAuthProvider): string => {
+    const { url, cookie } = startOAuth(provider, settings, c.var.userId);
+    setCookie(c, cookieName(provider), cookie, {
+      path: cookiePath(provider),
+      httpOnly: true,
+      // Lax, so the cookie comes back on the provider's top-level redirect to the callback.
+      sameSite: 'Lax',
+      secure: settings[provider]?.redirectUri.startsWith('https:') ?? false,
+      maxAge: OAUTH_FLOW_TTL_MS / 1000,
+    });
+    return url;
+  };
+  /** Finishes the flow; returns the settings page to go back to, with the outcome. */
+  const callback = async (
+    c: Context<UserVars>,
+    provider: OAuthProvider,
+    query: z.infer<typeof OAuthCallbackQuery>,
+  ): Promise<string> => {
+    const cookie = getCookie(c, cookieName(provider));
+    deleteCookie(c, cookieName(provider), { path: cookiePath(provider) });
+    const outcome = await finishOAuth(provider, db(), settings, c.var.userId, query, cookie);
+    return 'connectionId' in outcome
+      ? `${SETTINGS}?${provider}=${outcome.connectionId}`
+      : `${SETTINGS}?${provider}Error=${outcome.error}`;
+  };
+
   return app
     .openapi(r.listConnections, async (c) =>
       c.json((await service.listConnections(db(), c.var.userId)).map(connectionOut), 200),
@@ -189,29 +242,10 @@ export function connectionsApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings 
     .openapi(r.addCaldav, async (c) =>
       c.json(connectionOut(await caldav.addCaldav(db(), settings, c.var.userId, c.req.valid('json'))), 201),
     )
-    .openapi(r.startGoogle, (c) => {
-      const { url, cookie } = startGoogle(settings, c.var.userId);
-      setCookie(c, GOOGLE_COOKIE, cookie, {
-        path: GOOGLE_COOKIE_PATH,
-        httpOnly: true,
-        // Lax, so the cookie comes back on Google's top-level redirect to the callback.
-        sameSite: 'Lax',
-        secure: settings.google?.redirectUri.startsWith('https:') ?? false,
-        maxAge: GOOGLE_FLOW_TTL_MS / 1000,
-      });
-      return c.redirect(url, 302);
-    })
-    .openapi(r.googleCallback, async (c) => {
-      const cookie = getCookie(c, GOOGLE_COOKIE);
-      deleteCookie(c, GOOGLE_COOKIE, { path: GOOGLE_COOKIE_PATH });
-      const outcome = await finishGoogle(db(), settings, c.var.userId, c.req.valid('query'), cookie);
-      return c.redirect(
-        'connectionId' in outcome
-          ? `${SETTINGS}?google=${outcome.connectionId}`
-          : `${SETTINGS}?googleError=${outcome.error}`,
-        302,
-      );
-    })
+    .openapi(r.startGoogle, (c) => c.redirect(start(c, 'google'), 302))
+    .openapi(r.googleCallback, async (c) => c.redirect(await callback(c, 'google', c.req.valid('query')), 302))
+    .openapi(r.startMicrosoft, (c) => c.redirect(start(c, 'microsoft'), 302))
+    .openapi(r.microsoftCallback, async (c) => c.redirect(await callback(c, 'microsoft', c.req.valid('query')), 302))
     .openapi(r.remoteCalendars, async (c) =>
       c.json(
         (await caldav.listRemoteCalendars(db(), settings, c.var.userId, c.req.valid('param').id)).map((x) => ({

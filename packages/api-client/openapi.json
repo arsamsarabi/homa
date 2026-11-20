@@ -490,6 +490,10 @@
           "googleCalendar": {
             "type": "boolean",
             "description": "Whether Google Calendar accounts can be connected"
+          },
+          "microsoftCalendar": {
+            "type": "boolean",
+            "description": "Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected"
           }
         },
         "required": [
@@ -497,7 +501,8 @@
           "signUpsOpen",
           "needsSetup",
           "defaultLanguage",
-          "googleCalendar"
+          "googleCalendar",
+          "microsoftCalendar"
         ]
       },
       "InstanceSettings": {
@@ -765,7 +770,7 @@
               "string",
               "null"
             ],
-            "description": "The account, such as \"ada on caldav.fastmail.com\" or a Google email; null for ICS feeds"
+            "description": "The account, such as \"ada on caldav.fastmail.com\" or a Google or Microsoft email; null for ICS feeds"
           },
           "status": {
             "type": "string",
@@ -909,7 +914,7 @@
         "properties": {
           "remoteId": {
             "type": "string",
-            "description": "The calendar's URL on the CalDAV server, or its Google calendar id"
+            "description": "The calendar's URL on the CalDAV server, or its Google or Microsoft calendar id"
           },
           "name": {
             "type": [
@@ -2241,13 +2246,128 @@
         }
       }
     },
+    "/connections/microsoft/start": {
+      "get": {
+        "operationId": "startMicrosoft",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Connect a Microsoft account (Outlook.com or Microsoft 365): redirects to Microsoft",
+        "description": "Open it in the browser (it isn't an API call): it redirects to Microsoft's sign-in and consent, and Microsoft sends the user back to the callback.",
+        "responses": {
+          "302": {
+            "description": "To Microsoft's sign-in"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY, or the Microsoft app (HOMA_MICROSOFT_CLIENT_ID), is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/connections/microsoft/callback": {
+      "get": {
+        "operationId": "microsoftCallback",
+        "tags": [
+          "Connected calendars"
+        ],
+        "summary": "Where Microsoft sends the user back",
+        "description": "Saves the account without calendars and redirects to /settings?microsoft={connection id}, where the user chooses them; on failure to /settings?microsoftError=denied|state|failed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "required": false,
+            "name": "code",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "state",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "error",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Back to the settings page"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HOMA_ENCRYPTION_KEY, or the Microsoft app (HOMA_MICROSOFT_CLIENT_ID), is not set on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/connections/{id}/remote-calendars": {
       "get": {
         "operationId": "listRemoteCalendars",
         "tags": [
           "Connected calendars"
         ],
-        "summary": "The calendars on a CalDAV or Google account, and which of them sync",
+        "summary": "The calendars on a CalDAV, Google or Microsoft account, and which of them sync",
         "parameters": [
           {
             "schema": {
@@ -2330,7 +2450,7 @@
         "tags": [
           "Connected calendars"
         ],
-        "summary": "Choose which calendars of a CalDAV or Google account sync",
+        "summary": "Choose which calendars of a CalDAV, Google or Microsoft account sync",
         "description": "New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).",
         "parameters": [
           {

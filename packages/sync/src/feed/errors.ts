@@ -6,12 +6,16 @@ export class SyncError extends Error {
   override name = 'SyncError';
 }
 
-/** The server refused a pushed change. `retriable` for answers worth trying again (5xx, 429). */
+/**
+ * The server refused a pushed change. `retriable` for answers worth trying again (5xx, 429);
+ * `retryAfterMs` when the server said how long to wait (Retry-After).
+ */
 export class PushError extends SyncError {
   override name = 'PushError';
   constructor(
     message: string,
     readonly retriable: boolean,
+    readonly retryAfterMs?: number,
   ) {
     super(message);
   }

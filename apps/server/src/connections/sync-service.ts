@@ -1,5 +1,5 @@
 // Syncs connected calendars. A sync claims its connection (so two never run at once), pushes the
-// outbox (CalDAV and Google), then pulls each calendar with the provider's adapter outside any transaction and
+// outbox (CalDAV, Google and Microsoft), then pulls each calendar with the provider's adapter outside any transaction and
 // applies the result in one transaction per calendar. A failure is stored on the connection as a
 // message safe to show (never the URL or a password) and never stops the run.
 import { UnavailableError, ValidationError } from '@homa/core';
@@ -14,6 +14,8 @@ import {
   googleAdapter,
   type IcsCredentials,
   icsAdapter,
+  type MicrosoftCredentials,
+  microsoftAdapter,
   type SyncAdapter,
   type SyncCursor,
   SyncError,
@@ -60,17 +62,21 @@ export function caldavCredentials(value: unknown): CaldavCredentials {
   return { serverUrl: c.serverUrl, username: c.username, password: c.password, homeUrl: c.homeUrl };
 }
 
-export function googleCredentials(value: unknown): GoogleCredentials {
+/** Google's and Microsoft's stored tokens have the same shape. */
+export function oauthCredentials(value: unknown): GoogleCredentials & MicrosoftCredentials {
   const c = value as Partial<GoogleCredentials> | null;
   if (typeof c?.accessToken !== 'string' || typeof c.refreshToken !== 'string' || typeof c.expiresAt !== 'number')
-    throw new Error('Google credentials without tokens');
+    throw new Error('OAuth credentials without tokens');
   return { accessToken: c.accessToken, refreshToken: c.refreshToken, expiresAt: c.expiresAt };
 }
 
 export const GOOGLE_MISSING =
   'Google Calendar is not set up on this server (HOMA_GOOGLE_CLIENT_ID and HOMA_GOOGLE_CLIENT_SECRET). Ask your admin to add it.';
 
-/** The provider's adapter for a connection. Google's stores refreshed tokens on the connection. */
+export const MICROSOFT_MISSING =
+  'Microsoft calendars are not set up on this server (HOMA_MICROSOFT_CLIENT_ID and HOMA_MICROSOFT_CLIENT_SECRET). Ask your admin to add it.';
+
+/** The provider's adapter for a connection. Google's and Microsoft's store refreshed tokens on the connection. */
 export function adapterFor(
   db: Db,
   connection: repo.ConnectionRow,
@@ -84,11 +90,24 @@ export function adapterFor(
     const client = settings.google;
     if (!client) throw new SyncError(GOOGLE_MISSING);
     const key = requireKey(settings);
-    return googleAdapter(googleCredentials(credentials), {
+    return googleAdapter(oauthCredentials(credentials), {
       floatingTz,
       client,
       policy: settings.policy,
       onCredentials: (c: GoogleCredentials): Promise<void> =>
+        repo.updateConnectionCredentials(db, connection.id, encryptCredentials(key, connection.id, c)),
+    });
+  }
+  if (connection.provider === 'microsoft') {
+    const client = settings.microsoft;
+    if (!client) throw new SyncError(MICROSOFT_MISSING);
+    const key = requireKey(settings);
+    return microsoftAdapter(oauthCredentials(credentials), {
+      floatingTz,
+      client,
+      policy: settings.policy,
+      // Microsoft rotates the refresh token: store every new pair.
+      onCredentials: (c: MicrosoftCredentials): Promise<void> =>
         repo.updateConnectionCredentials(db, connection.id, encryptCredentials(key, connection.id, c)),
     });
   }

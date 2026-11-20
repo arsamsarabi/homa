@@ -1,4 +1,4 @@
-// Runtime schemas for connected calendars (ICS subscriptions, CalDAV and Google accounts) and the holiday catalog.
+// Runtime schemas for connected calendars (ICS subscriptions, CalDAV, Google and Microsoft accounts) and the holiday catalog.
 import { z } from 'zod';
 import { CalendarSchema } from '@/schemas/calendar';
 
@@ -41,12 +41,16 @@ export const RemoteCalendarSchema = z.object({
 export type RemoteCalendar = z.infer<typeof RemoteCalendarSchema>;
 export const RemoteCalendarListSchema = z.array(RemoteCalendarSchema);
 
+/** Why an OAuth connect (Google or Microsoft) failed, as the API's callback says. */
 export const GOOGLE_ERRORS = ['denied', 'state', 'failed'] as const;
 
-/** The settings route's search params: where the API's Google callback sends the user back. */
+/** The settings route's search params: where the API's Google and Microsoft callbacks send the user back. */
 export const SettingsSearchSchema = z.object({
   /** A Google account just connected: open its calendar picker. */
   google: z.uuid().optional().catch(undefined),
   googleError: z.enum(GOOGLE_ERRORS).optional().catch(undefined),
+  /** A Microsoft account just connected: open its calendar picker. */
+  microsoft: z.uuid().optional().catch(undefined),
+  microsoftError: z.enum(GOOGLE_ERRORS).optional().catch(undefined),
 });
 export type SettingsSearch = z.infer<typeof SettingsSearchSchema>;

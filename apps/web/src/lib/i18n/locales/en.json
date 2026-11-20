@@ -220,7 +220,7 @@
   },
   "connections": {
     "title": "Connected calendars",
-    "hint": "Subscribe to a calendar feed (an .ics or webcal address from Google Calendar, Outlook, Apple Calendar, a sports team or a school), add public holidays, or connect a CalDAV account (iCloud, Fastmail, Nextcloud) or a Google account to sync both ways.",
+    "hint": "Subscribe to a calendar feed (an .ics or webcal address from Google Calendar, Outlook, Apple Calendar, a sports team or a school), add public holidays, or connect a CalDAV account (iCloud, Fastmail, Nextcloud), a Google account or a Microsoft account (Outlook.com, Microsoft 365) to sync both ways.",
     "add": "Add calendar",
     "addTitle": "Add a calendar",
     "byAddress": "By address",
@@ -336,6 +336,15 @@
       "denied": "Google wasn't connected: access wasn't granted.",
       "state": "Google wasn't connected: the request expired or didn't come from this browser. Try again.",
       "failed": "Google wasn't connected. Try again, and allow Homa to see and edit your calendars."
+    }
+  },
+  "microsoft": {
+    "add": "Connect Outlook",
+    "provider": "Microsoft",
+    "errors": {
+      "denied": "Outlook wasn't connected: access wasn't granted.",
+      "state": "Outlook wasn't connected: the request expired or didn't come from this browser. Try again.",
+      "failed": "Outlook wasn't connected. Try again, and allow Homa to read and write your calendars."
     }
   }
 }

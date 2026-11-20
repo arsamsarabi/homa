@@ -309,6 +309,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/connections/microsoft/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Connect a Microsoft account (Outlook.com or Microsoft 365): redirects to Microsoft
+         * @description Open it in the browser (it isn't an API call): it redirects to Microsoft's sign-in and consent, and Microsoft sends the user back to the callback.
+         */
+        get: operations["startMicrosoft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/microsoft/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where Microsoft sends the user back
+         * @description Saves the account without calendars and redirects to /settings?microsoft={connection id}, where the user chooses them; on failure to /settings?microsoftError=denied|state|failed.
+         */
+        get: operations["microsoftCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/connections/{id}/remote-calendars": {
         parameters: {
             query?: never;
@@ -316,7 +356,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The calendars on a CalDAV or Google account, and which of them sync */
+        /** The calendars on a CalDAV, Google or Microsoft account, and which of them sync */
         get: operations["listRemoteCalendars"];
         put?: never;
         post?: never;
@@ -335,7 +375,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Choose which calendars of a CalDAV or Google account sync
+         * Choose which calendars of a CalDAV, Google or Microsoft account sync
          * @description New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).
          */
         put: operations["chooseCalendars"];
@@ -586,6 +626,8 @@ export interface components {
             defaultLanguage: "en" | "fa";
             /** @description Whether Google Calendar accounts can be connected */
             googleCalendar: boolean;
+            /** @description Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected */
+            microsoftCalendar: boolean;
         };
         InstanceSettings: {
             /**
@@ -681,7 +723,7 @@ export interface components {
             id: string;
             /** @enum {string} */
             provider: "ics" | "caldav" | "google" | "microsoft";
-            /** @description The account, such as "ada on caldav.fastmail.com" or a Google email; null for ICS feeds */
+            /** @description The account, such as "ada on caldav.fastmail.com" or a Google or Microsoft email; null for ICS feeds */
             label: string | null;
             /** @enum {string} */
             status: "pending" | "syncing" | "ok" | "error";
@@ -718,7 +760,7 @@ export interface components {
             password: string;
         };
         RemoteCalendar: {
-            /** @description The calendar's URL on the CalDAV server, or its Google calendar id */
+            /** @description The calendar's URL on the CalDAV server, or its Google or Microsoft calendar id */
             remoteId: string;
             name: string | null;
             color: string | null;
@@ -1684,6 +1726,86 @@ export interface operations {
                 };
             };
             /** @description HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    startMicrosoft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description To Microsoft's sign-in */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY, or the Microsoft app (HOMA_MICROSOFT_CLIENT_ID), is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    microsoftCallback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Back to the settings page */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY, or the Microsoft app (HOMA_MICROSOFT_CLIENT_ID), is not set on the server */
             503: {
                 headers: {
                     [name: string]: unknown;

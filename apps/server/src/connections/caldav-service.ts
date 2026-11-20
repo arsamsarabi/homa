@@ -1,4 +1,4 @@
-// CalDAV connections: add an account (server URL, user name, app password). For CalDAV and Google
+// CalDAV connections: add an account (server URL, user name, app password). For CalDAV, Google and Microsoft
 // accounts alike: list the calendars on it, and choose which of them sync. Each chosen calendar
 // becomes a local calendar tied to its remote id; one the user can't write to on the server stays
 // read-only here. Unchoosing a calendar removes the local copy only, never anything on the server.
@@ -58,12 +58,11 @@ export async function addCaldav(
   return view(db, userId, id);
 }
 
-/** The user's CalDAV or Google connection (the ones with calendars to choose). */
+/** The user's CalDAV, Google or Microsoft connection (the ones with calendars to choose). */
 async function accountConnection(db: Db, userId: string, id: string): Promise<repo.ConnectionRow> {
   const connection = await repo.findOwnedConnection(db, userId, id);
   if (!connection) throw new NotFoundError();
-  if (connection.provider !== 'caldav' && connection.provider !== 'google')
-    throw new ValidationError('Only CalDAV and Google connections have calendars to choose');
+  if (connection.provider === 'ics') throw new ValidationError('Only account connections have calendars to choose');
   return connection;
 }
 
