@@ -1,5 +1,5 @@
 // Pushes a connection's outbox: each due op uploads an event's current state (CalDAV: PUT with
-// If-Match, or If-None-Match: * when it's new; Google: patch with If-Match, or insert) or deletes a resource at the ETag it had. Ops are independent:
+// If-Match, or If-None-Match: * when it's new; Google: patch with If-Match, or insert; Microsoft: patch after checking the changeKey, or create) or deletes a resource at the ETag it had. Ops are independent:
 // one failing waits with backoff and the rest go on. On a conflict the server's copy wins: it is
 // fetched again and written over the local event (or the local event goes, if the server deleted
 // it). A change the server refuses outright is dropped with a notice on the connection.
@@ -33,10 +33,18 @@ async function pushOne(
   }
   const e = op.eventId ? await repo.findEvent(db, op.eventId) : undefined;
   if (!e || e.calendarId !== op.calendarId) return null; // deleted or moved since: a later op covers it
-  const href = e.remoteHref ?? adapter.newHref(calendar.remoteId, e.uid);
+  const planned = e.remoteHref ?? adapter.newHref(calendar.remoteId, e.uid);
   const ics = serializeEvent(e, await repo.listOverrides(db, [e.id]));
+  const result = await adapter.pushChange({
+    kind: 'put',
+    href: planned,
+    ics,
+    etag: e.remoteHref ? e.remoteEtag : null,
+  });
+  // Microsoft picks a new event's id, so its href is known only now.
+  const href = result.href ?? planned;
+  const { etag } = result;
   const pushed = { href, title: e.summary };
-  const { etag } = await adapter.pushChange({ kind: 'put', href, ics, etag: e.remoteHref ? e.remoteEtag : null });
   // Some servers change what they store and send no ETag; read it back so the next edit can match.
   const remoteEtag = etag ?? (await adapter.fetchResource(href))?.etag ?? null;
   await repo.updateEventColumns(db, e.id, { remoteHref: href, remoteEtag });
@@ -102,7 +110,9 @@ export async function pushOutbox(
       const lastError = err instanceof Error ? err.message.slice(0, 500) : 'unknown error';
       await repo.deferOutbox(db, op.id, op.version, {
         attempts,
-        nextAttemptAt: new Date(now.getTime() + backoffMs(attempts)),
+        nextAttemptAt: new Date(
+          now.getTime() + Math.max(backoffMs(attempts), err instanceof PushError ? (err.retryAfterMs ?? 0) : 0),
+        ),
         lastError,
       });
     }

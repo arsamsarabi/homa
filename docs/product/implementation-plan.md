@@ -38,7 +38,7 @@ Status: done (2a #8, 2b #9, 2c #11, 2d #14).
 
 Delivered in four pull requests: 3a the connection model, encrypted credentials, the sync worker, ICS subscriptions, the holiday catalog and the connection status UI; 3b CalDAV two-way with the outbox; 3c Google; 3d Microsoft.
 
-Status: 3a done (#16); 3b done (#19); 3c done (#20).
+Status: 3a done (#16); 3b done (#19); 3c done (#20); 3d done (#28).
 
 - Connection model, encrypted credentials, sync worker and outbox.
 - ICS subscriptions and the holiday catalog.

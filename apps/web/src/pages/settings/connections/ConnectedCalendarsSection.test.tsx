@@ -274,6 +274,41 @@ describe('connected calendars section', () => {
     expect(await screen.findByText("Google wasn't connected: access wasn't granted.")).toBeTruthy();
   });
 
+  test('Outlook is offered only when the server is set up for it', async () => {
+    renderApp(
+      '/settings',
+      api(() => json([])),
+    );
+    await within(await section()).findByText('No connected calendars yet.');
+    expect(screen.queryByRole('link', { name: 'Connect Outlook' })).toBeNull();
+  });
+
+  test("back from Microsoft: the new account's calendar picker opens", async () => {
+    const base = api(() => json([{ ...account, provider: 'microsoft', label: 'ada@outlook.com', notice: null }]));
+    renderApp('/settings?microsoft=0b6f6f8e-3a35-4c1e-9d55-7c1e2a8c6f10', (url, req) =>
+      url.pathname === '/api/instance' ? json({ ...setUpInstance, microsoftCalendar: true }) : base(url, req),
+    );
+    const link = await screen.findByRole('link', { name: 'Connect Outlook' });
+    expect(link.getAttribute('href')).toBe('/api/connections/microsoft/start');
+    expect(screen.queryByRole('link', { name: 'Connect Google' })).toBeNull();
+    const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
+    expect(await within(picker).findByRole('checkbox', { name: /Work/ })).toBeTruthy();
+    const item = await within(await section()).findByRole('listitem', { name: 'ada@outlook.com' });
+    expect(within(item).getByText('Microsoft')).toBeTruthy();
+  });
+
+  test('a failed Microsoft connect says why', async () => {
+    renderApp(
+      '/settings?microsoftError=state',
+      api(() => json([])),
+    );
+    expect(
+      await screen.findByText(
+        "Outlook wasn't connected: the request expired or didn't come from this browser. Try again.",
+      ),
+    ).toBeTruthy();
+  });
+
   test('a calendar deleted on Google says so, and is removed from Homa after confirming', async () => {
     const sent: Sent[] = [];
     const ttrpg = { ...work, id: 'c10', name: 'TTRPG', remoteMissing: true };

@@ -17,6 +17,9 @@ export const PublicInstance = z
     needsSetup: z.boolean().openapi({ description: 'True until the first account (the admin) exists' }),
     defaultLanguage: Language,
     googleCalendar: z.boolean().openapi({ description: 'Whether Google Calendar accounts can be connected' }),
+    microsoftCalendar: z
+      .boolean()
+      .openapi({ description: 'Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected' }),
   })
   .openapi('PublicInstance');
 

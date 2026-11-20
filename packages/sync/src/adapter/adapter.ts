@@ -1,4 +1,4 @@
-// The interface every provider implements (ICS, CalDAV and Google now; Microsoft later).
+// The interface every provider implements (ICS, CalDAV, Google and Microsoft).
 // The worker drives it: listCalendars when a connection is added, pullChanges on every sync, and
 // pushChange for each outbox entry of a writable calendar. See docs/product/architecture.md ("Sync").
 import type { IcsEvent } from '@homa/core';
@@ -10,7 +10,7 @@ export type SyncCursor = {
   remoteLastModified: string | null;
   /** ICS: a SHA-256 of the last body, so an unchanged feed without validators is skipped too. */
   contentHash: string | null;
-  /** CalDAV sync-token, Google syncToken or Graph delta link. */
+  /** CalDAV sync-token or Google syncToken (Microsoft lists the whole calendar each time, so none). */
   syncToken: string | null;
 };
 
@@ -73,12 +73,16 @@ export interface SyncAdapter {
     known?: ReadonlyMap<string, string | null>,
   ): Promise<PullResult>;
   /**
-   * Returns the new ETag (null if the server didn't say). Throws PushConflict when the remote
+   * Returns the new ETag (null if the server didn't say), and `href` when the server chose where a
+   * new resource lives (Microsoft Graph assigns event ids). Throws PushConflict when the remote
    * version isn't the expected one, PushError when the server refused, ReadOnlyError for ICS.
    */
-  pushChange(op: ChangeOp): Promise<{ etag: string | null }>;
+  pushChange(op: ChangeOp): Promise<{ etag: string | null; href?: string }>;
   /** The resource as the server has it now, or null if it's gone. */
   fetchResource(href: string): Promise<RemoteResource | null>;
-  /** Where a new event with `uid` goes in the calendar `calendarRemoteId` (stable, so a retried create can't duplicate it). */
+  /**
+   * Where a new event with `uid` goes in the calendar `calendarRemoteId` (stable, so a retried create
+   * can't duplicate it). For Microsoft it's a placeholder until the push returns the real href.
+   */
   newHref(calendarRemoteId: string, uid: string): string;
 }

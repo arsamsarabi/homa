@@ -58,8 +58,11 @@ export function instanceApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings }):
     .openapi(r.getInstance, async (c) =>
       c.json(
         PublicInstance.parse(
-          // Google needs both its OAuth client and the key its tokens are stored with.
-          await instance.getPublicInstance(db(), Boolean(deps?.sync?.google && deps.sync.key)),
+          // Each provider needs both its OAuth client and the key its tokens are stored with.
+          await instance.getPublicInstance(db(), {
+            googleCalendar: Boolean(deps?.sync?.google && deps.sync.key),
+            microsoftCalendar: Boolean(deps?.sync?.microsoft && deps.sync.key),
+          }),
         ),
         200,
       ),

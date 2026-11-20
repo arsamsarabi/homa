@@ -14,6 +14,8 @@ export const PublicInstanceSchema = z.object({
   defaultLanguage: z.enum(LANGUAGES),
   /** Whether Google Calendar accounts can be connected on this server. */
   googleCalendar: z.boolean(),
+  /** Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected on this server. */
+  microsoftCalendar: z.boolean(),
 });
 export type PublicInstance = z.infer<typeof PublicInstanceSchema>;
 

@@ -9,7 +9,7 @@ import { providerName } from './ConnectionItem';
 export type RemoteCalendarPickerProps = { connectionId: string; onDone: () => void };
 
 /**
- * Checkboxes for the calendars on a CalDAV or Google account; saving makes exactly the checked ones
+ * Checkboxes for the calendars on a CalDAV, Google or Microsoft account; saving makes exactly the checked ones
  * sync. Synced calendars the account no longer has are listed too, marked deleted.
  */
 export function RemoteCalendarPicker({ connectionId, onDone }: RemoteCalendarPickerProps): JSX.Element {

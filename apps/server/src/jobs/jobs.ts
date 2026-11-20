@@ -22,7 +22,7 @@ const schedules = (sync: SyncSettings): Schedule[] => [
   }, // daily, 02:41 UTC
   // Every 5 minutes, syncs the connections last tried more than HOMA_SYNC_INTERVAL_MINUTES ago.
   { name: SYNC_CONNECTIONS, cron: '*/5 * * * *', run: (db: Db): Promise<unknown> => syncDueConnections(db, sync) },
-  // Every minute, pushes local changes waiting in the outbox of two-way (CalDAV, Google) calendars.
+  // Every minute, pushes local changes waiting in the outbox of two-way (CalDAV, Google, Microsoft) calendars.
   { name: SYNC_OUTBOX, cron: '* * * * *', run: (db: Db): Promise<unknown> => pushDueOutboxes(db, sync) },
 ];
 

@@ -43,3 +43,13 @@ test('the Google OAuth client: both values or neither', () => {
   ).toMatchObject({ HOMA_GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com', HOMA_GOOGLE_CLIENT_SECRET: 's' });
   expect(() => loadConfig({ ...valid, HOMA_GOOGLE_CLIENT_ID: 'id' })).toThrow(/HOMA_GOOGLE_CLIENT_SECRET: set both/);
 });
+
+test('the Microsoft app: both values or neither', () => {
+  expect(loadConfig({ ...valid, HOMA_MICROSOFT_CLIENT_ID: '', HOMA_MICROSOFT_CLIENT_SECRET: '' })).toMatchObject({
+    HOMA_MICROSOFT_CLIENT_ID: undefined,
+    HOMA_MICROSOFT_CLIENT_SECRET: undefined,
+  });
+  expect(() => loadConfig({ ...valid, HOMA_MICROSOFT_CLIENT_ID: 'id' })).toThrow(
+    /HOMA_MICROSOFT_CLIENT_SECRET: set both/,
+  );
+});

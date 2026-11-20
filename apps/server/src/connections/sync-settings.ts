@@ -1,10 +1,11 @@
 // What the connection services need from the config: the app key, the fetch policy and the Google
-// OAuth client.
+// and Microsoft OAuth clients.
 import {
   type CredentialKey,
   DEFAULT_FETCH_POLICY,
   type FetchPolicy,
   type GoogleClient,
+  type MicrosoftClient,
   parseCredentialKey,
 } from '@homa/sync';
 import type { Config } from '@/config';
@@ -16,6 +17,8 @@ export type SyncSettings = {
   policy: FetchPolicy;
   /** Unset when HOMA_GOOGLE_CLIENT_ID is: Google isn't offered. */
   google?: GoogleClient;
+  /** Unset when HOMA_MICROSOFT_CLIENT_ID is: Microsoft isn't offered. */
+  microsoft?: MicrosoftClient;
 };
 
 export const syncSettingsFrom = (config: Config): SyncSettings => ({
@@ -28,6 +31,14 @@ export const syncSettingsFrom = (config: Config): SyncSettings => ({
         clientId: config.HOMA_GOOGLE_CLIENT_ID,
         clientSecret: config.HOMA_GOOGLE_CLIENT_SECRET,
         redirectUri: new URL('/api/connections/google/callback', config.HOMA_URL).href,
+      },
+    }),
+  ...(config.HOMA_MICROSOFT_CLIENT_ID &&
+    config.HOMA_MICROSOFT_CLIENT_SECRET && {
+      microsoft: {
+        clientId: config.HOMA_MICROSOFT_CLIENT_ID,
+        clientSecret: config.HOMA_MICROSOFT_CLIENT_SECRET,
+        redirectUri: new URL('/api/connections/microsoft/callback', config.HOMA_URL).href,
       },
     }),
 });
