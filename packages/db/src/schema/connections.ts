@@ -1,4 +1,4 @@
-// External calendar connections (ICS subscriptions now; CalDAV, Google and Microsoft later).
+// External calendar connections (ICS subscriptions, CalDAV and Google now; Microsoft later).
 // See docs/product/architecture.md ("Sync").
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';

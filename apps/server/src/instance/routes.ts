@@ -2,6 +2,7 @@
 import type { Db } from '@homa/db';
 import { createRoute, type OpenAPIHono, type z } from '@hono/zod-openapi';
 import { type Auth, requireAdmin, type UserVars } from '@/auth';
+import type { SyncSettings } from '@/connections';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
 import * as instance from './instance-service';
 import { InstanceSettings, InstanceSettingsPatch, PublicInstance } from './schemas';
@@ -43,7 +44,7 @@ const r = {
 const out = (s: instance.InstanceSettings): z.infer<typeof InstanceSettings> => InstanceSettings.parse(s);
 
 /** Instance routes. Without `deps` (the OpenAPI dump) they're described but don't run. */
-export function instanceApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars> {
+export function instanceApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings }): OpenAPIHono<UserVars> {
   const app = newApi<UserVars>();
   app.use('/admin/instance', requireAdmin(deps?.auth));
 
@@ -54,7 +55,15 @@ export function instanceApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars
   };
 
   return app
-    .openapi(r.getInstance, async (c) => c.json(PublicInstance.parse(await instance.getPublicInstance(db())), 200))
+    .openapi(r.getInstance, async (c) =>
+      c.json(
+        PublicInstance.parse(
+          // Google needs both its OAuth client and the key its tokens are stored with.
+          await instance.getPublicInstance(db(), Boolean(deps?.sync?.google && deps.sync.key)),
+        ),
+        200,
+      ),
+    )
     .openapi(r.getInstanceSettings, async (c) => c.json(out(await instance.getInstanceSettings(db())), 200))
     .openapi(r.updateInstanceSettings, async (c) =>
       c.json(out(await instance.updateInstanceSettings(db(), c.req.valid('json'))), 200),

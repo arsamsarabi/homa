@@ -12,6 +12,8 @@ export const PublicInstanceSchema = z.object({
   /** True until the first account (the admin) exists. */
   needsSetup: z.boolean(),
   defaultLanguage: z.enum(LANGUAGES),
+  /** Whether Google Calendar accounts can be connected on this server. */
+  googleCalendar: z.boolean(),
 });
 export type PublicInstance = z.infer<typeof PublicInstanceSchema>;
 

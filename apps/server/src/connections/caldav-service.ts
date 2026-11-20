@@ -1,7 +1,7 @@
-// CalDAV connections: add an account (server URL, user name, app password), list the calendars on
-// it, and choose which of them sync. Each chosen calendar becomes a local calendar tied to its
-// remote URL; one the user can't write to on the server stays read-only here. Unchoosing a
-// calendar removes the local copy only, never anything on the server.
+// CalDAV connections: add an account (server URL, user name, app password). For CalDAV and Google
+// accounts alike: list the calendars on it, and choose which of them sync. Each chosen calendar
+// becomes a local calendar tied to its remote id; one the user can't write to on the server stays
+// read-only here. Unchoosing a calendar removes the local copy only, never anything on the server.
 import { NotFoundError, ValidationError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 import {
@@ -13,14 +13,7 @@ import {
   SyncError,
 } from '@homa/sync';
 import { type ConnectionView, view } from './connections-service';
-import {
-  caldavCredentials,
-  credentialsOf,
-  failureMessage,
-  floatingTzOf,
-  requireKey,
-  syncConnection,
-} from './sync-service';
+import { adapterFor, credentialsOf, failureMessage, floatingTzOf, requireKey, syncConnection } from './sync-service';
 import type { SyncSettings } from './sync-settings';
 
 export type CaldavInput = { serverUrl: string; username: string; password: string };
@@ -65,19 +58,37 @@ export async function addCaldav(
   return view(db, userId, id);
 }
 
-async function caldavConnection(db: Db, userId: string, id: string): Promise<repo.ConnectionRow> {
+/** The user's CalDAV or Google connection (the ones with calendars to choose). */
+async function accountConnection(db: Db, userId: string, id: string): Promise<repo.ConnectionRow> {
   const connection = await repo.findOwnedConnection(db, userId, id);
   if (!connection) throw new NotFoundError();
-  if (connection.provider !== 'caldav') throw new ValidationError('Only CalDAV connections have calendars to choose');
+  if (connection.provider !== 'caldav' && connection.provider !== 'google')
+    throw new ValidationError('Only CalDAV and Google connections have calendars to choose');
   return connection;
 }
 
 async function remoteList(db: Db, settings: SyncSettings, connection: repo.ConnectionRow): Promise<RemoteCalendar[]> {
-  const adapter = caldavAdapter(caldavCredentials(credentialsOf(settings, connection)), {
-    floatingTz: await floatingTzOf(db, connection.ownerUserId),
-    policy: settings.policy,
-  });
-  return adapter.listCalendars().catch(asValidation);
+  try {
+    const adapter = adapterFor(
+      db,
+      connection,
+      credentialsOf(settings, connection),
+      settings,
+      await floatingTzOf(db, connection.ownerUserId),
+    );
+    return await adapter.listCalendars();
+  } catch (err) {
+    return asValidation(err);
+  }
+}
+
+/** A name for a remote calendar without one: the last path segment of a CalDAV URL, else "Calendar". */
+function fallbackName(remoteId: string): string {
+  try {
+    return new URL(remoteId).pathname.split('/').filter(Boolean).at(-1) || 'Calendar';
+  } catch {
+    return 'Calendar';
+  }
 }
 
 /** The account's calendars on the server, with the ones that sync marked. */
@@ -87,7 +98,7 @@ export async function listRemoteCalendars(
   userId: string,
   id: string,
 ): Promise<RemoteCalendarView[]> {
-  const connection = await caldavConnection(db, userId, id);
+  const connection = await accountConnection(db, userId, id);
   const local = new Set((await repo.listConnectionCalendars(db, [id])).map((c) => c.remoteId));
   return (await remoteList(db, settings, connection)).flatMap((c) =>
     c.remoteId ? [{ ...c, remoteId: c.remoteId, selected: local.has(c.remoteId) }] : [],
@@ -105,7 +116,7 @@ export async function chooseCalendars(
   id: string,
   remoteIds: readonly string[],
 ): Promise<ConnectionView> {
-  const connection = await caldavConnection(db, userId, id);
+  const connection = await accountConnection(db, userId, id);
   const remote = new Map((await remoteList(db, settings, connection)).map((c) => [c.remoteId, c]));
   const wanted = new Set(remoteIds);
   for (const remoteId of wanted)
@@ -118,8 +129,7 @@ export async function chooseCalendars(
       const c = remote.get(remoteId);
       if (!c || have.has(remoteId)) continue;
       await repo.insertCalendar(tx, userId, {
-        name:
-          (c.name ?? '').slice(0, 100) || new URL(remoteId).pathname.split('/').filter(Boolean).at(-1) || 'Calendar',
+        name: (c.name ?? '').slice(0, 100) || fallbackName(remoteId),
         ...(c.color && { color: c.color }),
         connectionId: id,
         readOnly: c.readOnly,

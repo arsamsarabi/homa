@@ -13,7 +13,13 @@ export const json = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 /** An instance that's set up, with sign-ups open; `/api/instance` answers this unless a fake overrides it. */
-export const setUpInstance = { name: 'Homa', signUpsOpen: true, needsSetup: false, defaultLanguage: 'en' };
+export const setUpInstance = {
+  name: 'Homa',
+  signUpsOpen: true,
+  needsSetup: false,
+  defaultLanguage: 'en',
+  googleCalendar: false,
+};
 
 /** Better Auth's get-session body for Ada, with `role` ('user' unless given). */
 export const sessionBody = (role = 'user'): unknown => ({

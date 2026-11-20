@@ -3,17 +3,35 @@
 import type { Db } from '@homa/db';
 import { HOLIDAY_CATALOG } from '@homa/sync';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { calendarOut } from '@/calendar';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
 import * as caldav from './caldav-service';
 import * as service from './connections-service';
-import { CaldavInput, ChooseCalendarsInput, Connection, HolidayFeed, RemoteCalendar, SubscribeInput } from './schemas';
+import { finishGoogle, GOOGLE_FLOW_TTL_MS, startGoogle } from './google-service';
+import {
+  CaldavInput,
+  ChooseCalendarsInput,
+  Connection,
+  GoogleCallbackQuery,
+  HolidayFeed,
+  RemoteCalendar,
+  SubscribeInput,
+} from './schemas';
 import { NO_SYNC, type SyncSettings } from './sync-settings';
 
 const tags = ['Connected calendars'];
 const Id = z.object({ id: z.uuid() });
 const unavailable = jsonContent(z.object({ error: z.string() }), 'HOMA_ENCRYPTION_KEY is not set on the server');
+const googleUnavailable = jsonContent(
+  z.object({ error: z.string() }),
+  'HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server',
+);
+/** Holds the state and PKCE verifier of a Google connect between start and callback. */
+const GOOGLE_COOKIE = 'homa_google_oauth';
+const GOOGLE_COOKIE_PATH = '/api/connections/google';
+const SETTINGS = '/settings';
 const r = {
   listConnections: createRoute({
     method: 'get',
@@ -45,12 +63,33 @@ const r = {
     request: jsonBody(CaldavInput),
     responses: { 201: jsonContent(Connection, 'Connected'), 400: errors[400], 401: errors[401], 503: unavailable },
   }),
+  startGoogle: createRoute({
+    method: 'get',
+    path: '/connections/google/start',
+    operationId: 'startGoogle',
+    tags,
+    summary: 'Connect a Google account: redirects to Google',
+    description:
+      "Open it in the browser (it isn't an API call): it redirects to Google's consent screen, and Google sends the user back to the callback.",
+    responses: { 302: { description: "To Google's consent screen" }, 401: errors[401], 503: googleUnavailable },
+  }),
+  googleCallback: createRoute({
+    method: 'get',
+    path: '/connections/google/callback',
+    operationId: 'googleCallback',
+    tags,
+    summary: 'Where Google sends the user back',
+    description:
+      'Saves the account without calendars and redirects to /settings?google={connection id}, where the user chooses them; on failure to /settings?googleError=denied|state|failed.',
+    request: { query: GoogleCallbackQuery },
+    responses: { 302: { description: 'Back to the settings page' }, 401: errors[401], 503: googleUnavailable },
+  }),
   remoteCalendars: createRoute({
     method: 'get',
     path: '/connections/{id}/remote-calendars',
     operationId: 'listRemoteCalendars',
     tags,
-    summary: 'The calendars on a CalDAV account, and which of them sync',
+    summary: 'The calendars on a CalDAV or Google account, and which of them sync',
     request: { params: Id },
     responses: {
       200: jsonContent(z.array(RemoteCalendar), 'Calendars that hold events'),
@@ -65,7 +104,7 @@ const r = {
     path: '/connections/{id}/calendars',
     operationId: 'chooseCalendars',
     tags,
-    summary: 'Choose which calendars of a CalDAV account sync',
+    summary: 'Choose which calendars of a CalDAV or Google account sync',
     description:
       'New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).',
     request: { params: Id, ...jsonBody(ChooseCalendarsInput) },
@@ -150,6 +189,29 @@ export function connectionsApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings 
     .openapi(r.addCaldav, async (c) =>
       c.json(connectionOut(await caldav.addCaldav(db(), settings, c.var.userId, c.req.valid('json'))), 201),
     )
+    .openapi(r.startGoogle, (c) => {
+      const { url, cookie } = startGoogle(settings, c.var.userId);
+      setCookie(c, GOOGLE_COOKIE, cookie, {
+        path: GOOGLE_COOKIE_PATH,
+        httpOnly: true,
+        // Lax, so the cookie comes back on Google's top-level redirect to the callback.
+        sameSite: 'Lax',
+        secure: settings.google?.redirectUri.startsWith('https:') ?? false,
+        maxAge: GOOGLE_FLOW_TTL_MS / 1000,
+      });
+      return c.redirect(url, 302);
+    })
+    .openapi(r.googleCallback, async (c) => {
+      const cookie = getCookie(c, GOOGLE_COOKIE);
+      deleteCookie(c, GOOGLE_COOKIE, { path: GOOGLE_COOKIE_PATH });
+      const outcome = await finishGoogle(db(), settings, c.var.userId, c.req.valid('query'), cookie);
+      return c.redirect(
+        'connectionId' in outcome
+          ? `${SETTINGS}?google=${outcome.connectionId}`
+          : `${SETTINGS}?googleError=${outcome.error}`,
+        302,
+      );
+    })
     .openapi(r.remoteCalendars, async (c) =>
       c.json(
         (await caldav.listRemoteCalendars(db(), settings, c.var.userId, c.req.valid('param').id)).map((x) => ({

@@ -1,5 +1,5 @@
 // Syncs connected calendars. A sync claims its connection (so two never run at once), pushes the
-// outbox (CalDAV), then pulls each calendar with the provider's adapter outside any transaction and
+// outbox (CalDAV and Google), then pulls each calendar with the provider's adapter outside any transaction and
 // applies the result in one transaction per calendar. A failure is stored on the connection as a
 // message safe to show (never the URL or a password) and never stops the run.
 import { UnavailableError, ValidationError } from '@homa/core';
@@ -8,6 +8,9 @@ import {
   type CaldavCredentials,
   caldavAdapter,
   decryptCredentials,
+  encryptCredentials,
+  type GoogleCredentials,
+  googleAdapter,
   type IcsCredentials,
   icsAdapter,
   type SyncAdapter,
@@ -56,7 +59,19 @@ export function caldavCredentials(value: unknown): CaldavCredentials {
   return { serverUrl: c.serverUrl, username: c.username, password: c.password, homeUrl: c.homeUrl };
 }
 
+export function googleCredentials(value: unknown): GoogleCredentials {
+  const c = value as Partial<GoogleCredentials> | null;
+  if (typeof c?.accessToken !== 'string' || typeof c.refreshToken !== 'string' || typeof c.expiresAt !== 'number')
+    throw new Error('Google credentials without tokens');
+  return { accessToken: c.accessToken, refreshToken: c.refreshToken, expiresAt: c.expiresAt };
+}
+
+export const GOOGLE_MISSING =
+  'Google Calendar is not set up on this server (HOMA_GOOGLE_CLIENT_ID and HOMA_GOOGLE_CLIENT_SECRET). Ask your admin to add it.';
+
+/** The provider's adapter for a connection. Google's stores refreshed tokens on the connection. */
 export function adapterFor(
+  db: Db,
   connection: repo.ConnectionRow,
   credentials: unknown,
   settings: SyncSettings,
@@ -64,6 +79,18 @@ export function adapterFor(
 ): SyncAdapter {
   if (connection.provider === 'caldav')
     return caldavAdapter(caldavCredentials(credentials), { floatingTz, policy: settings.policy });
+  if (connection.provider === 'google') {
+    const client = settings.google;
+    if (!client) throw new SyncError(GOOGLE_MISSING);
+    const key = requireKey(settings);
+    return googleAdapter(googleCredentials(credentials), {
+      floatingTz,
+      client,
+      policy: settings.policy,
+      onCredentials: (c: GoogleCredentials): Promise<void> =>
+        repo.updateConnectionCredentials(db, connection.id, encryptCredentials(key, connection.id, c)),
+    });
+  }
   if (connection.provider !== 'ics') throw new SyncError(`${connection.provider} connections aren't supported yet`);
   const url = (credentials as Partial<IcsCredentials> | null)?.url;
   if (typeof url !== 'string') throw new Error('ICS credentials without a URL');
@@ -124,8 +151,8 @@ export async function syncConnection(
     const calendars = await repo.listConnectionCalendars(db, [connection.id]);
     if (connection.provider === 'ics' && !calendars.length)
       throw new SyncError('The calendar for this connection is missing');
-    const adapter = adapterFor(connection, credentials, settings, await floatingTzOf(db, connection.ownerUserId));
-    const pushed = connection.provider === 'caldav' ? await pushOutbox(db, adapter, connection, calendars, now) : [];
+    const adapter = adapterFor(db, connection, credentials, settings, await floatingTzOf(db, connection.ownerUserId));
+    const pushed = connection.provider === 'ics' ? [] : await pushOutbox(db, adapter, connection, calendars, now);
     const pulled = await pullAll(db, adapter, calendars);
     const notice = conflictNotice([...pushed, ...pulled.conflicts]);
     if (notice) await repo.setConnectionNotice(db, connection.id, notice);
@@ -188,6 +215,7 @@ export async function pushDueOutboxes(
     try {
       const calendars = await repo.listConnectionCalendars(db, [id]);
       const adapter = adapterFor(
+        db,
         connection,
         credentialsOf(settings, connection),
         settings,

@@ -269,6 +269,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/connections/google/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Connect a Google account: redirects to Google
+         * @description Open it in the browser (it isn't an API call): it redirects to Google's consent screen, and Google sends the user back to the callback.
+         */
+        get: operations["startGoogle"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/connections/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where Google sends the user back
+         * @description Saves the account without calendars and redirects to /settings?google={connection id}, where the user chooses them; on failure to /settings?googleError=denied|state|failed.
+         */
+        get: operations["googleCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/connections/{id}/remote-calendars": {
         parameters: {
             query?: never;
@@ -276,7 +316,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The calendars on a CalDAV account, and which of them sync */
+        /** The calendars on a CalDAV or Google account, and which of them sync */
         get: operations["listRemoteCalendars"];
         put?: never;
         post?: never;
@@ -295,7 +335,7 @@ export interface paths {
         };
         get?: never;
         /**
-         * Choose which calendars of a CalDAV account sync
+         * Choose which calendars of a CalDAV or Google account sync
          * @description New ones get a local calendar and sync now; ones left out lose their local calendar and its events (nothing on the server is deleted).
          */
         put: operations["chooseCalendars"];
@@ -532,6 +572,8 @@ export interface components {
              * @enum {string}
              */
             defaultLanguage: "en" | "fa";
+            /** @description Whether Google Calendar accounts can be connected */
+            googleCalendar: boolean;
         };
         InstanceSettings: {
             /**
@@ -626,7 +668,7 @@ export interface components {
             id: string;
             /** @enum {string} */
             provider: "ics" | "caldav" | "google" | "microsoft";
-            /** @description The account, such as "ada on caldav.fastmail.com"; null for ICS feeds */
+            /** @description The account, such as "ada on caldav.fastmail.com" or a Google email; null for ICS feeds */
             label: string | null;
             /** @enum {string} */
             status: "pending" | "syncing" | "ok" | "error";
@@ -663,7 +705,7 @@ export interface components {
             password: string;
         };
         RemoteCalendar: {
-            /** @description The calendar's URL on the server */
+            /** @description The calendar's URL on the CalDAV server, or its Google calendar id */
             remoteId: string;
             name: string | null;
             color: string | null;
@@ -1547,6 +1589,86 @@ export interface operations {
                 };
             };
             /** @description HOMA_ENCRYPTION_KEY is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    startGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description To Google's consent screen */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    googleCallback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Back to the settings page */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description HOMA_ENCRYPTION_KEY, or the Google OAuth client (HOMA_GOOGLE_CLIENT_ID), is not set on the server */
             503: {
                 headers: {
                     [name: string]: unknown;

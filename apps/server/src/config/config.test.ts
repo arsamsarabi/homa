@@ -32,3 +32,14 @@ test('connected-calendar settings: an optional 32-byte key, the interval and the
   expect(() => loadConfig({ ...valid, HOMA_ENCRYPTION_KEY: 'short' })).toThrow(/HOMA_ENCRYPTION_KEY must be 32 bytes/);
   expect(() => loadConfig({ ...valid, HOMA_SYNC_INTERVAL_MINUTES: '1' })).toThrow(/HOMA_SYNC_INTERVAL_MINUTES/);
 });
+
+test('the Google OAuth client: both values or neither', () => {
+  expect(loadConfig({ ...valid, HOMA_GOOGLE_CLIENT_ID: '', HOMA_GOOGLE_CLIENT_SECRET: '' })).toMatchObject({
+    HOMA_GOOGLE_CLIENT_ID: undefined,
+    HOMA_GOOGLE_CLIENT_SECRET: undefined,
+  });
+  expect(
+    loadConfig({ ...valid, HOMA_GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com', HOMA_GOOGLE_CLIENT_SECRET: 's' }),
+  ).toMatchObject({ HOMA_GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com', HOMA_GOOGLE_CLIENT_SECRET: 's' });
+  expect(() => loadConfig({ ...valid, HOMA_GOOGLE_CLIENT_ID: 'id' })).toThrow(/HOMA_GOOGLE_CLIENT_SECRET: set both/);
+});

@@ -1,8 +1,10 @@
 import { Alert, Button, Group, Loader, Modal, Stack, Text, Title } from '@mantine/core';
-import { type JSX, useId, useMemo, useState } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import { type JSX, useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { useConnectionMutations, useConnections } from '@/hooks/connections';
+import { useInstance } from '@/hooks/instance';
 import { CalendarEditDrawer } from '@/pages/settings/calendars';
 import type { Calendar, Connection } from '@/schemas';
 import { useAnnouncer } from '@/stores';
@@ -11,16 +13,27 @@ import classes from './ConnectedCalendarsSection.module.css';
 import { ConnectionItem, connectionName } from './ConnectionItem';
 import { SubscribeDrawer } from './SubscribeDrawer';
 
-/** Settings section: connected calendars (ICS feeds, public holidays, CalDAV accounts) with their sync status. */
+/**
+ * Settings section: connected calendars (ICS feeds, public holidays, CalDAV and Google accounts) with
+ * their sync status. Google's OAuth callback lands here with ?google={id} (open its calendar picker)
+ * or ?googleError=…; both are read once and cleared from the URL.
+ */
 export function ConnectedCalendarsSection(): JSX.Element {
   const { t, i18n } = useTranslation();
   const headingId = useId();
   const connections = useConnections();
   const { syncNow, remove, dismissNotice } = useConnectionMutations();
   const announce = useAnnouncer((s) => s.announce);
+  const googleOn = useInstance().data?.googleCalendar === true;
+  const search = useSearch({ from: '/_app/settings' });
+  const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
-  // The CalDAV drawer: closed, adding an account (null) or choosing an account's calendars (its id).
-  const [caldav, setCaldav] = useState<string | null>();
+  // The account drawer: closed, adding a CalDAV account (null) or choosing an account's calendars (its id).
+  const [caldav, setCaldav] = useState<string | null | undefined>(search.google);
+  const [googleError, setGoogleError] = useState(search.googleError);
+  useEffect(() => {
+    if (search.google || search.googleError) void navigate({ to: '/settings', search: {}, replace: true });
+  }, [search.google, search.googleError, navigate]);
   const [editing, setEditing] = useState<Calendar>();
   const [removing, setRemoving] = useState<Connection>();
   const format = useMemo(
@@ -54,7 +67,18 @@ export function ConnectedCalendarsSection(): JSX.Element {
         <Button variant="default" onClick={() => setCaldav(null)}>
           {t('caldav.add')}
         </Button>
+        {googleOn && (
+          // A full page load: the API redirects to Google's consent screen.
+          <Button variant="default" component="a" href="/api/connections/google/start">
+            {t('google.add')}
+          </Button>
+        )}
       </Group>
+      {googleError && (
+        <Alert color="red" role="alert" withCloseButton onClose={() => setGoogleError(undefined)}>
+          {t(`google.errors.${googleError}`)}
+        </Alert>
+      )}
       {connections.isPending && <Loader size="sm" aria-label={t('connections.loading')} />}
       {connections.isError && (
         <QueryErrorAlert
@@ -104,7 +128,7 @@ export function ConnectedCalendarsSection(): JSX.Element {
       >
         <Stack>
           <Text size="sm">
-            {t(removing?.provider === 'caldav' ? 'caldav.removeBody' : 'connections.removeBody', {
+            {t(removing && removing.provider !== 'ics' ? 'caldav.removeBody' : 'connections.removeBody', {
               name: removing ? connectionName(removing, t('connections.untitled')) : '',
             })}
           </Text>

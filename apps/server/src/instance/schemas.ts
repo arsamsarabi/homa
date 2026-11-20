@@ -16,6 +16,7 @@ export const PublicInstance = z
     signUpsOpen: z.boolean().openapi({ description: 'Whether new accounts can sign up' }),
     needsSetup: z.boolean().openapi({ description: 'True until the first account (the admin) exists' }),
     defaultLanguage: Language,
+    googleCalendar: z.boolean().openapi({ description: 'Whether Google Calendar accounts can be connected' }),
   })
   .openapi('PublicInstance');
 

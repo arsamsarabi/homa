@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { type FakeApi, json, renderApp, signedIn } from '@/testing/renderApp';
+import { type FakeApi, json, renderApp, setUpInstance, signedIn } from '@/testing/renderApp';
 
 const calendar = {
   id: 'c2',
@@ -243,5 +243,34 @@ describe('connected calendars section', () => {
     fail = false;
     fireEvent.click(within(s).getByRole('button', { name: 'Try again' }));
     expect(await within(s).findByRole('listitem', { name: 'UK holidays' })).toBeTruthy();
+  });
+  test('Google is offered only when the server is set up for it, as a link to the start endpoint', async () => {
+    renderApp(
+      '/settings',
+      api(() => json([])),
+    );
+    await within(await section()).findByText('No connected calendars yet.');
+    expect(screen.queryByRole('link', { name: 'Connect Google' })).toBeNull();
+  });
+
+  test("back from Google: the new account's calendar picker opens", async () => {
+    const base = api(() => json([{ ...account, provider: 'google', label: 'ada@gmail.com', notice: null }]));
+    renderApp('/settings?google=0b6f6f8e-3a35-4c1e-9d55-7c1e2a8c6f10', (url, req) =>
+      url.pathname === '/api/instance' ? json({ ...setUpInstance, googleCalendar: true }) : base(url, req),
+    );
+    const link = await screen.findByRole('link', { name: 'Connect Google' });
+    expect(link.getAttribute('href')).toBe('/api/connections/google/start');
+    const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
+    expect(await within(picker).findByRole('checkbox', { name: /Work/ })).toBeTruthy();
+    const item = await within(await section()).findByRole('listitem', { name: 'ada@gmail.com' });
+    expect(within(item).getByText('Syncs both ways', { exact: false })).toBeTruthy();
+  });
+
+  test('a failed Google connect says why', async () => {
+    renderApp(
+      '/settings?googleError=denied',
+      api(() => json([])),
+    );
+    expect(await screen.findByText("Google wasn't connected: access wasn't granted.")).toBeTruthy();
   });
 });
