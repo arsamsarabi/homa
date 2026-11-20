@@ -35,3 +35,28 @@ describe('settings page', () => {
     expect(await screen.findByText("Couldn't save your settings: database is down")).toBeTruthy();
   });
 });
+
+describe('settings page: reminders', () => {
+  test('the default reminder saves, and push says when this browser can’t', async () => {
+    const sent: unknown[] = [];
+    const user = signedInWith(saved);
+    renderApp('/settings', async (url, req) => {
+      if (url.pathname === '/api/settings' && req.method === 'PATCH') {
+        const body = await req.json();
+        sent.push(body);
+        return json({ ...saved, ...body });
+      }
+      return user(url, req);
+    });
+    const select = (await screen.findByRole('combobox', { name: /^Default reminder/ })) as HTMLSelectElement;
+    expect(select.value).toBe('10');
+    fireEvent.change(select, { target: { value: '60' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(sent).toEqual([{ defaultReminderMinutes: 60 }]));
+    fireEvent.change(select, { target: { value: 'none' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(sent[1]).toEqual({ defaultReminderMinutes: null }));
+    // happy-dom has no PushManager.
+    expect(screen.getByText(/This browser can't receive push notifications/)).toBeTruthy();
+  });
+});

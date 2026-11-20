@@ -24,7 +24,14 @@ export type Draft =
 
 export type EditorResult =
   | { kind: 'create'; body: EventInput }
-  | { kind: 'edit'; occurrence: Occurrence; patch: EventPatch; seriesChanged: boolean };
+  | {
+      kind: 'edit';
+      occurrence: Occurrence;
+      patch: EventPatch;
+      seriesChanged: boolean;
+      /** The series' new reminders, when they were changed. */
+      reminders?: number[];
+    };
 
 export type FormInput = {
   summary: string;
@@ -39,6 +46,8 @@ export type FormInput = {
   calendarId: string;
   /** The repeat picked in the form, or undefined if untouched. */
   repeat: Repeat | undefined;
+  /** Reminders (minutes before): what a new event gets, or an edit's change; undefined if untouched. */
+  reminders?: number[];
 };
 
 /** The simple repeat choice an RRULE matches, or 'custom' for anything else. */
@@ -116,7 +125,8 @@ export function buildEditorResult(
   const tz = input.allDay ? 'UTC' : input.tz;
   if (draft.kind === 'create') {
     const rrule = rruleOf(shownRepeat(draft, input.repeat, null), draft.rrule ?? null);
-    return { kind: 'create', body: { ...common, calendarId: input.calendarId, allDay: input.allDay, tz, rrule } };
+    const body = { ...common, calendarId: input.calendarId, allDay: input.allDay, tz, rrule };
+    return { kind: 'create', body: input.reminders ? { ...body, reminders: input.reminders } : body };
   }
   const o = draft.occurrence;
   const patch: EventPatch = { ...common };
@@ -134,7 +144,7 @@ export function buildEditorResult(
     patch.rrule = rruleOf(input.repeat, ctx.seriesRrule ?? null);
     seriesChanged = true;
   }
-  return { kind: 'edit', occurrence: o, patch, seriesChanged };
+  return { kind: 'edit', occurrence: o, patch, seriesChanged, ...(input.reminders && { reminders: input.reminders }) };
 }
 
 /** The slot "New event" starts with: the next whole hour on `date`, an hour long. Wall times in, wall times out. */

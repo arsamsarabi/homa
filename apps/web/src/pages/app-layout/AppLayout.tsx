@@ -9,6 +9,7 @@ import { useAppCommands } from '@/hooks/commands';
 import { useSession, useSignOut } from '@/hooks/session';
 import { type Language, setLanguage } from '@/lib/i18n';
 import { useAnnouncer } from '@/stores';
+import { HeaderBell } from './HeaderBell';
 
 /** The signed-in shell: header, the page, the command palette, shortcut help and the live region. */
 export function AppLayout(): JSX.Element {
@@ -43,6 +44,7 @@ export function AppLayout(): JSX.Element {
           onOpenPalette={spotlight.open}
           onShowShortcuts={help.open}
           onSignOut={onSignOut}
+          bell={<HeaderBell />}
         />
       </AppShell.Header>
       <AppShell.Main>

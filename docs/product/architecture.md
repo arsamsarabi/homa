@@ -74,8 +74,10 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | `attendees` | Per event: email or user, role, RSVP |
 | `tasks`, `projects`, `tags`, `task_tags` | Tasks with optional `parent_task_id` for subtasks; `scheduled_event_id` links a time block |
 | `routines`, `routine_runs` | Routine metadata; each run is a planned slot (linked event) with a done flag for streaks |
-| `reminders` | Polymorphic target (`event`, `task`, `routine_run`, none), offset or absolute time, next fire time, channels |
-| `notification_channels`, `push_subscriptions` | Per-user delivery config |
+| `reminders` | An event's reminder (`event_id`, `minutes_before`, `action` `display` or `email`) or a standalone one (`title`, `starts_at`, `tz`, `rrule`, `next_fire_at`, `done_at`). Tasks and routine runs come later |
+| `notifications`, `notification_deliveries` | A fired reminder occurrence (`dedupe_key` unique, `read_at`, `snoozed_until`, `done_at`), and its send on each channel (`status`, `attempts`, `next_attempt_at`, `last_error`) |
+| `push_subscriptions` | A browser's web push subscription (`endpoint` unique, `p256dh`, `auth`) |
+| `notification_channels` | Per-user delivery config (email, ntfy, Gotify, webhook): phase 4b |
 | `circles`, `circle_members` | Named groups of users and email-only contacts |
 | `calendar_grants` | Calendar → user or circle, level `freebusy`, `read`, `edit` |
 | `polls`, `poll_options`, `poll_participants`, `poll_votes` | Mode (`slots`, `ranges`, `window`), constraints JSON, deadline, quorum, required flags, guest tokens (stored hashed) |
@@ -196,7 +198,7 @@ Pushes go through the outbox. Graph documents no `If-Match` for events, so a cha
 
 ### Reminders
 
-Each reminder stores its next fire time. A pg-boss cron job every minute claims due reminders (`FOR UPDATE SKIP LOCKED`), sends them through the user's channels, and computes the next fire time for recurring targets.
+Design: `docs/design/phase-4a-reminders.md`. Event reminders are offsets before the start, stored per series, so every occurrence gets them; the delivery job reads due occurrences from `event_instances` rather than storing a fire time per reminder. Standalone reminders keep `next_fire_at`. A pg-boss cron job (`reminders.deliver`, every minute, in the worker) creates notifications with `ON CONFLICT (dedupe_key) DO NOTHING` (key: event, occurrence and fire time), so restarts and parallel workers can't remind twice; brings back snoozed ones; then claims pending deliveries (`FOR UPDATE SKIP LOCKED`, a 5-minute lease) and sends them, retrying with backoff. Whole-day offsets are wall-clock days in the event's zone; a reminder more than an hour late is skipped. The bell polls `GET /api/notifications` every 30 seconds. Web push signs with VAPID keys from the environment or generated once into `instance_settings`; the PWA's service worker imports `apps/web/public/push-sw.js` (plain JavaScript, the one exception to TypeScript in the web app, since it is loaded by `importScripts`). Sync maps reminders to `VALARM`, Google `reminders.overrides` and Outlook's single `reminderMinutesBeforeStart`; reminders on read-only calendars stay local.
 
 ### Permissions
 

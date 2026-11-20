@@ -2,6 +2,7 @@
 import { type FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSeries } from '@/hooks/calendar';
+import { useSettings } from '@/hooks/settings';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import {
@@ -14,6 +15,7 @@ import {
   type Repeat,
   shownRepeat,
 } from '@/services/event-form';
+import { DEFAULT_REMINDER } from '@/services/reminders';
 import { timeZones } from '@/services/zones';
 
 export type EventFormModel = {
@@ -44,6 +46,11 @@ export type EventFormModel = {
   close: () => void;
   /** The chosen calendar's color, for the header dot. */
   color: string | undefined;
+  /** Minutes before each occurrence's start. */
+  reminders: number[];
+  setReminders: (v: number[]) => void;
+  /** An edit's reminders can't be shown until the event has loaded. */
+  remindersLoading: boolean;
 };
 
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
@@ -60,7 +67,9 @@ export function useEventForm(draft: Draft): EventFormModel {
     tz: viewTz,
   } = useCalendarPageModel();
   const occurrence = draft.kind === 'edit' ? draft.occurrence : undefined;
-  const series = useSeries(occurrence?.recurring ? occurrence.eventId : undefined);
+  // The event behind the occurrence: its rule, for recurring ones, and its reminders.
+  const series = useSeries(occurrence?.eventId);
+  const defaultReminder = useSettings().data?.defaultReminderMinutes;
 
   const [allDay, setAllDay] = useState(draftAllDay(draft));
   const [tz, setTz] = useState(draftZone(draft, viewTz));
@@ -68,10 +77,18 @@ export function useEventForm(draft: Draft): EventFormModel {
     occurrence?.calendarId ?? (draft.kind === 'create' ? draft.calendarId : undefined) ?? defaultCalendarId ?? '',
   );
   const [picked, setPicked] = useState<Repeat>();
+  const [pickedReminders, setReminders] = useState<number[]>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
-  const seriesRrule = series.data?.rrule;
+  const seriesRrule = occurrence?.recurring ? series.data?.rrule : undefined;
+  // New timed events start with the default reminder (10 minutes unless the user chose another, or none).
+  const startReminders = (): number[] => {
+    if (occurrence) return series.data?.reminders ?? [];
+    const d = defaultReminder === undefined ? DEFAULT_REMINDER : defaultReminder;
+    return allDay || d === null ? [] : [d];
+  };
+  const reminders = pickedReminders ?? startReminders();
   const repeat = shownRepeat(draft, picked, seriesRrule);
   // Recomputed when the zone changes, but the inputs keep what was typed: changing the zone keeps the
   // wall times and moves the event, as other calendars do.
@@ -115,6 +132,7 @@ export function useEventForm(draft: Draft): EventFormModel {
         tz,
         calendarId,
         repeat: picked,
+        reminders: occurrence ? pickedReminders : reminders,
       },
       { seriesRrule },
     );
@@ -150,5 +168,8 @@ export function useEventForm(draft: Draft): EventFormModel {
       if (occurrence) void run(() => actions.remove(occurrence));
     },
     close: editor.close,
+    reminders,
+    setReminders,
+    remindersLoading: occurrence !== undefined && series.isPending,
   };
 }
