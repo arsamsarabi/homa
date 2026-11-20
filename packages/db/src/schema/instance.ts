@@ -15,6 +15,9 @@ export const instanceSettings = pgTable(
     // What new accounts start with; null home zone means "use the browser's zone".
     defaultHomeTz: text('default_home_tz'),
     defaultSecondaryCalendar: text('default_secondary_calendar').notNull().default('none'),
+    // Web push signing keys generated on first start, when HOMA_VAPID_* aren't set (base64url).
+    vapidPublicKey: text('vapid_public_key'),
+    vapidPrivateKey: text('vapid_private_key'),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow()

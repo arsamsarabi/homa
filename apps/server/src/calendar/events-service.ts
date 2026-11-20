@@ -4,6 +4,7 @@ import {
   type EventFields,
   type EventPatch,
   NotFoundError,
+  normalizeReminders,
   opsForChange,
   opsForCreate,
   opsForDelete,
@@ -16,6 +17,7 @@ import { type Db, type Executor, repo } from '@homa/db';
 import { requireWritableCalendar } from './calendars-service';
 import { reexpand } from './instance-cache';
 import { enqueueOps } from './outbox';
+import type { EventWithReminders } from './responses';
 
 const newUid = (): string => `${crypto.randomUUID()}@homa`;
 
@@ -23,6 +25,22 @@ async function ownEvent(db: Executor, userId: string, id: string): Promise<repo.
   const e = await repo.findOwnedEvent(db, userId, id);
   if (!e) throw new NotFoundError();
   return e;
+}
+
+/** The event with its reminders' minutes. */
+async function withReminders(db: Executor, e: repo.EventRow): Promise<EventWithReminders> {
+  const list = (await repo.listEventReminders(db, [e.id])).get(e.id) ?? [];
+  return { ...e, reminders: list.map((r) => r.minutes) };
+}
+
+const ownEventWithReminders = async (db: Executor, userId: string, id: string): Promise<EventWithReminders> =>
+  withReminders(db, await ownEvent(db, userId, id));
+
+/** Replaces the event's reminders, keeping each kept offset's action (email from a sync stays email). */
+async function writeReminders(tx: Executor, e: repo.EventRow, minutes: readonly number[]): Promise<void> {
+  const before = new Map(((await repo.listEventReminders(tx, [e.id])).get(e.id) ?? []).map((r) => [r.minutes, r]));
+  const list = normalizeReminders(minutes).map((m) => ({ minutes: m, action: before.get(m)?.action ?? 'display' }));
+  await repo.replaceEventReminders(tx, e.ownerUserId, e.id, list);
 }
 
 /** The user's event, if its calendar accepts changes (ReadOnlyError for a subscription's events). */
@@ -43,9 +61,15 @@ const patchColumns = (p: EventPatch): repo.EventColumns => ({
   ...(p.rrule !== undefined && { rrule: p.rrule }),
 });
 
-export const getEvent = (db: Db, userId: string, id: string): Promise<repo.EventRow> => ownEvent(db, userId, id);
+export const getEvent = (db: Db, userId: string, id: string): Promise<EventWithReminders> =>
+  ownEventWithReminders(db, userId, id);
 
-export function createEvent(db: Db, userId: string, input: EventFields): Promise<repo.EventRow> {
+export function createEvent(
+  db: Db,
+  userId: string,
+  input: EventFields,
+  reminders: readonly number[] = [],
+): Promise<EventWithReminders> {
   return db.transaction(async (tx) => {
     await requireWritableCalendar(tx, userId, input.calendarId);
     const row = await repo.insertEvent(tx, {
@@ -61,9 +85,10 @@ export function createEvent(db: Db, userId: string, input: EventFields): Promise
       tz: input.tz,
       rrule: input.rrule,
     });
+    await writeReminders(tx, row, reminders);
     await reexpand(tx, row.id);
     await enqueueOps(tx, userId, opsForCreate(row));
-    return ownEvent(tx, userId, row.id);
+    return ownEventWithReminders(tx, userId, row.id);
   });
 }
 
@@ -78,7 +103,7 @@ export function updateEvent(
   patch: EventPatch,
   scope: Scope = 'all',
   recurrenceId?: Date,
-): Promise<repo.EventRow> {
+): Promise<EventWithReminders> {
   return db.transaction(async (tx) => {
     const e = await writableEvent(tx, userId, id);
     if (patch.calendarId) await requireWritableCalendar(tx, userId, patch.calendarId);
@@ -100,14 +125,14 @@ export function updateEvent(
         if (e.rrule) await repo.shiftOverrides(tx, id, plan.shiftMs, plan.durationMs);
         await reexpand(tx, id);
         await enqueueOps(tx, userId, opsForChange(e, plan, { calendarId }));
-        return ownEvent(tx, userId, id);
+        return ownEventWithReminders(tx, userId, id);
       }
       case 'occurrence': {
         const existing = await repo.findOverride(tx, id, plan.recurrenceId);
         await repo.upsertOverride(tx, id, plan.recurrenceId, overrideValues(e, existing, patch, plan.recurrenceId));
         await reexpand(tx, id);
         await enqueueOps(tx, userId, opsForChange(e, plan, { calendarId }));
-        return ownEvent(tx, userId, id);
+        return ownEventWithReminders(tx, userId, id);
       }
       case 'split': {
         const { id: _id, uid: _uid, createdAt: _c, updatedAt: _u, remoteHref: _h, remoteEtag: _t, ...rest } = e;
@@ -130,10 +155,11 @@ export function updateEvent(
           exdates: plan.previousExdates,
           rdates: plan.previousRdates,
         });
+        await writeReminders(tx, created, (await withReminders(tx, e)).reminders);
         await reexpand(tx, id);
         await reexpand(tx, created.id);
         await enqueueOps(tx, userId, opsForChange(e, plan, { calendarId, created }));
-        return ownEvent(tx, userId, created.id);
+        return ownEventWithReminders(tx, userId, created.id);
       }
     }
   });
@@ -164,5 +190,23 @@ export async function deleteEvent(
         break;
     }
     await reexpand(tx, id);
+  });
+}
+
+/**
+ * Replaces the event's reminders. Works on read-only calendars too: there they stay local (pulls
+ * leave them alone); on two-way calendars the event is pushed with them.
+ */
+export function setEventReminders(
+  db: Db,
+  userId: string,
+  id: string,
+  minutes: readonly number[],
+): Promise<EventWithReminders> {
+  return db.transaction(async (tx) => {
+    const e = await ownEvent(tx, userId, id);
+    await writeReminders(tx, e, minutes);
+    await enqueueOps(tx, userId, opsForCreate(e));
+    return withReminders(tx, e);
   });
 }

@@ -51,6 +51,25 @@ const Env = z
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    // Web push (VAPID) keys, base64url as `bunx web-push generate-vapid-keys` prints them. Both or
+    // neither; without them the first start generates a pair and stores it in the database.
+    HOMA_VAPID_PUBLIC_KEY: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    HOMA_VAPID_PRIVATE_KEY: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    // Who push services can contact about this instance: a mailto: or https: URL. Defaults to
+    // HOMA_URL when that is HTTPS (Apple refuses localhost subjects).
+    HOMA_VAPID_SUBJECT: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z
+        .string()
+        .regex(/^(mailto:|https:\/\/)/, 'HOMA_VAPID_SUBJECT must be a mailto: or https:// URL')
+        .optional(),
+    ),
+    // Lets notifications go to loopback and private networks: web push endpoints in tests, and (from
+    // phase 4b) ntfy, Gotify and webhooks on the self-hoster's own network. Refused by default: SSRF.
+    HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
     // Better Auth's per-IP limits on sign-in and sign-up. Turn off only for automated tests, where
     // one machine signs up several accounts within seconds.
     HOMA_AUTH_RATE_LIMIT: z
@@ -65,6 +84,10 @@ const Env = z
   .refine((env) => !env.HOMA_MICROSOFT_CLIENT_ID === !env.HOMA_MICROSOFT_CLIENT_SECRET, {
     message: 'set both HOMA_MICROSOFT_CLIENT_ID and HOMA_MICROSOFT_CLIENT_SECRET, or neither',
     path: ['HOMA_MICROSOFT_CLIENT_SECRET'],
+  })
+  .refine((env) => !env.HOMA_VAPID_PUBLIC_KEY === !env.HOMA_VAPID_PRIVATE_KEY, {
+    message: 'set both HOMA_VAPID_PUBLIC_KEY and HOMA_VAPID_PRIVATE_KEY, or neither',
+    path: ['HOMA_VAPID_PRIVATE_KEY'],
   });
 
 export type Config = z.infer<typeof Env>;

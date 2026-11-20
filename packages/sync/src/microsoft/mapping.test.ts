@@ -120,6 +120,7 @@ describe('push: RRULEs to patterns', () => {
       exdates: [],
       rdates: [],
       overrides: [],
+      reminders: [],
     };
     expect(graphBody(e)).toEqual({
       subject: 'Stand-up',
@@ -128,7 +129,14 @@ describe('push: RRULEs to patterns', () => {
       start: { dateTime: '2027-03-01T09:00:00', timeZone: 'GMT Standard Time' },
       end: { dateTime: '2027-03-01T09:15:00', timeZone: 'GMT Standard Time' },
       isAllDay: false,
+      isReminderOn: false,
     });
+    // Outlook holds one reminder: the one closest to the start goes.
+    const two = [
+      { minutes: 15, action: 'display' as const },
+      { minutes: 60, action: 'display' as const },
+    ];
+    expect(graphBody({ ...e, reminders: two })).toMatchObject({ isReminderOn: true, reminderMinutesBeforeStart: 15 });
     const day = graphBody({
       ...e,
       allDay: true,
@@ -214,4 +222,17 @@ describe('reading a series', () => {
       }),
     ).toBe('Bring snacks & tea\n\nThanks');
   });
+});
+
+test('reading Outlook’s one reminder', () => {
+  const single: GraphEvent = {
+    id: 's1',
+    subject: 'Dentist',
+    start: { dateTime: '2027-03-01T09:00:00.0000000', timeZone: 'UTC' },
+    end: { dateTime: '2027-03-01T09:30:00.0000000', timeZone: 'UTC' },
+    isReminderOn: true,
+    reminderMinutesBeforeStart: 1440,
+  };
+  expect(readSeries(single, 'UTC').events[0]?.reminders).toEqual([{ minutes: 1440, action: 'display' }]);
+  expect(readSeries({ ...single, isReminderOn: false }, 'UTC').events[0]?.reminders).toEqual([]);
 });

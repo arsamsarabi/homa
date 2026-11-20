@@ -8,11 +8,13 @@ import { createApp } from './http';
 import { createSetupGate } from './instance';
 import { startWorker } from './jobs';
 import { log } from './log';
+import { pushSettingsFrom } from './reminders';
 
 const config = loadConfig();
 const { db, pool } = createDb(config.DATABASE_URL);
 const role: Config['HOMA_ROLE'] = config.HOMA_ROLE;
 const sync = syncSettingsFrom(config);
+const push = pushSettingsFrom(db, config);
 
 // Only the API applies migrations, so a separate worker never races it.
 if (role !== 'worker') {
@@ -52,12 +54,13 @@ const server =
               rateLimit: config.HOMA_AUTH_RATE_LIMIT,
             }),
             sync,
+            push,
           },
           config.HOMA_WEB_DIR,
         ).fetch,
       });
 
-const boss: PgBoss | undefined = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db, sync);
+const boss: PgBoss | undefined = role === 'api' ? undefined : await startWorker(config.DATABASE_URL, db, sync, push);
 
 log.info('homa started', { role, ...(server && { url: `http://localhost:${server.port}` }) });
 

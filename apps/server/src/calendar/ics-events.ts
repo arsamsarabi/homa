@@ -1,5 +1,7 @@
 // Writes parsed iCalendar events into one calendar, matching by UID: shared by .ics import and
 // subscription sync. Runs inside the caller's transaction and re-expands each event into the cache.
+// Reminders come with the events, except on read-only calendars (subscriptions, calendars the
+// account can't write), where the user's own reminders are local and a pull leaves them alone.
 import { ICS_LIMITS, type IcsEvent, ValidationError } from '@homa/core';
 import { type Executor, repo } from '@homa/db';
 import { reexpand } from './instance-cache';
@@ -19,6 +21,8 @@ export async function writeIcsEvents(
   let imported = 0;
   let updated = 0;
   let occurrences = 0;
+  const calendar = await repo.findOwnedCalendar(tx, ownerUserId, calendarId);
+  const takeReminders = calendar ? !calendar.readOnly : false;
   for (const e of events) {
     const columns = {
       summary: e.summary,
@@ -41,6 +45,7 @@ export async function writeIcsEvents(
       imported++;
     }
     await repo.replaceOverrides(tx, id, e.overrides);
+    if (takeReminders) await repo.replaceEventReminders(tx, ownerUserId, id, e.reminders);
     occurrences += await reexpand(tx, id);
     // Rolls the whole write back: a file of endless rules shouldn't fill the cache.
     if (occurrences > ICS_LIMITS.maxOccurrences)

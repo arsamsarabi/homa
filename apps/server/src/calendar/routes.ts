@@ -19,6 +19,7 @@ import {
   MAX_RANGE_DAYS,
   Occurrence,
   OccurrenceQuery,
+  RemindersInput,
   ScopeQuery,
 } from './schemas';
 
@@ -98,6 +99,22 @@ const r = {
     request: { params: Id, query: ScopeQuery },
     responses: { 204: { description: 'Deleted' }, ...errors },
   }),
+  setEventReminders: createRoute({
+    method: 'put',
+    path: '/events/{id}/reminders',
+    operationId: 'setEventReminders',
+    tags: tags.events,
+    summary: "Replace an event's reminders",
+    description:
+      'They apply to every occurrence. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.',
+    request: { params: Id, ...jsonBody(RemindersInput) },
+    responses: {
+      200: jsonContent(Event, 'The event with its reminders'),
+      400: errors[400],
+      401: errors[401],
+      404: errors[404],
+    },
+  }),
   listOccurrences: createRoute({
     method: 'get',
     path: '/occurrences',
@@ -139,13 +156,18 @@ export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars
       return c.body(null, 204);
     })
     .openapi(r.createEvent, async (c) => {
-      const input = c.req.valid('json');
-      const row = await events.createEvent(db(), c.var.userId, {
-        ...input,
-        description: input.description ?? null,
-        location: input.location ?? null,
-        rrule: input.rrule ?? null,
-      });
+      const { reminders, ...input } = c.req.valid('json');
+      const row = await events.createEvent(
+        db(),
+        c.var.userId,
+        {
+          ...input,
+          description: input.description ?? null,
+          location: input.location ?? null,
+          rrule: input.rrule ?? null,
+        },
+        reminders,
+      );
       return c.json(eventOut(row), 201);
     })
     .openapi(r.getEvent, async (c) =>
@@ -161,6 +183,15 @@ export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars
       const { scope, recurrenceId } = c.req.valid('query');
       await events.deleteEvent(db(), c.var.userId, c.req.valid('param').id, scope, recurrenceId);
       return c.body(null, 204);
+    })
+    .openapi(r.setEventReminders, async (c) => {
+      const row = await events.setEventReminders(
+        db(),
+        c.var.userId,
+        c.req.valid('param').id,
+        c.req.valid('json').reminders,
+      );
+      return c.json(eventOut(row), 200);
     })
     .openapi(r.listOccurrences, async (c) => {
       const { from, to, calendarId } = c.req.valid('query');

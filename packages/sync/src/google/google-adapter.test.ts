@@ -264,3 +264,53 @@ describe('tokens', () => {
     expect(saved).toEqual([]);
   });
 });
+
+describe('reminders', () => {
+  test('a pull reads overrides, and useDefault takes the calendar’s defaults', async () => {
+    g.put('ada@example.com', { ...standup, reminders: { useDefault: true } });
+    g.put('ada@example.com', {
+      id: 'dentist',
+      summary: 'Dentist',
+      start: { dateTime: '2027-03-02T09:00:00Z' },
+      end: { dateTime: '2027-03-02T09:30:00Z' },
+      reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 1440 }] },
+    });
+    const r = byHref(deltaOf(await adapter().pullChanges(cal, EMPTY_CURSOR)).changed);
+    expect(r.get(href('standup'))?.events[0]?.reminders).toEqual([{ minutes: 30, action: 'display' }]);
+    expect(r.get(href('dentist'))?.events[0]?.reminders).toEqual([{ minutes: 1440, action: 'email' }]);
+  });
+
+  test('a push sends them as overrides, keeping email', async () => {
+    const event = {
+      uid: 'homa-r',
+      summary: 'Call',
+      description: null,
+      location: null,
+      startAt: new Date('2027-03-01T18:00:00Z'),
+      endAt: new Date('2027-03-01T19:00:00Z'),
+      allDay: false,
+      tz: 'UTC',
+      rrule: null,
+      exdates: [],
+      rdates: [],
+    };
+    const reminders = [
+      { minutes: 10, action: 'display' as const },
+      { minutes: 60, action: 'email' as const },
+    ];
+    const id = googleEventId('homa-r');
+    await adapter().pushChange({
+      kind: 'put',
+      href: href(id),
+      ics: serializeEvent(event, [], new Date(), reminders),
+      etag: null,
+    });
+    expect(g.events.get('ada@example.com')?.get(id)?.reminders).toEqual({
+      useDefault: false,
+      overrides: [
+        { method: 'popup', minutes: 10 },
+        { method: 'email', minutes: 60 },
+      ],
+    });
+  });
+});

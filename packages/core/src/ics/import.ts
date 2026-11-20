@@ -1,6 +1,6 @@
 // Reads an iCalendar (.ics) file into events Homa can store. The file is treated as hostile: it is
-// size- and component-capped, nothing in it is fetched (URLs, ATTACH), alarms and X- properties are
-// ignored, every string is bounded, and one bad event is skipped with a warning, not fatal.
+// size- and component-capped, nothing in it is fetched (URLs, ATTACH), X- properties are ignored,
+// only alarms relative to the start are read (as reminders), every string is bounded, and one bad event is skipped with a warning, not fatal.
 //
 // Times: each DATE-TIME is read as wall-clock fields plus its TZID, and placed with Temporal in the
 // IANA zone that TZID maps to (zones.ts). A file's VTIMEZONE rules are never run, as in expansion.
@@ -8,6 +8,7 @@
 import ICAL from 'ical.js';
 import { ValidationError } from '../errors';
 import { parseRrule } from '../recurrence';
+import { normalizeReminders, REMINDER_LIMITS } from '../reminders';
 import { zoneForTzid } from './zones';
 
 export const ICS_LIMITS = {
@@ -38,6 +39,9 @@ export type IcsOverride = {
   endAt: Date;
 };
 
+/** A VALARM relative to the start: `minutes` before it. `email` is kept so a round trip keeps it. */
+export type IcsReminder = { minutes: number; action: 'display' | 'email' };
+
 export type IcsEvent = {
   uid: string;
   summary: string;
@@ -51,6 +55,8 @@ export type IcsEvent = {
   exdates: Date[];
   rdates: Date[];
   overrides: IcsOverride[];
+  /** The series' alarms, sorted by minutes, one per offset, at most REMINDER_LIMITS.perEvent. */
+  reminders: IcsReminder[];
 };
 
 export type IcsImport = {
@@ -210,6 +216,27 @@ function readRrule(e: ICAL.Component): string | null {
   return value;
 }
 
+/**
+ * The VEVENT's alarms that fire at or before its start. Absolute triggers, RELATED=END and
+ * triggers after the start are skipped: Homa's reminders are offsets before the start.
+ */
+function readAlarms(e: ICAL.Component): IcsReminder[] {
+  const found = new Map<number, IcsReminder['action']>();
+  for (const alarm of e.getAllSubcomponents('valarm')) {
+    const trigger = alarm.getFirstProperty('trigger');
+    const value = trigger?.getFirstValue();
+    if (!trigger || !(value instanceof ICAL.Duration)) continue;
+    if (String(trigger.getParameter('related') ?? 'START').toUpperCase() !== 'START') continue;
+    const minutes = -value.toSeconds() / 60;
+    if (!Number.isInteger(minutes) || minutes < 0 || minutes > REMINDER_LIMITS.maxMinutes) continue;
+    const action = clean(alarm.getFirstPropertyValue('action'), 20).toUpperCase() === 'EMAIL' ? 'email' : 'display';
+    if (!found.has(minutes) || action === 'display') found.set(minutes, action);
+  }
+  return normalizeReminders([...found.keys()])
+    .slice(0, REMINDER_LIMITS.perEvent)
+    .map((minutes) => ({ minutes, action: found.get(minutes) ?? 'display' }));
+}
+
 function readMaster(e: ICAL.Component, uid: string, clock: Clock, warn: (m: string) => void): IcsEvent {
   const { start, end, allDay, tz } = span(e, clock);
   const rrule = readRrule(e);
@@ -226,6 +253,7 @@ function readMaster(e: ICAL.Component, uid: string, clock: Clock, warn: (m: stri
     exdates: capDates(dateList(e, 'exdate', clock), 'EXDATEs', uid, warn),
     rdates: capDates(dateList(e, 'rdate', clock), 'RDATEs', uid, warn),
     overrides: [],
+    reminders: readAlarms(e),
   };
 }
 

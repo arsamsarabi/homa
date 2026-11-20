@@ -28,33 +28,55 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
   test('new users use the browser zone and no second calendar', async () => {
     const res = await get(await signUp('new@example.com'));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
+    expect(await res.json()).toEqual({
+      homeTz: null,
+      secondaryCalendar: 'none',
+      weekStart: null,
+      defaultReminderMinutes: 10,
+    });
   });
 
   test('a change is saved for that user only', async () => {
     const a = await signUp('a@example.com');
     const b = await signUp('b@example.com');
     const res = await patch(a, { homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali' });
-    expect(await res.json()).toEqual({ homeTz: 'Asia/Tehran', secondaryCalendar: 'jalali', weekStart: null });
+    expect(await res.json()).toEqual({
+      homeTz: 'Asia/Tehran',
+      secondaryCalendar: 'jalali',
+      weekStart: null,
+      defaultReminderMinutes: 10,
+    });
     expect(await (await get(a)).json()).toEqual({
       homeTz: 'Asia/Tehran',
       secondaryCalendar: 'jalali',
       weekStart: null,
+      defaultReminderMinutes: 10,
     });
-    expect(await (await get(b)).json()).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
+    expect(await (await get(b)).json()).toEqual({
+      homeTz: null,
+      secondaryCalendar: 'none',
+      weekStart: null,
+      defaultReminderMinutes: 10,
+    });
 
     // A partial change keeps the rest; null goes back to the browser's zone.
     expect(await (await patch(a, { homeTz: null })).json()).toEqual({
       homeTz: null,
       secondaryCalendar: 'jalali',
       weekStart: null,
+      defaultReminderMinutes: 10,
     });
   });
 
   test('an empty change keeps the settings', async () => {
     const res = await patch(await signUp('empty@example.com'), {});
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ homeTz: null, secondaryCalendar: 'none', weekStart: null });
+    expect(await res.json()).toEqual({
+      homeTz: null,
+      secondaryCalendar: 'none',
+      weekStart: null,
+      defaultReminderMinutes: 10,
+    });
   });
 
   test('unknown zones and calendars are rejected', async () => {
@@ -68,11 +90,25 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
     const a = await signUp('week@example.com');
     expect(await (await patch(a, { weekStart: 0 })).json()).toMatchObject({ weekStart: 0 });
     expect(await (await get(a)).json()).toMatchObject({ weekStart: 0 });
-    expect(await (await patch(a, { weekStart: null })).json()).toMatchObject({ weekStart: null });
+    expect(await (await patch(a, { weekStart: null })).json()).toMatchObject({
+      weekStart: null,
+      defaultReminderMinutes: 10,
+    });
   });
 
   test('needs a session', async () => {
     expect((await get('')).status).toBe(401);
     expect((await patch('', { homeTz: 'UTC' })).status).toBe(401);
+  });
+
+  test('the default reminder can be changed or turned off', async () => {
+    const a = await signUp('reminder@example.com');
+    expect(await (await patch(a, { defaultReminderMinutes: 1440 })).json()).toMatchObject({
+      defaultReminderMinutes: 1440,
+    });
+    expect(await (await patch(a, { defaultReminderMinutes: null })).json()).toMatchObject({
+      defaultReminderMinutes: null,
+    });
+    expect((await patch(a, { defaultReminderMinutes: -5 })).status).toBe(400);
   });
 });

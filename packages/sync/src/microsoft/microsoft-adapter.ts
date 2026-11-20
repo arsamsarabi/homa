@@ -76,6 +76,8 @@ const FIELDS = [
   'originalStartTimeZone',
   'iCalUId',
   'recurrence',
+  'isReminderOn',
+  'reminderMinutesBeforeStart',
 ].join(',');
 const UID_EXPAND = `singleValueExtendedProperties($filter=id eq '${HOMA_UID_PROPERTY}')`;
 

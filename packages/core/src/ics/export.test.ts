@@ -56,6 +56,7 @@ describe('serializeEvent', () => {
     const back = roundTrip(e, overrides);
     expect(back).toEqual({
       uid: e.uid,
+      reminders: [],
       summary: e.summary,
       description: e.description,
       location: e.location,
@@ -97,5 +98,32 @@ describe('serializeEvent', () => {
   test('other zones round-trip, including one with a half-hour offset', () => {
     for (const tz of ['Asia/Tehran', 'America/New_York', 'Australia/Adelaide'])
       expect(roundTrip({ ...base, tz })).toMatchObject({ tz, start: base.startAt, end: base.endAt });
+  });
+});
+
+describe('alarms', () => {
+  const reminders = [
+    { minutes: 10, action: 'display' as const },
+    { minutes: 1440, action: 'email' as const },
+  ];
+
+  test('round-trip as VALARMs', () => {
+    expect(roundTrip(base, [], new Date(), reminders).reminders).toEqual(reminders);
+  });
+
+  test('each override carries them too', () => {
+    const series = { ...base, rrule: 'FREQ=DAILY;COUNT=3' };
+    const moved = {
+      recurrenceId: d('2026-03-17T09:00:00Z'),
+      summary: null,
+      description: null,
+      location: null,
+      startAt: d('2026-03-17T10:00:00Z'),
+      endAt: d('2026-03-17T10:15:00Z'),
+    };
+    const text = serializeEvent(series, [moved], new Date(), reminders);
+    expect(text.match(/BEGIN:VALARM/g)).toHaveLength(4);
+    expect(text).toContain('TRIGGER:-PT10M');
+    expect(text).toContain('TRIGGER:-P1D');
   });
 });
