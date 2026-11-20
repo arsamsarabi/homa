@@ -12,6 +12,7 @@ export const CalendarSchema = z.object({
   connectionId: z.string().nullable().default(null),
   /** Subscriptions: events can't be created, changed or deleted. */
   readOnly: z.boolean().default(false),
+  hidden: z.boolean().default(false),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });

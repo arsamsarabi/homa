@@ -3,7 +3,7 @@
 import { isTimeZone, parseRrule } from '@homa/core';
 import { z } from '@hono/zod-openapi';
 
-const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #4a4e69');
+const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #7d7fa3');
 export const Calendar = z
   .object({
     id: z.uuid(),
@@ -11,6 +11,7 @@ export const Calendar = z
     color: Color,
     connectionId: z.uuid().nullable().openapi({ description: 'The connection it syncs with; null for your own' }),
     readOnly: z.boolean().openapi({ description: 'Events here cannot be created, changed or deleted (subscriptions)' }),
+    hidden: z.boolean().openapi({ description: 'Left out of the calendar views; its events still sync' }),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -18,6 +19,10 @@ export const Calendar = z
 export const CalendarInput = z
   .object({ name: z.string().trim().min(1).max(100), color: Color.optional() })
   .openapi('CalendarInput');
+export const CalendarPatch = CalendarInput.partial()
+  .extend({ hidden: z.boolean().optional() })
+  .refine((v) => Object.values(v).some((x) => x !== undefined), 'nothing to change')
+  .openapi('CalendarPatch');
 
 const Tz = z.string().refine(isTimeZone, 'an IANA time zone like Europe/London').openapi({ example: 'Europe/London' });
 const isRrule = (v: string): boolean => {

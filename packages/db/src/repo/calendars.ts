@@ -4,7 +4,7 @@ import type { Executor } from '../client';
 import { calendars } from '../schema';
 
 export type CalendarRow = typeof calendars.$inferSelect;
-export type CalendarValues = { name: string; color?: string };
+export type CalendarValues = { name: string; color?: string; hidden?: boolean };
 /** A calendar that belongs to a connection. */
 export type ConnectedCalendarValues = CalendarValues & { connectionId: string; readOnly: boolean; remoteId?: string };
 /** Where an ICS feed was at its last fetch. */

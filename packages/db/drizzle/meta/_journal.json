@@ -50,6 +50,13 @@
       "when": 1795128203071,
       "tag": "0006_caldav_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795136045807,
+      "tag": "0007_calendar_hidden_and_color",
+      "breakpoints": true
     }
   ]
 }

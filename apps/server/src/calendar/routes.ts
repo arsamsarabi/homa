@@ -11,6 +11,7 @@ import { calendarOut, eventOut, occurrenceOut } from './responses';
 import {
   Calendar,
   CalendarInput,
+  CalendarPatch,
   Event,
   EventInput,
   EventPatch,
@@ -45,8 +46,8 @@ const r = {
     path: '/calendars/{id}',
     operationId: 'updateCalendar',
     tags: tags.calendars,
-    summary: 'Rename or recolor a calendar',
-    request: { params: Id, ...jsonBody(CalendarInput.partial()) },
+    summary: 'Rename, recolor, hide or show a calendar',
+    request: { params: Id, ...jsonBody(CalendarPatch) },
     responses: { 200: jsonContent(Calendar, 'Updated'), ...errors },
   }),
   deleteCalendar: createRoute({

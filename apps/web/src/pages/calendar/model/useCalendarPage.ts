@@ -43,8 +43,12 @@ export function useCalendarPage(): CalendarPageModel {
   const secondary = useSettings().data?.secondaryCalendar ?? 'none';
   const range = useMemo((): DayRange => rangeFor(url.view, url.date, weekStart), [url.view, url.date, weekStart]);
   const calendarsQuery = useCalendars();
-  // The range's wall dates, as instants in the viewed zone.
-  const occurrences = useOccurrences(instantOf(range.from, url.tz), instantOf(range.to, url.tz));
+  const hiddenIds = useMemo(
+    (): ReadonlySet<string> => new Set((calendarsQuery.data ?? []).filter((c) => c.hidden).map((c) => c.id)),
+    [calendarsQuery.data],
+  );
+  // The range's wall dates, as instants in the viewed zone; hidden calendars are left out.
+  const occurrences = useOccurrences(instantOf(range.from, url.tz), instantOf(range.to, url.tz), hiddenIds);
   const editor = useEventEditor();
   const scope = useScopePrompt();
   const actions = useOccurrenceActions(scope.ask, editor.close);

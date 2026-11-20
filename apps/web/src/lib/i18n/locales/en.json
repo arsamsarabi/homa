@@ -299,5 +299,28 @@
     "noneChosen": "No calendars chosen yet.",
     "twoWay": "Syncs both ways",
     "removeBody": "\"{{name}}\" and its calendars will be removed from Homa. Nothing on the server is changed."
+  },
+  "calendars": {
+    "title": "Calendars",
+    "hint": "Pick a color for each calendar, and choose which ones show in the calendar views. Hidden calendars keep syncing.",
+    "loading": "Loading calendars",
+    "loadFailed": "Couldn't load your calendars",
+    "saveFailed": "Couldn't save the calendar: {{message}}",
+    "colorOf": "Color of {{name}}",
+    "suggested": "The swatches above stay readable in light and dark themes.",
+    "yours": "Your calendar",
+    "connected": "Connected",
+    "hiddenLabel": "Hidden",
+    "hide": "Hide {{name}}",
+    "show": "Show {{name}}",
+    "hiddenDone": "{{name}} hidden",
+    "shown": "{{name}} shown",
+    "filter": "Calendars",
+    "filterHidden_one": "Calendars, {{count}} hidden",
+    "filterHidden_other": "Calendars, {{count}} hidden",
+    "mine": "My calendars",
+    "other": "Connected calendars",
+    "showAll": "Show all",
+    "manage": "Colors and settings"
   }
 }

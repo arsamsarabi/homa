@@ -67,7 +67,7 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | `instance_settings` | Not per user: one row (a check keeps it at `id = 1`, its migration inserts it) with `instance_name`, `sign_ups` (`open`, `closed`), `default_language` (`en`, `fa`) and what new accounts start with: `default_home_tz` (null: the browser's) and `default_secondary_calendar` |
 | `connections` | `provider` (`ics`, `caldav`; `google`, `microsoft` later), `credentials` (AES-256-GCM ciphertext: the feed URL, or the CalDAV server, user name and app password; later OAuth tokens), `label` (the CalDAV account, such as `ada on caldav.fastmail.com`), `status` (`pending`, `syncing`, `ok`, `error`), `last_error`, `last_synced_at` (the last attempt), `sync_started_at` (the running sync's claim), `notice` and `notice_at` (a conflict or refused change the user should see) |
 | `outbox` | Local changes waiting for a two-way calendar: one row per remote resource (`calendar_id`, `uid`, unique), `kind` (`put` an event's current state, or `delete` an `href` at its `etag`), `version` (bumped when a later change replaces it), `attempts`, `next_attempt_at`, `last_error` |
-| `calendars` | `connection_id` null for native (deleting a connection deletes its calendars); `read_only` (subscriptions, and CalDAV calendars the account can't write); color, `remote_id` (the CalDAV collection URL), `sync_token` (CalDAV, Google, Graph), and for ICS feeds `remote_etag`, `remote_last_modified` and `content_hash` |
+| `calendars` | `connection_id` null for native (deleting a connection deletes its calendars); `read_only` (subscriptions, and CalDAV calendars the account can't write); `hidden` (left out of the views by the calendar filter, still synced); color (the suggested swatches keep at least 3:1 contrast on the light and dark backgrounds), `remote_id` (the CalDAV collection URL), `sync_token` (CalDAV, Google, Graph), and for ICS feeds `remote_etag`, `remote_last_modified` and `content_hash` |
 | `events` | Master record: summary, description, location, start/end, all-day, tz, `rrule`, `exdates`, `rdates`, iCalendar `uid` (unique per calendar), `remote_href` and `remote_etag` (the CalDAV resource holding the event, as last seen), `source` (`native`, `routine`, `task_block`, `poll`, `hold`) |
 | `event_overrides` | Per-occurrence changes keyed by `recurrence_id` |
 | `event_instances` | Expansion cache: one row per occurrence inside a rolling window (for example 18 months ahead), `tstzrange` with GiST index. Rebuilt per event on change |
@@ -131,7 +131,7 @@ Golden fixtures in the shape of Google, Outlook and iCloud exports (`packages/co
   "version": 1,
   "exportedAt": "2026-11-19T12:00:00.000Z",
   "settings": { "homeTz": "Europe/London", "secondaryCalendar": "none" },
-  "calendars": [{ "id": "…", "name": "Personal", "color": "#4a4e69", "createdAt": "…", "updatedAt": "…" }],
+  "calendars": [{ "id": "…", "name": "Personal", "color": "#7d7fa3", "createdAt": "…", "updatedAt": "…" }],
   "events": [{ "id": "…", "calendarId": "…", "uid": "…", "summary": "…", "start": "…", "end": "…", "allDay": false,
     "tz": "Europe/London", "rrule": "FREQ=WEEKLY;BYDAY=MO", "exdates": [], "rdates": [],
     "overrides": [{ "recurrenceId": "…", "start": "…", "end": "…", "summary": null, "description": null, "location": null }] }]

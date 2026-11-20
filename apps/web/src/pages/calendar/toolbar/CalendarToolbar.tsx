@@ -2,11 +2,12 @@ import { ActionIcon, Button, Group, SegmentedControl, Select, Stack, Text, Title
 import { IconChevronLeft, IconChevronRight, IconPlus, IconWorld } from '@tabler/icons-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CalendarFilter } from './CalendarFilter';
 import classes from './CalendarToolbar.module.css';
 import { useCalendarShortcuts } from './useCalendarShortcuts';
 import { useCalendarToolbar } from './useCalendarToolbar';
 
-/** Today, previous and next, the title, the view switcher, the zone and "New event". */
+/** Today, previous and next, the title, the calendar filter, the zone, the view switcher and "New event". */
 export function CalendarToolbar(): JSX.Element {
   const { t } = useTranslation();
   const bar = useCalendarToolbar();
@@ -35,6 +36,7 @@ export function CalendarToolbar(): JSX.Element {
         </Stack>
       </Group>
       <Group gap="xs">
+        <CalendarFilter />
         <Select
           aria-label={t('calendar.timeZone')}
           leftSection={<IconWorld size={16} aria-hidden />}

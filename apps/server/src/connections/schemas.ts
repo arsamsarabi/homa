@@ -27,7 +27,7 @@ export const Connection = z
   })
   .openapi('Connection');
 
-const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #4a4e69');
+const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #7d7fa3');
 const Common = { name: z.string().trim().min(1).max(100).optional(), color: Color.optional() };
 export const SubscribeInput = z
   .union([

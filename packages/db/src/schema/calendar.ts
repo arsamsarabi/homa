@@ -24,11 +24,13 @@ export const calendars = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    color: text('color').notNull().default('#4a4e69'),
+    color: text('color').notNull().default('#7d7fa3'),
     /** The connection this calendar syncs with; null for a native calendar. */
     connectionId: uuid('connection_id').references(() => connections.id, { onDelete: 'cascade' }),
     /** Events can't be created, changed or deleted here (ICS subscriptions). */
     readOnly: boolean('read_only').notNull().default(false),
+    /** Left out of the calendar views (the user's filter); its events still sync. */
+    hidden: boolean('hidden').notNull().default(false),
     /** The provider's id for this calendar (a CalDAV href, a Google calendar id); null for native and ICS. */
     remoteId: text('remote_id'),
     /** Incremental sync cursor: a Google syncToken, Graph delta link or CalDAV sync-token / ctag. */

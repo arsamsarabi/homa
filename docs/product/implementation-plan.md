@@ -45,6 +45,9 @@ Status: 3a done (#16); 3b in review.
 - CalDAV two-way (tested against Radicale, Nextcloud, iCloud, Fastmail).
 - Google two-way, then Microsoft two-way.
 - Connection status and error UI.
+- Calendar filter (show or hide each calendar in the views) and a color for every calendar in Settings.
+
+To do: hand-test sync against real accounts before calling phase 3 done. iCloud CalDAV passed a first check on 2026-11-20; still to test are Google (after 3c), Fastmail, Nextcloud and Microsoft (after 3d).
 
 **Milestone: v1 hero is usable.** One timeline with every calendar, synced both ways.
 

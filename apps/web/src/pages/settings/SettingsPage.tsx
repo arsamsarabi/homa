@@ -6,13 +6,14 @@ import { useTranslation } from 'react-i18next';
 import { SettingsFields } from '@/components';
 import { useSession } from '@/hooks/session';
 import { useSettingsDraft } from '@/hooks/settings';
+import { CalendarsSection } from '@/pages/settings/calendars';
 import { ConnectedCalendarsSection } from '@/pages/settings/connections';
 import { ImportExportSection } from '@/pages/settings/import-export';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
 import classes from './SettingsPage.module.css';
 
-/** Your settings: home time zone and the second calendar. Language and theme are in the header. */
+/** Your settings: home time zone, the second calendar, your calendars' colors and visibility, connections. Language and theme are in the header. */
 export function SettingsPage(): JSX.Element {
   const { t } = useTranslation();
   const draft = useSettingsDraft();
@@ -56,6 +57,7 @@ export function SettingsPage(): JSX.Element {
             </Text>
           </Stack>
         )}
+        <CalendarsSection />
         <ConnectedCalendarsSection />
         <ImportExportSection />
       </Stack>

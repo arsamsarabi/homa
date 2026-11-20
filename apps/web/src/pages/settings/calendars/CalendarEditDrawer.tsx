@@ -1,17 +1,17 @@
 import { Alert, Button, ColorInput, Drawer, Group, Stack, TextInput } from '@mantine/core';
 import { type FormEvent, type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useConnectionMutations } from '@/hooks/connections';
+import { useCalendarUpdate } from '@/hooks/calendar';
 import type { Calendar } from '@/schemas';
 import { useAnnouncer } from '@/stores';
 import { SWATCHES } from './swatches';
 
 export type CalendarEditDrawerProps = { calendar: Calendar | undefined; onClose: () => void };
 
-/** Rename or recolor a connected calendar. Only Homa's copy changes, not the original. */
+/** Rename or recolor a calendar. For a connected one, only Homa's copy changes, not the original. */
 export function CalendarEditDrawer({ calendar, onClose }: CalendarEditDrawerProps): JSX.Element {
   const { t } = useTranslation();
-  const { editCalendar } = useConnectionMutations();
+  const editCalendar = useCalendarUpdate();
   const announce = useAnnouncer((s) => s.announce);
   const [color, setColor] = useState<string>();
 
@@ -62,8 +62,7 @@ export function CalendarEditDrawer({ calendar, onClose }: CalendarEditDrawerProp
               onChange={setColor}
               format="hex"
               swatches={[...SWATCHES]}
-              swatchesPerRow={8}
-              withPicker={false}
+              swatchesPerRow={7}
               closeOnColorSwatchClick
             />
             {editCalendar.isError && (

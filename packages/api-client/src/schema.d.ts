@@ -56,7 +56,7 @@ export interface paths {
         delete: operations["deleteCalendar"];
         options?: never;
         head?: never;
-        /** Rename or recolor a calendar */
+        /** Rename, recolor, hide or show a calendar */
         patch: operations["updateCalendar"];
         trace?: never;
     };
@@ -399,6 +399,8 @@ export interface components {
             connectionId: string | null;
             /** @description Events here cannot be created, changed or deleted (subscriptions) */
             readOnly: boolean;
+            /** @description Left out of the calendar views; its events still sync */
+            hidden: boolean;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -410,6 +412,11 @@ export interface components {
         CalendarInput: {
             name: string;
             color?: string;
+        };
+        CalendarPatch: {
+            name?: string;
+            color?: string;
+            hidden?: boolean;
         };
         Event: {
             /** Format: uuid */
@@ -836,10 +843,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    name?: string;
-                    color?: string;
-                };
+                "application/json": components["schemas"]["CalendarPatch"];
             };
         };
         responses: {
