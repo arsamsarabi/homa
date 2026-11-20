@@ -43,8 +43,8 @@ describe('previewOf', () => {
     const p = previewOf(parseQuickAdd('Dentist tue 3pm 45m', ctx), ctx.tz, formats);
     // ICU decides the spacing around the range dash.
     expect(p.when).toMatch(/^Tue 24 Nov, 15:00\s*–\s*15:45$/);
+    expect(p.length).toMatch(/^45 mins?$/); // ICU versions differ on the unit name
     expect(p).toMatchObject({
-      length: '45 min',
       repeat: 'none',
       weekdays: [],
       defaulted: false,
@@ -66,7 +66,7 @@ describe('previewOf', () => {
   test('an event across midnight shows both days', () => {
     const p = previewOf(parseQuickAdd('Night out tomorrow 10pm-1am', ctx), ctx.tz, formats);
     expect(p.when).toMatch(/^Sat 21 Nov, 22:00 – Sun 22 Nov, 0?1:00$/);
-    expect(p.length).toBe('3 hrs');
+    expect(p.length).toMatch(/^3 hrs?$/);
   });
 
   test('says when no date was found', () => {

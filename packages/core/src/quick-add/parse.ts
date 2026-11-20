@@ -61,13 +61,23 @@ export function parseQuickAdd(text: string, ctx: QuickAddContext): QuickAdd {
     }
   }
   // Matches never split a surrogate pair, so blanking by UTF-16 unit is safe.
-  const title = text
+  const left = text
     .split('')
     .map((ch, i) => (used[i] ? ' ' : ch))
     .join('')
-    .replace(/\s+/g, ' ')
-    .replace(/^[\s,;:@-]+|[\s,;:@-]+$/g, '');
-  return { title, ...resolve(facts, ctx, nowWall, today), reminder: facts.reminder === true };
+    .replace(/\s+/g, ' ');
+  return { title: trimEdges(left), ...resolve(facts, ctx, nowWall, today), reminder: facts.reminder === true };
+}
+
+const EDGE = /[\s,;:@-]/;
+
+/** Drops spaces and stray punctuation at both ends (a scan, not a regex, so long input stays linear). */
+function trimEdges(s: string): string {
+  let from = 0;
+  let to = s.length;
+  while (from < to && EDGE.test(s.charAt(from))) from++;
+  while (to > from && EDGE.test(s.charAt(to - 1))) to--;
+  return s.slice(from, to);
 }
 
 type Times = Pick<QuickAdd, 'start' | 'end' | 'allDay' | 'rrule' | 'defaulted'>;

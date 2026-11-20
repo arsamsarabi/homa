@@ -310,3 +310,13 @@ describe('quick add, reminders hook', () => {
     expect(parseQuickAdd('call mum at 5pm', LONDON).reminder).toBe(false);
   });
 });
+
+describe('quick add, long input', () => {
+  test('stays fast on long runs of spaces, digits and punctuation', () => {
+    const started = performance.now();
+    for (const filler of ['\t', ' ', '1', '-', '1 ', 'a ']) {
+      parseQuickAdd(`x${filler.repeat(5_000)}x`, LONDON);
+    }
+    expect(performance.now() - started).toBeLessThan(2_000);
+  });
+});
