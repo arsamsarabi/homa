@@ -616,6 +616,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notification-channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your notification channels, and whether this server can send email */
+        get: operations["listNotificationChannels"];
+        put?: never;
+        /** Add an email, ntfy, Gotify or webhook channel (a webhook's secret is in this answer only) */
+        post: operations["createNotificationChannel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notification-channels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a channel */
+        delete: operations["deleteNotificationChannel"];
+        options?: never;
+        head?: never;
+        /** Change a channel; omitted tokens are kept */
+        patch: operations["updateNotificationChannel"];
+        trace?: never;
+    };
+    "/notification-channels/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test message now */
+        post: operations["testNotificationChannel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1062,6 +1115,89 @@ export interface components {
         PushUnsubscribe: {
             /** Format: uri */
             endpoint: string;
+        };
+        NotificationChannelList: {
+            items: components["schemas"]["NotificationChannel"][];
+            /** @description Whether this server can send email (SMTP is set up) */
+            email: boolean;
+        };
+        NotificationChannel: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "email" | "ntfy" | "gotify" | "webhook";
+            name: string;
+            enabled: boolean;
+            reminderKinds: ("event" | "standalone")[];
+            /** @description ntfy and Gotify */
+            server: string | null;
+            /** @description ntfy */
+            topic: string | null;
+            /** @description A webhook's host (the full address is secret) */
+            host: string | null;
+            hasToken: boolean;
+            /** @description The last 3 or more sends failed */
+            failing: boolean;
+            lastError: string | null;
+            /** Format: date-time */
+            lastErrorAt: string | null;
+            /** Format: date-time */
+            lastSentAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description A webhook's signing secret: only when created or rotated */
+            secret?: string;
+        };
+        NotificationChannelInput: {
+            /** @enum {string} */
+            kind: "email";
+            name: string;
+            /** @description Which reminders it gets: event reminders, standalone ones, or both */
+            reminderKinds?: ("event" | "standalone")[];
+        } | {
+            /** @enum {string} */
+            kind: "ntfy";
+            name: string;
+            /** @description Which reminders it gets: event reminders, standalone ones, or both */
+            reminderKinds?: ("event" | "standalone")[];
+            /** @default https://ntfy.sh */
+            server: string;
+            /** @example homa-reminders-3f9a */
+            topic: string;
+            token?: string;
+        } | {
+            /** @enum {string} */
+            kind: "gotify";
+            name: string;
+            /** @description Which reminders it gets: event reminders, standalone ones, or both */
+            reminderKinds?: ("event" | "standalone")[];
+            server: string;
+            token: string;
+        } | {
+            /** @enum {string} */
+            kind: "webhook";
+            name: string;
+            /** @description Which reminders it gets: event reminders, standalone ones, or both */
+            reminderKinds?: ("event" | "standalone")[];
+            url: string;
+        };
+        NotificationChannelPatch: {
+            name?: string;
+            enabled?: boolean;
+            /** @description Which reminders it gets: event reminders, standalone ones, or both */
+            reminderKinds?: ("event" | "standalone")[];
+            server?: string;
+            /** @example homa-reminders-3f9a */
+            topic?: string;
+            /** @description Omit to keep it; null removes an ntfy token */
+            token?: string | null;
+            url?: string;
+            /** @description A webhook's new signing secret, shown in the answer */
+            rotateSecret?: boolean;
+        };
+        NotificationChannelTestResult: {
+            ok: boolean;
+            error?: string;
         };
     };
     responses: never;
@@ -2868,6 +3004,252 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listNotificationChannels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Channels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannelList"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not set up on this server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    createNotificationChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationChannelInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannel"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not set up on this server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    deleteNotificationChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateNotificationChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationChannelPatch"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannel"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not set up on this server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    testNotificationChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sent, or why not */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannelTestResult"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not set up on this server */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
                 };
             };
         };

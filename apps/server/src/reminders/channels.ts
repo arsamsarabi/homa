@@ -1,5 +1,6 @@
 // The channels a notification goes out on. In-app is the notification row itself (the bell); the
-// rest each get a delivery row that the job sends and retries. Phase 4a has web push.
+// rest each get a delivery row that the job sends and retries: `push` (every browser the user
+// subscribed) and `channel:{id}` for each of the user's channels that takes the notification's kind.
 import { type Db, type Executor, repo } from '@homa/db';
 
 /** A send failed. `retriable` failures are tried again with backoff; others fail the delivery. */
@@ -13,12 +14,29 @@ export class DeliveryError extends Error {
   }
 }
 
-/** Sends one notification on one channel; throws DeliveryError when it can't. */
-export type Sender = (db: Db, n: repo.NotificationRow) => Promise<void>;
+/** Sends one notification on one channel (`push`, `channel:{id}`); throws DeliveryError when it can't. */
+export type Sender = (db: Db, n: repo.NotificationRow, channel: string) => Promise<void>;
+/** Senders by the channel's prefix: `push`, `channel`. */
 export type Senders = Readonly<Record<string, Sender>>;
 
-/** The delivery channels each owner's new notifications go out on (beside in-app). */
-export async function channelsFor(db: Executor, ownerIds: readonly string[]): Promise<Map<string, string[]>> {
-  const withPush = await repo.usersWithPush(db, [...new Set(ownerIds)]);
-  return new Map(ownerIds.map((id) => [id, withPush.has(id) ? ['push'] : []]));
+export const senderFor = (senders: Senders, channel: string): Sender | undefined =>
+  senders[channel.split(':')[0] ?? channel];
+
+/** The deliveries to queue for these notifications (beside in-app). */
+export async function deliveriesFor(
+  db: Executor,
+  list: readonly Pick<repo.NotificationRow, 'id' | 'ownerUserId' | 'eventId'>[],
+): Promise<{ notificationId: string; channel: string }[]> {
+  const owners = [...new Set(list.map((n) => n.ownerUserId))];
+  const withPush = await repo.usersWithPush(db, owners);
+  const channels = await repo.listEnabledChannels(db, owners);
+  return list.flatMap((n) => {
+    const kind = n.eventId ? 'event' : 'standalone';
+    return [
+      ...(withPush.has(n.ownerUserId) ? ['push'] : []),
+      ...channels
+        .filter((c) => c.ownerUserId === n.ownerUserId && c.reminderKinds.includes(kind))
+        .map((c) => `channel:${c.id}`),
+    ].map((channel) => ({ notificationId: n.id, channel }));
+  });
 }

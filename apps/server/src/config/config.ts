@@ -64,12 +64,24 @@ const Env = z
         .regex(/^(mailto:|https:\/\/)/, 'HOMA_VAPID_SUBJECT must be a mailto: or https:// URL')
         .optional(),
     ),
-    // Lets notifications go to loopback and private networks: web push endpoints in tests, and (from
-    // phase 4b) ntfy, Gotify and webhooks on the self-hoster's own network. Refused by default: SSRF.
+    // Lets notifications go to loopback and private networks, and over plain http: web push
+    // endpoints in tests, and ntfy, Gotify and webhooks on the self-hoster's own network. Refused by
+    // default: SSRF.
     HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS: z
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    // The SMTP server email reminders go through: smtp://user:pass@host:587 (STARTTLS) or
+    // smtps://user:pass@host:465. With HOMA_MAIL_FROM; both or neither. Without them there is no email.
+    HOMA_SMTP_URL: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z
+        .string()
+        .regex(/^smtps?:\/\//, 'HOMA_SMTP_URL must start with smtp:// or smtps://')
+        .optional(),
+    ),
+    // The sender, such as `Homa <homa@example.com>`.
+    HOMA_MAIL_FROM: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
     // Better Auth's per-IP limits on sign-in and sign-up. Turn off only for automated tests, where
     // one machine signs up several accounts within seconds.
     HOMA_AUTH_RATE_LIMIT: z
@@ -84,6 +96,10 @@ const Env = z
   .refine((env) => !env.HOMA_MICROSOFT_CLIENT_ID === !env.HOMA_MICROSOFT_CLIENT_SECRET, {
     message: 'set both HOMA_MICROSOFT_CLIENT_ID and HOMA_MICROSOFT_CLIENT_SECRET, or neither',
     path: ['HOMA_MICROSOFT_CLIENT_SECRET'],
+  })
+  .refine((env) => !env.HOMA_SMTP_URL === !env.HOMA_MAIL_FROM, {
+    message: 'set both HOMA_SMTP_URL and HOMA_MAIL_FROM, or neither',
+    path: ['HOMA_MAIL_FROM'],
   })
   .refine((env) => !env.HOMA_VAPID_PUBLIC_KEY === !env.HOMA_VAPID_PRIVATE_KEY, {
     message: 'set both HOMA_VAPID_PUBLIC_KEY and HOMA_VAPID_PRIVATE_KEY, or neither',

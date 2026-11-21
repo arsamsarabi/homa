@@ -5,7 +5,7 @@ People on your instance can connect a Microsoft account (a personal Outlook.com,
 You need:
 
 - `HOMA_URL` set to the address people use to reach Homa, such as `https://homa.example.com`. Microsoft sends people back to it, so it must match exactly. Microsoft accepts `http` only for `localhost`.
-- `HOMA_ENCRYPTION_KEY` set (see [Docker](./docker.md)). Microsoft's tokens are stored encrypted with it.
+- `HOMA_ENCRYPTION_KEY` set (see [Environment variables](./environment.md)). Microsoft's tokens are stored encrypted with it.
 
 ## 1. Register the app
 

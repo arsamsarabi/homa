@@ -8,14 +8,17 @@ import { calendarApi } from '@/calendar';
 import { connectionsApi, type SyncSettings } from '@/connections';
 import { importExportApi } from '@/import-export';
 import { instanceApi } from '@/instance';
-import { type PushSettings, remindersApi } from '@/reminders';
+import { channelsApi, type NotifySettings, type PushSettings, remindersApi } from '@/reminders';
 import { settingsApi } from '@/settings';
 import { handleError, notFound } from './errors';
 import { healthApi } from './health';
 import { newApi, openApiConfig } from './openapi';
 
-/** `sync` is the connected-calendar settings and `push` web push; without them those routes answer 503. */
-export type AppDeps = { db: Db; auth: Auth; sync?: SyncSettings; push?: PushSettings };
+/**
+ * `sync` is the connected-calendar settings, `push` web push and `notify` the notification channels;
+ * without them those routes answer 503.
+ */
+export type AppDeps = { db: Db; auth: Auth; sync?: SyncSettings; push?: PushSettings; notify?: NotifySettings };
 
 /** The /api routes. Without `deps` (tests, the OpenAPI dump) routes that need a user answer 401. */
 export function createApi(deps?: AppDeps): OpenAPIHono {
@@ -27,6 +30,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   api.route('/', importExportApi(deps));
   api.route('/', connectionsApi(deps));
   api.route('/', remindersApi(deps));
+  api.route('/', channelsApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;

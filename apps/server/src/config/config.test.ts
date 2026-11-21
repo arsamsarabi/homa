@@ -62,3 +62,9 @@ test('VAPID keys come in pairs, and the subject is a mailto: or https: URL', () 
     HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS: false,
   });
 });
+
+test('email: HOMA_SMTP_URL and HOMA_MAIL_FROM together, or neither', () => {
+  expect(loadConfig({ ...valid, HOMA_SMTP_URL: '', HOMA_MAIL_FROM: '' }).HOMA_SMTP_URL).toBeUndefined();
+  expect(() => loadConfig({ ...valid, HOMA_SMTP_URL: 'smtp://mail.example.com:587' })).toThrow(/HOMA_MAIL_FROM/);
+  expect(() => loadConfig({ ...valid, HOMA_SMTP_URL: 'http://mail', HOMA_MAIL_FROM: 'x' })).toThrow(/smtp:\/\//);
+});

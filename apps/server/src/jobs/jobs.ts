@@ -1,11 +1,11 @@
 // Scheduled jobs on pg-boss. Each handler calls a service and logs counts.
-import type { Db, repo } from '@homa/db';
+import type { Db } from '@homa/db';
 import { PgBoss } from 'pg-boss';
 import { purgeExpiredAuth } from '@/auth';
 import { extendHorizon } from '@/calendar';
 import { pushDueOutboxes, type SyncSettings, syncDueConnections } from '@/connections';
 import { errorFields, log } from '@/log';
-import { deliverReminders, type PushSettings, sendPush } from '@/reminders';
+import { deliverReminders, type NotifySettings, type PushSettings, reminderSenders } from '@/reminders';
 
 export const PURGE_AUTH = 'maintenance.purge-auth';
 export const EXTEND_HORIZON = 'calendar.extend-horizon';
@@ -15,7 +15,7 @@ export const DELIVER_REMINDERS = 'reminders.deliver';
 
 type Schedule = { name: string; cron: string; run: (db: Db) => Promise<unknown> };
 
-const schedules = (sync: SyncSettings, push: PushSettings): Schedule[] => [
+const schedules = (sync: SyncSettings, push: PushSettings, notify: NotifySettings): Schedule[] => [
   { name: PURGE_AUTH, cron: '17 3 * * *', run: purgeExpiredAuth }, // daily, 03:17 UTC
   {
     name: EXTEND_HORIZON,
@@ -26,12 +26,11 @@ const schedules = (sync: SyncSettings, push: PushSettings): Schedule[] => [
   { name: SYNC_CONNECTIONS, cron: '*/5 * * * *', run: (db: Db): Promise<unknown> => syncDueConnections(db, sync) },
   // Every minute, pushes local changes waiting in the outbox of two-way (CalDAV, Google, Microsoft) calendars.
   { name: SYNC_OUTBOX, cron: '* * * * *', run: (db: Db): Promise<unknown> => pushDueOutboxes(db, sync) },
-  // Every minute, notifies due reminders and sends their deliveries (web push).
+  // Every minute, notifies due reminders and sends their deliveries (web push, email, ntfy, Gotify, webhooks).
   {
     name: DELIVER_REMINDERS,
     cron: '* * * * *',
-    run: (db: Db): Promise<unknown> =>
-      deliverReminders(db, { push: (d: Db, n: repo.NotificationRow): Promise<void> => sendPush(d, push, n) }),
+    run: (db: Db): Promise<unknown> => deliverReminders(db, reminderSenders(push, notify)),
   },
 ];
 
@@ -40,11 +39,12 @@ export async function startWorker(
   db: Db,
   sync: SyncSettings,
   push: PushSettings,
+  notify: NotifySettings,
 ): Promise<PgBoss> {
   const boss = new PgBoss(databaseUrl);
   boss.on('error', (err) => log.error('pg-boss error', errorFields(err)));
   await boss.start();
-  for (const job of schedules(sync, push)) {
+  for (const job of schedules(sync, push, notify)) {
     await boss.createQueue(job.name);
     await boss.schedule(job.name, job.cron);
     await boss.work(job.name, async () => {

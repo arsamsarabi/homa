@@ -1,0 +1,16 @@
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  padding-block: var(--mantine-spacing-xs);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}

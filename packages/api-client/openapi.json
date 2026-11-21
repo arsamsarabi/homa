@@ -1341,6 +1341,365 @@
         "required": [
           "endpoint"
         ]
+      },
+      "NotificationChannelList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationChannel"
+            }
+          },
+          "email": {
+            "type": "boolean",
+            "description": "Whether this server can send email (SMTP is set up)"
+          }
+        },
+        "required": [
+          "items",
+          "email"
+        ]
+      },
+      "NotificationChannel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "email",
+              "ntfy",
+              "gotify",
+              "webhook"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "reminderKinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "event",
+                "standalone"
+              ]
+            }
+          },
+          "server": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ntfy and Gotify"
+          },
+          "topic": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ntfy"
+          },
+          "host": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A webhook's host (the full address is secret)"
+          },
+          "hasToken": {
+            "type": "boolean"
+          },
+          "failing": {
+            "type": "boolean",
+            "description": "The last 3 or more sends failed"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastErrorAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastSentAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "secret": {
+            "type": "string",
+            "description": "A webhook's signing secret: only when created or rotated"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "enabled",
+          "reminderKinds",
+          "server",
+          "topic",
+          "host",
+          "hasToken",
+          "failing",
+          "lastError",
+          "lastErrorAt",
+          "lastSentAt",
+          "createdAt"
+        ]
+      },
+      "NotificationChannelInput": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "email"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "reminderKinds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "event",
+                    "standalone"
+                  ]
+                },
+                "minItems": 1,
+                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ntfy"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "reminderKinds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "event",
+                    "standalone"
+                  ]
+                },
+                "minItems": 1,
+                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "default": "https://ntfy.sh"
+              },
+              "topic": {
+                "type": "string",
+                "pattern": "^[\\w-]{1,64}$",
+                "example": "homa-reminders-3f9a"
+              },
+              "token": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "topic"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "gotify"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "reminderKinds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "event",
+                    "standalone"
+                  ]
+                },
+                "minItems": 1,
+                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+              },
+              "server": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "token": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "server",
+              "token"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "webhook"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "reminderKinds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "event",
+                    "standalone"
+                  ]
+                },
+                "minItems": 1,
+                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+              },
+              "url": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "url"
+            ]
+          }
+        ]
+      },
+      "NotificationChannelPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "reminderKinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "event",
+                "standalone"
+              ]
+            },
+            "minItems": 1,
+            "description": "Which reminders it gets: event reminders, standalone ones, or both"
+          },
+          "server": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "topic": {
+            "type": "string",
+            "pattern": "^[\\w-]{1,64}$",
+            "example": "homa-reminders-3f9a"
+          },
+          "token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Omit to keep it; null removes an ntfy token"
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "rotateSecret": {
+            "type": "boolean",
+            "description": "A webhook's new signing secret, shown in the answer"
+          }
+        }
+      },
+      "NotificationChannelTestResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok"
+        ]
       }
     },
     "parameters": {}
@@ -3665,6 +4024,325 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notification-channels": {
+      "get": {
+        "operationId": "listNotificationChannels",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Your notification channels, and whether this server can send email",
+        "responses": {
+          "200": {
+            "description": "Channels",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationChannelList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not set up on this server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createNotificationChannel",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Add an email, ntfy, Gotify or webhook channel (a webhook's secret is in this answer only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationChannelInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationChannel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not set up on this server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notification-channels/{id}": {
+      "patch": {
+        "operationId": "updateNotificationChannel",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Change a channel; omitted tokens are kept",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationChannelPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationChannel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not set up on this server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteNotificationChannel",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Remove a channel",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notification-channels/{id}/test": {
+      "post": {
+        "operationId": "testNotificationChannel",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Send a test message now",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sent, or why not",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationChannelTestResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not set up on this server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }

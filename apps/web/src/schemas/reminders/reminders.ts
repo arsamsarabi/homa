@@ -30,3 +30,32 @@ export const ReminderSchema = z.object({
 });
 export type Reminder = z.infer<typeof ReminderSchema>;
 export const ReminderListSchema = z.array(ReminderSchema);
+
+export const CHANNEL_KINDS = ['email', 'ntfy', 'gotify', 'webhook'] as const;
+export type ChannelKind = (typeof CHANNEL_KINDS)[number];
+export const REMINDER_KINDS = ['event', 'standalone'] as const;
+export type ReminderKind = (typeof REMINDER_KINDS)[number];
+
+export const ChannelSchema = z.object({
+  id: z.string(),
+  kind: z.enum(CHANNEL_KINDS),
+  name: z.string(),
+  enabled: z.boolean(),
+  reminderKinds: z.array(z.enum(REMINDER_KINDS)),
+  server: z.string().nullable(),
+  topic: z.string().nullable(),
+  host: z.string().nullable(),
+  hasToken: z.boolean(),
+  failing: z.boolean(),
+  lastError: z.string().nullable(),
+  lastErrorAt: isoDateTime.nullable(),
+  lastSentAt: isoDateTime.nullable(),
+  createdAt: isoDateTime,
+  /** A webhook's signing secret: only right after it is created or rotated. */
+  secret: z.string().optional(),
+});
+export type Channel = z.infer<typeof ChannelSchema>;
+export const ChannelListSchema = z.object({ items: z.array(ChannelSchema), email: z.boolean() });
+export type ChannelList = z.infer<typeof ChannelListSchema>;
+export const ChannelTestSchema = z.object({ ok: z.boolean(), error: z.string().optional() });
+export type ChannelTest = z.infer<typeof ChannelTestSchema>;

@@ -5,7 +5,7 @@
 import { fireAt, nextStandaloneFire, REMINDER_LIMITS } from '@homa/core';
 import { type Db, type Executor, repo } from '@homa/db';
 import { errorFields, log } from '@/log';
-import { channelsFor, DeliveryError, type Senders } from './channels';
+import { DeliveryError, deliveriesFor, type Senders, senderFor } from './channels';
 
 const DAY_MS = 86_400_000;
 const MINUTE = 60_000;
@@ -26,15 +26,7 @@ const isDue = (at: Date, now: Date): boolean => at <= now && at.getTime() > now.
 async function notify(tx: Executor, rows: readonly repo.NewNotification[], now: Date): Promise<number> {
   const unique = [...new Map(rows.map((r) => [r.dedupeKey, r])).values()];
   const created = await repo.insertNotifications(tx, unique);
-  const channels = await channelsFor(
-    tx,
-    created.map((n) => n.ownerUserId),
-  );
-  await repo.queueDeliveries(
-    tx,
-    created.flatMap((n) => (channels.get(n.ownerUserId) ?? []).map((channel) => ({ notificationId: n.id, channel }))),
-    now,
-  );
+  await repo.queueDeliveries(tx, await deliveriesFor(tx, created), now);
   return created.length;
 }
 
@@ -89,15 +81,7 @@ function fireStandalone(db: Db, now: Date): Promise<number> {
 function resurface(db: Db, now: Date): Promise<number> {
   return db.transaction(async (tx) => {
     const back = await repo.resurfaceSnoozed(tx, now);
-    const channels = await channelsFor(
-      tx,
-      back.map((n) => n.ownerUserId),
-    );
-    await repo.queueDeliveries(
-      tx,
-      back.flatMap((n) => (channels.get(n.ownerUserId) ?? []).map((channel) => ({ notificationId: n.id, channel }))),
-      now,
-    );
+    await repo.queueDeliveries(tx, await deliveriesFor(tx, back), now);
     return back.length;
   });
 }
@@ -109,10 +93,10 @@ async function deliver(db: Db, senders: Senders, now: Date): Promise<{ sent: num
   for (let batch = 0; batch < MAX_BATCHES; batch++) {
     const claimed = await repo.claimDueDeliveries(db, now, LEASE_MS, BATCH);
     for (const d of claimed) {
-      const send = senders[d.channel];
+      const send = senderFor(senders, d.channel);
       try {
         if (!send) throw new DeliveryError(`the ${d.channel} channel is not available`, false);
-        await send(db, d.notification);
+        await send(db, d.notification, d.channel);
         await repo.finishDelivery(db, d.id, { status: 'sent' });
         sent++;
       } catch (err) {
