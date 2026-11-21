@@ -85,14 +85,15 @@ Built and on `main` today:
 
 ## Quick start
 
-There is no published image yet, so Compose builds it from this repository. You need Docker with Compose v2 and `openssl`.
+Compose pulls the published image, `ghcr.io/arsamsarabi/homa`, for amd64 and arm64. You need Docker with Compose v2, `git` and `openssl`.
 
 ```sh
 git clone https://github.com/arsamsarabi/homa.git
 cd homa
 echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > deploy/docker/.env
 echo "HOMA_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> deploy/docker/.env
-docker compose -f deploy/docker/compose.yaml up -d --build --wait
+echo "HOMA_VERSION=0.1.0" >> deploy/docker/.env
+docker compose -f deploy/docker/compose.yaml up -d --wait
 ```
 
 Open <http://localhost:3000>. The first account you create becomes the instance admin. Creating it asks for the 4-digit setup code that the API prints in its log at start:
@@ -101,7 +102,7 @@ Open <http://localhost:3000>. The first account you create becomes the instance 
 docker compose -f deploy/docker/compose.yaml logs api | grep 'first-run setup code'
 ```
 
-Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means adding every connected calendar again. Backups, upgrades and running behind a reverse proxy are covered in [Operations](docs/self-hosting/operations.md).
+`HOMA_VERSION` pins the release you run (see [Releases](https://github.com/arsamsarabi/homa/releases)); images are signed with cosign. Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means adding every connected calendar again. Upgrades, checking the image signature, backups and running behind a reverse proxy are covered in [Operations](docs/self-hosting/operations.md).
 
 ---
 
@@ -195,7 +196,8 @@ To report a vulnerability, follow the [security policy](.github/SECURITY.md). Pl
 | [Docs index](docs/README.md) | Every doc in this repository |
 | [Quick start](docs/self-hosting/quick-start.md) | Running Homa with Docker Compose |
 | [Environment variables](docs/self-hosting/environment.md) | Every setting and its default |
-| [Operations](docs/self-hosting/operations.md) | Reverse proxy, upgrades, backup and restore, roles and health |
+| [Operations](docs/self-hosting/operations.md) | Reverse proxy, upgrades, verifying the image, backup and restore, roles and health |
+| [Releasing](docs/self-hosting/releasing.md) | Maintainer steps to cut a release |
 | [Google Calendar](docs/self-hosting/google.md) | Creating the Google OAuth client for Google connections |
 | [Microsoft](docs/self-hosting/microsoft.md) | Creating the Entra ID app for Outlook.com and Microsoft 365 |
 | [Changelog](docs/CHANGELOG.md) | Changes, and the steps an upgrade needs |
@@ -267,12 +269,12 @@ All screenshots use a made-up account and events.
 
 ## Roadmap
 
-Phases 1 to 3 (the calendar and sync) are done. Next, in order:
+Phases 1 to 4 (the calendar, sync and reminders) are done. Next, in order:
 
 | Phase | What it adds |
 | --- | --- |
-| **4. Reminders** (in progress) | Reminders on events and on their own, delivered by web push, email, ntfy, Gotify or webhook, with snooze; quick add in plain language |
-| **Releases and distribution** | Versioned releases and a published container image, so you no longer build from source. No image is published yet |
+| **4. Reminders** (done) | Reminders on events and on their own, delivered by web push, email, ntfy, Gotify or webhook, with snooze; quick add in plain language |
+| **Releases and distribution** | Versioned releases and a signed, multi-arch container image (in progress), then one-click templates for home-server platforms and a public demo |
 | **5. Tasks** | Tasks, projects, tags and subtasks; Inbox, Today and Upcoming; time-blocking tasks onto the calendar; Todoist import |
 | **6. Sharing** | Several people on one instance, invites and circles, sharing calendars at free/busy, read or edit level; OIDC and passkeys |
 | **7. Group date-finding** | Polls to find a date that works for a group, with guests by link, suggestions from everyone's availability, and tentative holds |

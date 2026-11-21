@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The release workflow runs CI on the tag before it builds the image.
+  workflow_call:
 
 permissions:
   contents: read
@@ -43,7 +45,7 @@ jobs:
           docker run -d --name radicale -p 127.0.0.1:5232:5232 --tmpfs /var/lib/radicale:mode=1777 \
             ghcr.io/kozea/radicale:3.8.3@sha256:62e281f4b35f1a5e52209cd99ad7081add25532f4c10df225b3a1519e64f70ca \
             --hosts 0.0.0.0:5232 --auth-type none
-          for i in $(seq 30); do curl -sf -o /dev/null -X OPTIONS "$TEST_CALDAV_URL" && exit 0; sleep 1; done
+          for _ in $(seq 30); do curl -sf -o /dev/null -X OPTIONS "$TEST_CALDAV_URL" && exit 0; sleep 1; done
           docker logs radicale; exit 1
       - run: bun run test
       - run: bun run build

@@ -1,10 +1,12 @@
 # Self-host Homa: docker compose -f deploy/docker/compose.yaml up -d
 # Needs BETTER_AUTH_SECRET in the environment or a .env file next to this one
 # (openssl rand -base64 32). Then open HOMA_URL (default http://localhost:3000).
+# Pulls the published image (set HOMA_VERSION in .env to pin a release). Compose builds it from
+# this repository only when the pull fails, or when you pass --build.
 name: homa
 
 x-homa: &homa
-  image: ${HOMA_IMAGE:-homa:local}
+  image: ghcr.io/arsamsarabi/homa:${HOMA_VERSION:-latest}
   build:
     context: ../..
     dockerfile: deploy/docker/Dockerfile
