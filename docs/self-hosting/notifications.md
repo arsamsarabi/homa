@@ -4,7 +4,7 @@ Reminders always show in the bell in Homa's header. People can also get them as 
 
 ## Web push
 
-Works without setup on HTTPS (and on `http://localhost`). The keys are generated on first start and kept in the database; set `HOMA_VAPID_PUBLIC_KEY` and `HOMA_VAPID_PRIVATE_KEY` to use your own, and `HOMA_VAPID_SUBJECT` to a `mailto:` or `https:` address for Safari and iOS. See [Docker](./docker.md#settings).
+Works without setup on HTTPS (and on `http://localhost`). The keys are generated on first start and kept in the database; set `HOMA_VAPID_PUBLIC_KEY` and `HOMA_VAPID_PRIVATE_KEY` to use your own, and `HOMA_VAPID_SUBJECT` to a `mailto:` or `https:` address for Safari and iOS. See [Environment variables](./environment.md).
 
 ## Email
 
