@@ -45,7 +45,7 @@ In scope:
 
 Out of scope (report these as normal bugs):
 
-- Setups that go against [Self-hosting with Docker](../docs/self-hosting/docker.md), such as test-only settings (`HOMA_SETUP_CODE`, `HOMA_AUTH_RATE_LIMIT=false`) in production, or a published Postgres port
+- Setups that go against the [self-hosting docs](../docs/self-hosting/quick-start.md), such as test-only settings (`HOMA_SETUP_CODE`, `HOMA_AUTH_RATE_LIMIT=false`) in production, or a published Postgres port
 - What an instance admin can do by design
 - Attacks that need an already compromised host, browser or account
 - Denial of service through request volume alone

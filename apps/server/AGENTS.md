@@ -228,7 +228,7 @@ bun run typecheck
 - Exported package functions that other packages call get a doc comment, with an example where non-obvious
 - Record architecture-affecting decisions in `docs/product/architecture.md`
 - Keep `.env.example` in sync when adding config keys
-- A change that needs operators to act on upgrade (a manual migration step, a renamed or removed env var, a volume change, an API break for clients) goes under a `### Breaking` heading in `docs/CHANGELOG.md`'s `[Unreleased]` section, with the steps to take. Add nothing there for changes that need no action. See [Docker](../../docs/self-hosting/docker.md)
+- A change that needs operators to act on upgrade (a manual migration step, a renamed or removed env var, a volume change, an API break for clients) goes under a `### Breaking` heading in `docs/CHANGELOG.md`'s `[Unreleased]` section, with the steps to take. Add nothing there for changes that need no action. See [Upgrades](../../docs/self-hosting/operations.md#upgrades)
 
 ---
 
