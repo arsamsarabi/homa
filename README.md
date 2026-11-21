@@ -46,7 +46,7 @@
 
 <br />
 
-Homa is built with AI coding tools under the maintainer's supervision. The maintainer sets the architecture and the plan for each phase, and reviews every change, its tests and the CI results before it is merged.
+Development used AI tooling under staff-engineer supervision (~20 years experience, 13 commercial). Architecture, logic, CI/CD, tests, and coverage were reviewed by the maintainer. AI accelerated implementation; technical decisions and review remained human-owned.
 
 </details>
 
@@ -101,13 +101,13 @@ Open <http://localhost:3000>. The first account you create becomes the instance 
 docker compose -f deploy/docker/compose.yaml logs api | grep 'first-run setup code'
 ```
 
-Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means adding every connected calendar again. Backups, upgrades and running behind a reverse proxy are covered in [Self-hosting with Docker](docs/self-hosting/docker.md).
+Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means adding every connected calendar again. Backups, upgrades and running behind a reverse proxy are covered in [Operations](docs/self-hosting/operations.md).
 
 ---
 
 ## Configuration
 
-Set these in `deploy/docker/.env` for Compose, or in `.env` at the repository root for development.
+Set these in `deploy/docker/.env` for Compose, or in `.env.local` at the repository root for development. The ones most installs need:
 
 | Variable | Required | Default | Meaning |
 | --- | --- | --- | --- |
@@ -115,18 +115,8 @@ Set these in `deploy/docker/.env` for Compose, or in `.env` at the repository ro
 | `DATABASE_URL` | **Yes** (development) | Set by Compose | Postgres connection string |
 | `HOMA_ENCRYPTION_KEY` | Once anyone connects a calendar | | Encrypts connected calendars' credentials at rest. 32 bytes, base64 (`openssl rand -base64 32`). With connections saved, the server won't start without it |
 | `HOMA_URL` | Behind a proxy | `http://localhost:3000` | The address people use to reach Homa. Sign-ins from any other origin are refused |
-| `HOMA_PORT` | No | `3000` | Compose only: the port published on the host |
-| `PORT` | No | `3000` | The port the server listens on |
-| `HOMA_ROLE` | No | `all` | `api` (HTTP), `worker` (background jobs) or `all` (both). Compose runs one service per role |
-| `HOMA_SYNC_INTERVAL_MINUTES` | No | `30` | How often each connected calendar is synced, 5 to 1440 |
-| `HOMA_SYNC_ALLOW_PRIVATE_NETWORKS` | No | `false` | Allow feeds and CalDAV servers on loopback and private networks (a server on your LAN). Off so a feed URL can't reach the server's own network |
-| `HOMA_GOOGLE_CLIENT_ID`, `HOMA_GOOGLE_CLIENT_SECRET` | For Google Calendar | | Your Google OAuth client. Set both or neither. See [Google Calendar](docs/self-hosting/google.md) |
-| `HOMA_MICROSOFT_CLIENT_ID`, `HOMA_MICROSOFT_CLIENT_SECRET` | For Outlook and Microsoft 365 | | Your Microsoft Entra ID app. Set both or neither. See [Microsoft](docs/self-hosting/microsoft.md) |
-| `POSTGRES_PASSWORD` | No | `homa` | Compose only: the database password. Set it before the first start |
-| `HOMA_IMAGE` | No | `homa:local` | Compose only: the image name to build and run |
-| `HOMA_WEB_DIR` | No | Set in the image | The built web app to serve, relative to the working directory. Unset in development, where Vite serves it |
-| `HOMA_SETUP_CODE` | No | Random | Tests only: pins the 4-digit first-run setup code |
-| `HOMA_AUTH_RATE_LIMIT` | No | `true` | Tests only: `false` lifts the sign-in and sign-up rate limits |
+
+Every variable, including sync, Google, Microsoft, web push and the Compose-only ones, is in [Environment variables](docs/self-hosting/environment.md).
 
 ---
 
@@ -136,7 +126,7 @@ You need [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
 
 ```sh
 bun install
-cp .env.example .env   # set DATABASE_URL and BETTER_AUTH_SECRET
+cp .env.example .env.local   # set DATABASE_URL and BETTER_AUTH_SECRET
 bun run dev            # web app on http://localhost:5173; API and worker on :3000
 ```
 
@@ -202,10 +192,14 @@ To report a vulnerability, follow the [security policy](.github/SECURITY.md). Pl
 
 | Doc | What it covers |
 | --- | --- |
-| [Self-hosting with Docker](docs/self-hosting/docker.md) | Install, settings, backups and upgrades |
+| [Docs index](docs/README.md) | Every doc in this repository |
+| [Quick start](docs/self-hosting/quick-start.md) | Running Homa with Docker Compose |
+| [Environment variables](docs/self-hosting/environment.md) | Every setting and its default |
+| [Operations](docs/self-hosting/operations.md) | Reverse proxy, upgrades, backup and restore, roles and health |
 | [Google Calendar](docs/self-hosting/google.md) | Creating the Google OAuth client for Google connections |
 | [Microsoft](docs/self-hosting/microsoft.md) | Creating the Entra ID app for Outlook.com and Microsoft 365 |
 | [Changelog](docs/CHANGELOG.md) | Changes, and the steps an upgrade needs |
+| [Features](docs/product/features.md) | What Homa does today |
 | [Product definition](docs/product/product-definition.md) | What Homa is for and its full feature set |
 | [Architecture](docs/product/architecture.md) | Stack, data model and key designs |
 | [Implementation plan](docs/product/implementation-plan.md) | Delivery phases and their status |

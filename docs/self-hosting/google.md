@@ -5,7 +5,7 @@ People on your instance can connect a Google account and sync its calendars both
 You need:
 
 - `HOMA_URL` set to the address people use to reach Homa, such as `https://homa.example.com`. Google sends people back to it, so it must match exactly.
-- `HOMA_ENCRYPTION_KEY` set (see [Docker](./docker.md)). Google's tokens are stored encrypted with it.
+- `HOMA_ENCRYPTION_KEY` set (see [Environment variables](./environment.md)). Google's tokens are stored encrypted with it.
 
 ## 1. Create a project and turn on the Calendar API
 
