@@ -34,10 +34,11 @@
 </p>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/week-dark.webp" />
-    <img src="docs/media/screenshots/week-light.webp" alt="Homa's week view with work, personal, family and fitness calendars in their own colors" width="900" />
-  </picture>
+  <a href="docs/media/homa-promo.mp4">
+    <img src="docs/media/homa-promo-preview.webp" alt="A short tour of Homa: the week view, quick add, the Jalali calendar in Farsi, calendars grouped by account, and light and dark themes" width="900" />
+  </a>
+  <br />
+  <sub><a href="docs/media/homa-promo.mp4">Watch the 33-second tour (MP4)</a></sub>
 </p>
 
 <details>
