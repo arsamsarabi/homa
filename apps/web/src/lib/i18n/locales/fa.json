@@ -309,12 +309,18 @@
     "presets": {
       "icloud": "iCloud",
       "fastmail": "Fastmail",
+      "mailbox": "mailbox.org",
+      "posteo": "Posteo",
+      "zoho": "Zoho Calendar",
       "nextcloud": "Nextcloud",
       "other": "سرور CalDAV دیگر"
     },
     "hints": {
       "icloud": "از گذرواژهٔ مخصوص برنامه در account.apple.com استفاده کنید، نه گذرواژهٔ حساب Apple.",
       "fastmail": "در Fastmail از بخش Settings → Privacy & Security یک گذرواژهٔ برنامه برای CalDAV بسازید.",
+      "mailbox": "در تنظیمات امنیتی حساب mailbox.org یک گذرواژهٔ برنامه بسازید و به‌جای گذرواژهٔ mailbox.org از آن استفاده کنید.",
+      "posteo": "در تنظیمات Posteo یک گذرواژهٔ برنامه بسازید و به‌جای گذرواژهٔ Posteo از آن استفاده کنید. نام کاربری، نشانی کامل Posteo شماست.",
+      "zoho": "در تنظیمات امنیتی حساب Zoho یک گذرواژهٔ مخصوص برنامه بسازید (وقتی تأیید دومرحله‌ای روشن است لازم است). نام کاربری، نشانی ایمیل Zoho شماست. اگر حساب شما در منطقهٔ دیگری است، ‎.com‎ را در نشانی عوض کنید، برای نمونه به ‎.eu‎.",
       "nextcloud": "نشانی سرور شما و سپس ‎/remote.php/dav‎، برای نمونه ‎https://cloud.example.com/remote.php/dav‎. در بخش Settings → Security یک گذرواژهٔ برنامه بسازید.",
       "other": "نشانی سرور CalDAV شما. Homa نشانی ‎/.well-known/caldav‎ آن را هم امتحان می‌کند."
     },

@@ -17,6 +17,9 @@ export type CaldavDrawerProps = {
 const PRESETS = {
   icloud: 'https://caldav.icloud.com',
   fastmail: 'https://caldav.fastmail.com',
+  mailbox: 'https://dav.mailbox.org',
+  posteo: 'https://posteo.de:8443',
+  zoho: 'https://calendar.zoho.com',
   nextcloud: 'https://',
   other: '',
 } as const;
