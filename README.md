@@ -292,6 +292,28 @@ Bug reports, ideas and pull requests are welcome. Questions and early ideas go t
 
 ---
 
+## Sister projects
+
+Another self-hostable app from the same maker, built the same way: source-available, runs with Docker Compose, and keeps your data on your own server.
+
+<table>
+  <tr>
+    <td width="460">
+      <a href="https://github.com/arsamsarabi/linkdean">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/arsamsarabi/linkdean/main/docs/media/screenshots/library-grid-dark.webp" />
+          <img src="https://raw.githubusercontent.com/arsamsarabi/linkdean/main/docs/media/screenshots/library-grid-light.webp" alt="Linkdean library in grid view" width="460" />
+        </picture>
+      </a>
+      <h3><img src="https://raw.githubusercontent.com/arsamsarabi/linkdean/main/docs/media/linkdean-symbol-color-256.png" alt="" width="28" height="28" />&nbsp;<a href="https://github.com/arsamsarabi/linkdean">Linkdean</a></h3>
+      <p>A self-hostable bookmark manager. Nested folders, encrypted vaults for private links, full-text search, import and export, and sharing on the same instance.</p>
+      <p><a href="https://linkdean.app">linkdean.app</a> · <a href="https://github.com/arsamsarabi/linkdean">GitHub</a></p>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## License
 
 Homa is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). © 2026 Arsam Sarabi.
