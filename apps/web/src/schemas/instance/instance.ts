@@ -16,6 +16,8 @@ export const PublicInstanceSchema = z.object({
   googleCalendar: z.boolean(),
   /** Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected on this server. */
   microsoftCalendar: z.boolean(),
+  /** Whether this server can email password reset links (it has email set up). */
+  passwordReset: z.boolean(),
 });
 export type PublicInstance = z.infer<typeof PublicInstanceSchema>;
 

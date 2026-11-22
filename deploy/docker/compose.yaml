@@ -27,9 +27,11 @@ x-homa: &homa
     HOMA_VAPID_PRIVATE_KEY: ${HOMA_VAPID_PRIVATE_KEY:-}
     HOMA_VAPID_SUBJECT: ${HOMA_VAPID_SUBJECT:-}
     HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS: ${HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS:-false}
-    # Email reminders: both or neither (docs/self-hosting/notifications.md).
+    # Email (reminders, address confirmation, password reset): both or neither (docs/self-hosting/notifications.md).
     HOMA_SMTP_URL: ${HOMA_SMTP_URL:-}
     HOMA_MAIL_FROM: ${HOMA_MAIL_FROM:-}
+    # New accounts confirm their email address; defaults to true when email is set up.
+    HOMA_REQUIRE_EMAIL_VERIFICATION: ${HOMA_REQUIRE_EMAIL_VERIFICATION:-}
     # Optional: your Google OAuth client, for Google Calendar connections (docs/self-hosting/google.md).
     HOMA_GOOGLE_CLIENT_ID: ${HOMA_GOOGLE_CLIENT_ID:-}
     HOMA_GOOGLE_CLIENT_SECRET: ${HOMA_GOOGLE_CLIENT_SECRET:-}

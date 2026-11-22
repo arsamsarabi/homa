@@ -99,6 +99,13 @@
       "when": 1795306745773,
       "tag": "0013_task_reminders_and_blocks",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795342142619,
+      "tag": "0014_verify_existing_users",
+      "breakpoints": true
     }
   ]
 }

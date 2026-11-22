@@ -21,6 +21,7 @@ Homa is configured with environment variables only. With Docker Compose, put the
 | --- | --- | --- |
 | `BETTER_AUTH_SECRET` | (none) | **Required.** Signs sessions and tokens. At least 32 characters (`openssl rand -base64 32`). Keep it secret and don't change it, or everyone is signed out |
 | `HOMA_AUTH_RATE_LIMIT` | `true` | Per-address limits on sign-in and sign-up attempts. Leave it on; `false` is for automated tests that sign up several accounts within seconds |
+| `HOMA_REQUIRE_EMAIL_VERIFICATION` | `true` with email, else `false` | New accounts confirm their email address before they can sign in. Defaults to `true` when `HOMA_SMTP_URL` is set. `true` without `HOMA_SMTP_URL` stops the server at startup. See [Accounts and passwords](./operations.md#accounts-and-passwords) |
 | `HOMA_SETUP_CODE` | Random | Pins the 4-digit first-run setup code instead of a random one printed in the log. For automated tests only; leave it unset in production |
 
 ## Sync and connected calendars
@@ -50,7 +51,7 @@ Homa is configured with environment variables only. With Docker Compose, put the
 | `HOMA_VAPID_PUBLIC_KEY`, `HOMA_VAPID_PRIVATE_KEY` | (unset) | The web push keys reminders are sent with, as `bunx web-push generate-vapid-keys` prints them. Set both or neither. Without them the first process that starts generates a pair and keeps it in the database, so it survives restarts and restores. Changing them makes every browser turn push on again |
 | `HOMA_VAPID_SUBJECT` | `HOMA_URL` if https, else `mailto:admin@localhost` | A `mailto:` or `https:` address push services can contact about this server. Apple's push service refuses `localhost` addresses, so set it for Safari and iOS |
 | `HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS` | `false` | Lets notification addresses (browser push services, and people's ntfy, Gotify and webhook channels) be plain `http` and on loopback, private and link-local networks, for an ntfy or Gotify on your LAN. Off by default, so a user-supplied address can't make the server reach its own network or a cloud metadata address. Push and public ntfy work without it |
-| `HOMA_SMTP_URL`, `HOMA_MAIL_FROM` | (unset) | The SMTP server email reminders go through (`smtp://user:pass@host:587` with STARTTLS, or `smtps://user:pass@host:465`) and the sender (`Homa <homa@example.com>`). Set both or neither; without them email isn't offered. See [Notifications](./notifications.md) |
+| `HOMA_SMTP_URL`, `HOMA_MAIL_FROM` | (unset) | The SMTP server Homa sends email through (`smtp://user:pass@host:587` with STARTTLS, or `smtps://user:pass@host:465`) and the sender (`Homa <homa@example.com>`): email reminders, address confirmation and password reset links. Set both or neither; without them email isn't offered and forgotten passwords are reset on the server (see [Accounts and passwords](./operations.md#accounts-and-passwords)). See [Notifications](./notifications.md) |
 
 ## Quick add
 

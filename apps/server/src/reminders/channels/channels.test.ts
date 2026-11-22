@@ -9,11 +9,14 @@ import { createApp } from '@/http';
 import { deliverReminders } from '@/reminders/delivery';
 import type { PushSettings } from '@/reminders/push';
 import { reminderSenders } from '@/reminders/senders';
-import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
+import { freshDb, startFakeSmtp, testAuth, testDatabaseUrl } from '@/testing';
 import { notifySettingsFrom } from './settings';
 
 type Json = Record<string, unknown>;
 type Hit = { path: string; headers: Headers; body: string };
+
+// A fake SMTP server, refusing RCPT with 550 on request.
+const smtp = await startFakeSmtp();
 
 describe.skipIf(!testDatabaseUrl)('notification channels', () => {
   let t: Awaited<ReturnType<typeof freshDb>>;
@@ -33,47 +36,6 @@ describe.skipIf(!testDatabaseUrl)('notification channels', () => {
     },
   });
   const base = `http://127.0.0.1:${http.port}`;
-
-  // A fake SMTP server: just enough of the protocol for nodemailer, refusing RCPT with 550 on request.
-  const mails: string[] = [];
-  let refuseMail = false;
-  type Smtp = { buf: string; inData: boolean; msg: string };
-  const smtp = Bun.listen<Smtp>({
-    hostname: '127.0.0.1',
-    port: 0,
-    socket: {
-      open(s) {
-        s.data = { buf: '', inData: false, msg: '' };
-        s.write('220 fake ESMTP\r\n');
-      },
-      data(s, chunk) {
-        s.data.buf += chunk.toString();
-        for (let i = s.data.buf.indexOf('\r\n'); i >= 0; i = s.data.buf.indexOf('\r\n')) {
-          const line = s.data.buf.slice(0, i);
-          s.data.buf = s.data.buf.slice(i + 2);
-          if (s.data.inData) {
-            if (line === '.') {
-              s.data.inData = false;
-              mails.push(s.data.msg);
-              s.data.msg = '';
-              s.write('250 queued\r\n');
-            } else s.data.msg += `${line}\n`;
-            continue;
-          }
-          const cmd = line.slice(0, 4).toUpperCase();
-          if (cmd === 'EHLO' || cmd === 'HELO') s.write('250 fake\r\n');
-          else if (cmd === 'RCPT' && refuseMail) s.write('550 no such user\r\n');
-          else if (cmd === 'DATA') {
-            s.data.inData = true;
-            s.write('354 go on\r\n');
-          } else if (cmd === 'QUIT') {
-            s.write('221 bye\r\n');
-            s.end();
-          } else s.write('250 ok\r\n');
-        }
-      },
-    },
-  });
 
   const env = {
     DATABASE_URL: 'postgres://homa@localhost/homa',
@@ -120,13 +82,13 @@ describe.skipIf(!testDatabaseUrl)('notification channels', () => {
     await t.db.delete(schema.reminders);
     await t.db.delete(schema.notifications);
     hits.length = 0;
-    mails.length = 0;
+    smtp.mails.length = 0;
     status = 200;
-    refuseMail = false;
+    smtp.refuse = false;
   });
   afterAll(async () => {
     await http.stop();
-    smtp.stop(true);
+    await smtp.stop();
     await t.drop();
   });
 
@@ -212,9 +174,9 @@ describe.skipIf(!testDatabaseUrl)('notification channels', () => {
   test('email goes to the account’s own address over SMTP; a refusal is reported', async () => {
     const id = (await call('POST', '/notification-channels', { kind: 'email', name: 'Mail' })).body.id;
     expect((await call('POST', `/notification-channels/${id}/test`)).body).toEqual({ ok: true });
-    expect(mails[0]).toContain('To: ada@example.com');
-    expect(mails[0]).toContain('Subject: Test from Homa');
-    refuseMail = true;
+    expect(smtp.mails[0]).toContain('To: ada@example.com');
+    expect(smtp.mails[0]).toContain('Subject: Test from Homa');
+    smtp.refuse = true;
     expect((await call('POST', `/notification-channels/${id}/test`)).body).toEqual({
       ok: false,
       error: 'the mail server answered 550',

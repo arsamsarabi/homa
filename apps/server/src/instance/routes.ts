@@ -4,6 +4,7 @@ import { createRoute, type OpenAPIHono, type z } from '@hono/zod-openapi';
 import { type Auth, requireAdmin, type UserVars } from '@/auth';
 import type { SyncSettings } from '@/connections';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
+import type { NotifySettings } from '@/reminders';
 import * as instance from './instance-service';
 import { InstanceSettings, InstanceSettingsPatch, PublicInstance } from './schemas';
 
@@ -44,7 +45,12 @@ const r = {
 const out = (s: instance.InstanceSettings): z.infer<typeof InstanceSettings> => InstanceSettings.parse(s);
 
 /** Instance routes. Without `deps` (the OpenAPI dump) they're described but don't run. */
-export function instanceApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings }): OpenAPIHono<UserVars> {
+export function instanceApi(deps?: {
+  db: Db;
+  auth: Auth;
+  sync?: SyncSettings;
+  notify?: NotifySettings;
+}): OpenAPIHono<UserVars> {
   const app = newApi<UserVars>();
   app.use('/admin/instance', requireAdmin(deps?.auth));
 
@@ -62,6 +68,7 @@ export function instanceApi(deps?: { db: Db; auth: Auth; sync?: SyncSettings }):
           await instance.getPublicInstance(db(), {
             googleCalendar: Boolean(deps?.sync?.google && deps.sync.key),
             microsoftCalendar: Boolean(deps?.sync?.microsoft && deps.sync.key),
+            passwordReset: Boolean(deps?.notify?.sendMail),
           }),
         ),
         200,

@@ -5,7 +5,8 @@ import { parseCredentialKey } from '@homa/sync';
 import nodemailer from 'nodemailer';
 import type { Config } from '@/config';
 
-export type Mail = { to: string; subject: string; text: string };
+/** An email: plain text, and an HTML version when there is one. */
+export type Mail = { to: string; subject: string; text: string; html?: string };
 
 export type NotifySettings = {
   /** Unset when HOMA_ENCRYPTION_KEY is: ntfy, Gotify and webhook channels are then unavailable. */

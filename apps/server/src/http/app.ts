@@ -14,6 +14,7 @@ import { tasksApi } from '@/tasks';
 import { handleError, notFound } from './errors';
 import { healthApi } from './health';
 import { newApi, openApiConfig } from './openapi';
+import { readyApi } from './ready';
 
 /**
  * `sync` is the connected-calendar settings, `push` web push and `notify` the notification channels;
@@ -25,6 +26,7 @@ export type AppDeps = { db: Db; auth: Auth; sync?: SyncSettings; push?: PushSett
 export function createApi(deps?: AppDeps): OpenAPIHono {
   const api = newApi();
   api.route('/', healthApi());
+  api.route('/', readyApi(deps?.db));
   api.route('/', calendarApi(deps));
   api.route('/', settingsApi(deps));
   api.route('/', instanceApi(deps));

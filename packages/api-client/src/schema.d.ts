@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness check: the database answers and its migrations are current */
+        get: operations["getReady"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendars": {
         parameters: {
             query?: never;
@@ -858,6 +875,16 @@ export interface components {
             /** @example 0.0.0 */
             version: string;
         };
+        Ready: {
+            /** @enum {string} */
+            status: "ready";
+        };
+        NotReady: {
+            /** @enum {string} */
+            status: "not-ready";
+            /** @example the database did not answer within 2 seconds */
+            reason: string;
+        };
         Calendar: {
             /** Format: uuid */
             id: string;
@@ -1062,6 +1089,8 @@ export interface components {
             googleCalendar: boolean;
             /** @description Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected */
             microsoftCalendar: boolean;
+            /** @description Whether this server can email password reset links (it has email set up) */
+            passwordReset: boolean;
         };
         InstanceSettings: {
             /**
@@ -1575,6 +1604,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    getReady: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ready to serve requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ready"];
+                };
+            };
+            /** @description Not ready, and why */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotReady"];
                 };
             };
         };
