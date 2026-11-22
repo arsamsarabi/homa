@@ -8,7 +8,7 @@ Homa runs as one image in two roles, plus Postgres:
 | `worker` | Runs background jobs (sync, reminders, clean-up). Starts after `api` is healthy |
 | `postgres` | Postgres 18. All data lives here |
 
-There is no published image yet, so Compose builds it from this repository. You need Docker with Compose v2 and `openssl`.
+Compose pulls the published image, `ghcr.io/arsamsarabi/homa`, for amd64 and arm64. You need Docker with Compose v2, `git` and `openssl`.
 
 ## Start
 
@@ -19,7 +19,8 @@ git clone https://github.com/arsamsarabi/homa.git
 cd homa
 echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > deploy/docker/.env
 echo "HOMA_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> deploy/docker/.env
-docker compose -f deploy/docker/compose.yaml up -d --build --wait
+echo "HOMA_VERSION=0.1.0" >> deploy/docker/.env
+docker compose -f deploy/docker/compose.yaml up -d --wait
 ```
 
 Open http://localhost:3000 to set up the instance. The first account becomes the admin, and creating it needs the 4-digit setup code the API prints in its log at start:
@@ -29,6 +30,8 @@ docker compose -f deploy/docker/compose.yaml logs api | grep 'first-run setup co
 ```
 
 Five wrong tries replace the code with a new one, also printed in the log.
+
+`HOMA_VERSION` pins the release you run; pick the newest from [Releases](https://github.com/arsamsarabi/homa/releases). Without it Compose runs `latest`. To check that the image came from this repository's release workflow, see [Verify the image](./operations.md#verify-the-image). To build the image from your checkout instead, add `--build` to `docker compose up`.
 
 Keep `deploy/docker/.env` with your backups: losing `HOMA_ENCRYPTION_KEY` means adding every connected calendar again.
 

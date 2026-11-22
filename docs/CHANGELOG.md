@@ -1,8 +1,12 @@
 # Changelog
 
-Changes that need people running Homa to do something on upgrade go under `### Breaking` in `[Unreleased]`, with the steps to take.
+Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z] - YYYY-MM-DD` section, which becomes the GitHub Release notes (see [Releasing](self-hosting/releasing.md)). Changes that need people running Homa to do something on upgrade go under `### Breaking`, with the steps to take.
 
 ## [Unreleased]
+
+## [0.1.0] - unreleased
+
+The first release, and the first published image: `ghcr.io/arsamsarabi/homa`, for linux/amd64 and linux/arm64, signed with cosign. Compose now pulls it instead of building from source; set `HOMA_VERSION` in `deploy/docker/.env` to pin a version (see `docs/self-hosting/operations.md`). `HOMA_IMAGE` is gone. `/api/health` reports the version.
 
 Notification channels. Under Settings → Notification channels, people can also get reminders by email, on ntfy, on Gotify, or as a signed webhook (JSON with an `X-Homa-Signature` HMAC-SHA256 header). Each channel picks event reminders, standalone reminders or both, has a "Send test" button, and shows its last error when it keeps failing. Email needs `HOMA_SMTP_URL` and `HOMA_MAIL_FROM`, and goes only to the account's own address. ntfy, Gotify and webhook channels need `HOMA_ENCRYPTION_KEY`, and their addresses must be public https unless `HOMA_NOTIFY_ALLOW_PRIVATE_NETWORKS=true`. Migration `0011_notification_channels` adds the `notification_channels` table.
 

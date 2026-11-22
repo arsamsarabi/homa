@@ -12,7 +12,7 @@ Homa is configured with environment variables only. With Docker Compose, put the
 | `HOMA_URL` | `http://localhost:3000` | The address people use to reach Homa. Sign-ins from any other origin are refused, and the Google and Microsoft redirect URIs are built from it, so set it to your real address behind a reverse proxy. See [Reverse proxy](./operations.md#reverse-proxy) |
 | `HOMA_ROLE` | `all` | `api` (HTTP only), `worker` (background jobs only) or `all` (both in one process). Compose runs one service per role. See [Roles](./operations.md#roles) |
 | `PORT` | `3000` | The port the server listens on inside the container |
-| `HOMA_VERSION` | `0.0.0` | The version reported by `/api/health` and the OpenAPI document. Nothing sets it yet |
+| `HOMA_VERSION` | Set in the image | The version reported by `/api/health` and the OpenAPI document. Release images set it to their version; images you build yourself and development report `0.0.0` |
 | `HOMA_WEB_DIR` | Set in the image | The built web app to serve, relative to the working directory. Unset in development, where Vite serves it |
 
 ## Auth
@@ -64,4 +64,4 @@ These are read by [`deploy/docker/compose.yaml`](../../deploy/docker/compose.yam
 | --- | --- | --- |
 | `POSTGRES_PASSWORD` | `homa` | The database password. Set it before the first start; changing it later needs the same change inside Postgres |
 | `HOMA_PORT` | `3000` | The port published on the host. `127.0.0.1:3000` publishes it on loopback only, for a reverse proxy on the same machine |
-| `HOMA_IMAGE` | `homa:local` | The image name to build and run |
+| `HOMA_VERSION` | `latest` | The release of `ghcr.io/arsamsarabi/homa` to pull and run, such as `0.1.0`. Pin one; see [Upgrades](./operations.md#upgrades). The container reports the version baked into its image, not this value |
