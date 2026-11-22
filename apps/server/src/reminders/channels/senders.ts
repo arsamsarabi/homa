@@ -5,7 +5,7 @@ import { type Db, type Executor, type ReminderKind, repo } from '@homa/db';
 import { DeliveryError, notificationKind, type Sender } from '@/reminders/channels';
 import { type ChannelConfig, type GotifyConfig, type NtfyConfig, openConfig, type WebhookConfig } from './config';
 import { postJson } from './http';
-import { type Message, mailText, reminderMessage } from './message';
+import { type Message, reminderMail, reminderMessage } from './message';
 import type { NotifySettings } from './settings';
 
 /** What a webhook receives. */
@@ -54,7 +54,7 @@ export async function sendOn(
   if (ch.kind === 'email') {
     if (!s.sendMail) throw new DeliveryError('email is not set up on this server', false);
     try {
-      await s.sendMail({ to: to.email, subject: m.subject, text: mailText(m, s.appUrl, to.language) });
+      await s.sendMail(reminderMail(m, s.appUrl, to));
     } catch (err) {
       throw mailError(err);
     }
