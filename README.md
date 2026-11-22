@@ -292,7 +292,7 @@ Bug reports, ideas and pull requests are welcome. Questions and early ideas go t
 
 ---
 
-## Also by Arsam Sarabi
+## Also by Arsam
 
 Another self-hostable app by the same author.
 
