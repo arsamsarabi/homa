@@ -1,8 +1,8 @@
 // Sending one message on one channel (email, ntfy, Gotify, webhook), and recording the result on the
 // channel so Settings can show one that keeps failing. See docs/design/phase-4b-channels.md.
 import { createHmac } from 'node:crypto';
-import { type Db, type Executor, repo } from '@homa/db';
-import { DeliveryError, type Sender } from '@/reminders/channels';
+import { type Db, type Executor, type ReminderKind, repo } from '@homa/db';
+import { DeliveryError, notificationKind, type Sender } from '@/reminders/channels';
 import { type ChannelConfig, type GotifyConfig, type NtfyConfig, openConfig, type WebhookConfig } from './config';
 import { postJson } from './http';
 import { type Message, mailText, reminderMessage } from './message';
@@ -15,7 +15,7 @@ export type WebhookPayload = {
   title: string;
   startAt: string;
   allDay: boolean;
-  kind: 'event' | 'standalone';
+  kind: ReminderKind;
   fireAt: string;
   url: string;
 };
@@ -118,7 +118,7 @@ export const payloadOf = (n: repo.NotificationRow, appUrl: string): WebhookPaylo
   title: n.title,
   startAt: n.occurrenceStart.toISOString(),
   allDay: n.allDay,
-  kind: n.eventId ? 'event' : 'standalone',
+  kind: notificationKind(n),
   fireAt: n.fireAt.toISOString(),
   url: appUrl,
 });

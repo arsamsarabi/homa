@@ -1,7 +1,11 @@
 // Tasks for one user: create, change, complete (a repeating task moves to its next due instead),
-// reopen and delete. A subtask is one level deep and always in its parent's project.
+// reopen and delete, their reminders, and their time blocks on the calendar. A subtask is one
+// level deep and always in its parent's project.
 import { NotFoundError, nextDue, TASK_LIMITS, ValidationError, wallOf } from '@homa/core';
 import { type Db, type Executor, repo } from '@homa/db';
+import { createEvent, deleteEvent, updateEvent } from '@/calendar/events-service';
+import type { TaskOut } from './responses';
+import { syncTaskReminders } from './task-reminders';
 
 export type TaskFields = {
   title: string;
@@ -14,6 +18,7 @@ export type TaskFields = {
   dueTime: string | null;
   tz: string;
   rrule: string | null;
+  reminders: number[];
 };
 
 const EMPTY: Omit<TaskFields, 'title' | 'tz'> = {
@@ -25,6 +30,7 @@ const EMPTY: Omit<TaskFields, 'title' | 'tz'> = {
   dueDate: null,
   dueTime: null,
   rrule: null,
+  reminders: [],
 };
 
 /** Names without duplicates (ignoring case), the first spelling kept. */
@@ -66,50 +72,67 @@ async function setTags(tx: Executor, userId: string, taskId: string, names: read
   await repo.replaceTaskTags(tx, userId, taskId, wanted);
 }
 
-async function found(tx: Executor, userId: string, id: string): Promise<repo.TaskWithTags> {
+async function found(tx: Executor, userId: string, id: string): Promise<TaskOut> {
   const t = await repo.findOwnedTask(tx, userId, id);
   if (!t) throw new NotFoundError();
-  return t;
+  return { ...t, reminders: (await repo.listTaskReminders(tx, [t.id])).get(t.id) ?? [] };
 }
 
-export const listTasks = (db: Db, userId: string, completed: boolean): Promise<repo.TaskWithTags[]> =>
-  completed ? repo.listCompletedTasks(db, userId, TASK_LIMITS.completedListed) : repo.listOpenTasks(db, userId);
+/** Tasks with their reminders. */
+export async function withReminders(db: Executor, list: readonly repo.TaskWithTags[]): Promise<TaskOut[]> {
+  const reminders = await repo.listTaskReminders(
+    db,
+    list.map((t) => t.id),
+  );
+  return list.map((t) => ({ ...t, reminders: reminders.get(t.id) ?? [] }));
+}
+
+export async function listTasks(db: Db, userId: string, completed: boolean): Promise<TaskOut[]> {
+  return withReminders(
+    db,
+    completed
+      ? await repo.listCompletedTasks(db, userId, TASK_LIMITS.completedListed)
+      : await repo.listOpenTasks(db, userId),
+  );
+}
 
 export function createTask(
   db: Db,
   userId: string,
   input: Partial<TaskFields> & Pick<TaskFields, 'title' | 'tz'>,
-): Promise<repo.TaskWithTags> {
+): Promise<TaskOut> {
   const f: TaskFields = { ...EMPTY, ...input };
   checkDue(f);
   return db.transaction(async (tx) => {
     if ((await repo.countOpenTasks(tx, userId)) >= TASK_LIMITS.openPerUser)
       throw new ValidationError(`You can have at most ${TASK_LIMITS.openPerUser} open tasks`);
-    const { tags, ...columns } = f;
+    const { tags, reminders, ...columns } = f;
     const row = await repo.insertTask(tx, {
       ...columns,
       ownerUserId: userId,
       projectId: await placement(tx, userId, f),
     });
     await setTags(tx, userId, row.id, tags);
+    await syncTaskReminders(tx, row, reminders);
     return found(tx, userId, row.id);
   });
 }
 
-export function updateTask(db: Db, userId: string, id: string, patch: Partial<TaskFields>): Promise<repo.TaskWithTags> {
+export function updateTask(db: Db, userId: string, id: string, patch: Partial<TaskFields>): Promise<TaskOut> {
   return db.transaction(async (tx) => {
     const current = await found(tx, userId, id);
     if (Object.keys(patch).length === 0) return current;
     const next = { ...current, ...patch };
     checkDue(next);
-    const { tags, ...columns } = patch;
+    const { tags, reminders, ...columns } = patch;
     if ('projectId' in patch || 'parentId' in patch) {
       columns.projectId = await placement(tx, userId, next, id);
       // A parent's subtasks follow it to its project.
       if (!next.parentId) await repo.setSubtasksProject(tx, id, columns.projectId);
     }
-    if (Object.keys(columns).length) await repo.updateOwnedTask(tx, userId, id, columns);
+    const row = Object.keys(columns).length ? await repo.updateOwnedTask(tx, userId, id, columns) : undefined;
     if (tags) await setTags(tx, userId, id, tags);
+    if (reminders || 'dueDate' in patch || 'dueTime' in patch) await syncTaskReminders(tx, row ?? current, reminders);
     return found(tx, userId, id);
   });
 }
@@ -118,7 +141,7 @@ export function updateTask(db: Db, userId: string, id: string, patch: Partial<Ta
  * Completes a task and its open subtasks. A repeating task instead moves to its next due (from
  * today in its zone) and its subtasks open again; once its rule ends it completes like any other.
  */
-export function completeTask(db: Db, userId: string, id: string, now = new Date()): Promise<repo.TaskWithTags> {
+export function completeTask(db: Db, userId: string, id: string, now = new Date()): Promise<TaskOut> {
   return db.transaction(async (tx) => {
     const t = await found(tx, userId, id);
     if (t.completedAt) return t;
@@ -127,23 +150,24 @@ export function completeTask(db: Db, userId: string, id: string, now = new Date(
       t.rrule && t.dueDate
         ? nextDue({ date: t.dueDate, time: t.dueTime?.slice(0, 5) ?? null, tz: t.tz, rrule: t.rrule }, today)
         : null;
-    if (next) {
-      await repo.updateOwnedTask(tx, userId, id, { dueDate: next.date, dueTime: next.time });
-      await repo.reopenSubtasks(tx, id);
-    } else {
-      await repo.updateOwnedTask(tx, userId, id, { completedAt: now });
-      await repo.completeSubtasks(tx, id, now);
-    }
+    const row = next
+      ? await repo.updateOwnedTask(tx, userId, id, { dueDate: next.date, dueTime: next.time })
+      : await repo.updateOwnedTask(tx, userId, id, { completedAt: now });
+    if (next) await repo.reopenSubtasks(tx, id);
+    else await repo.completeSubtasks(tx, id, now);
+    // The reminders move to the next due, or stop.
+    if (row) await syncTaskReminders(tx, row, undefined, now);
     return found(tx, userId, id);
   });
 }
 
 /** Opens a completed task again, and its parent with it, so an open subtask is never under a done task. */
-export function reopenTask(db: Db, userId: string, id: string): Promise<repo.TaskWithTags> {
+export function reopenTask(db: Db, userId: string, id: string, now = new Date()): Promise<TaskOut> {
   return db.transaction(async (tx) => {
     const t = await found(tx, userId, id);
     if (!t.completedAt) return t;
-    await repo.updateOwnedTask(tx, userId, id, { completedAt: null });
+    const row = await repo.updateOwnedTask(tx, userId, id, { completedAt: null });
+    if (row) await syncTaskReminders(tx, row, undefined, now);
     if (t.parentId) await repo.updateOwnedTask(tx, userId, t.parentId, { completedAt: null });
     return found(tx, userId, id);
   });
@@ -151,4 +175,39 @@ export function reopenTask(db: Db, userId: string, id: string): Promise<repo.Tas
 
 export async function deleteTask(db: Db, userId: string, id: string): Promise<void> {
   if (!(await repo.deleteOwnedTask(db, userId, id))) throw new NotFoundError();
+}
+
+export type BlockFields = { calendarId: string; start: Date; end: Date };
+
+/**
+ * Puts a time block for the task on the calendar: an ordinary event named after it, linked by the
+ * task's `scheduled_event_id`. A task that has a block gets it moved (and its calendar changed).
+ */
+export async function scheduleTask(db: Db, userId: string, id: string, b: BlockFields): Promise<TaskOut> {
+  const t = await found(db, userId, id);
+  if (t.scheduledEventId) {
+    await updateEvent(db, userId, t.scheduledEventId, { calendarId: b.calendarId, start: b.start, end: b.end });
+    return found(db, userId, id);
+  }
+  // Two transactions: if linking fails, the event stays on the calendar as a plain event.
+  const event = await createEvent(db, userId, {
+    calendarId: b.calendarId,
+    summary: t.title,
+    description: t.notes,
+    location: null,
+    start: b.start,
+    end: b.end,
+    allDay: false,
+    tz: t.tz,
+    rrule: null,
+  });
+  await repo.updateOwnedTask(db, userId, id, { scheduledEventId: event.id });
+  return found(db, userId, id);
+}
+
+/** Takes the task's time block off the calendar (deletes its event). */
+export async function unscheduleTask(db: Db, userId: string, id: string): Promise<TaskOut> {
+  const t = await found(db, userId, id);
+  if (t.scheduledEventId) await deleteEvent(db, userId, t.scheduledEventId);
+  return found(db, userId, id);
 }

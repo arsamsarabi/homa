@@ -1,3 +1,4 @@
+import { VisuallyHidden } from '@mantine/core';
 import type { CSSProperties, JSX, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Placed, TimedItem } from '@/services/calendar-layout';
@@ -47,7 +48,10 @@ export function DayColumn({ grid, day, index, items, ghost, draft, colors, time 
               if ((e.nativeEvent as globalThis.PointerEvent).pointerType === 'touch' || e.detail === 0) grid.open(p.o);
             }}
           >
-            <b>{p.o.summary || t('calendar.untitled')}</b>
+            <b>
+              {p.o.taskDone ? <s>{p.o.summary || t('calendar.untitled')}</s> : p.o.summary || t('calendar.untitled')}
+              {p.o.taskDone && <VisuallyHidden>{t('calendar.taskDone')}</VisuallyHidden>}
+            </b>
             <span>
               {time.format(p.start)}
               <span className={classes.end}> – {time.format(p.end)}</span>

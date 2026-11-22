@@ -20,6 +20,8 @@ const task = (title: string, extra: Partial<Task> = {}): Task => ({
   dueTime: null,
   tz: TZ,
   rrule: null,
+  reminders: [],
+  block: null,
   completedAt: null,
   createdAt: '2026-11-01T00:00:00Z',
   updatedAt: '2026-11-01T00:00:00Z',
@@ -38,6 +40,19 @@ function fakeTasks(start: Task[], secondaryCalendar = 'none') {
     if (p === '/api/projects')
       return json([{ id: 'p1', name: 'Garden', color: '#669070', createdAt: '2026-11-01T00:00:00Z' }]);
     if (p === '/api/tags') return json([{ id: 'g1', name: 'errand' }]);
+    if (p === '/api/calendars')
+      return json([
+        {
+          id: 'c1',
+          name: 'Personal',
+          color: '#7d7fa3',
+          connectionId: null,
+          readOnly: false,
+          hidden: false,
+          createdAt: '2026-11-01T00:00:00Z',
+          updatedAt: '2026-11-01T00:00:00Z',
+        },
+      ]);
     if (!p.startsWith('/api/tasks')) return user(url, req);
     if (req.method === 'GET')
       return json(
@@ -50,6 +65,11 @@ function fakeTasks(start: Task[], secondaryCalendar = 'none') {
       const created = task(`new${list.length}`, body as Partial<Task>);
       list = [...list, created];
       return json(created, 201);
+    }
+    if (p.endsWith('/block')) {
+      const b = body as { calendarId: string; start: string; end: string };
+      list = list.map((t) => (t.id === id ? { ...t, block: { eventId: 'e1', ...b } } : t));
+      return json(list.find((t) => t.id === id));
     }
     if (p.endsWith('/complete')) {
       list = list.map((t) => (t.id === id ? { ...t, completedAt: '2026-11-21T10:00:00Z' } : t));
@@ -160,9 +180,39 @@ describe('tasks page', () => {
           dueDate: TODAY,
           dueTime: '17:30',
           rrule: 'FREQ=WEEKLY',
+          reminders: [],
         },
       }),
     );
+  });
+
+  test('the drawer sets reminders and blocks time on the calendar', async () => {
+    const { api, sent } = fakeTasks([task('Report', { dueDate: '2030-07-01', dueTime: '15:00' })]);
+    renderApp('/tasks?list=upcoming', api);
+    fireEvent.click(await screen.findByRole('button', { name: /Report/ }));
+    const drawer = await screen.findByRole('dialog', { name: 'Edit task' });
+    fireEvent.click(within(drawer).getByRole('checkbox', { name: '1 hour before' }));
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(sent[0]?.body).toMatchObject({ reminders: [60] }));
+
+    fireEvent.click(await screen.findByRole('button', { name: /Report/ }));
+    const again = await screen.findByRole('dialog', { name: 'Edit task' });
+    // The block starts at the due time; 2 hours on the only writable calendar.
+    expect((within(again).getByLabelText('Starts') as HTMLInputElement).value).toBe('15:00');
+    fireEvent.change(within(again).getByRole('combobox', { name: 'Length' }), { target: { value: '120' } });
+    await waitFor(() =>
+      expect((within(again).getByRole('combobox', { name: 'Calendar' }) as HTMLSelectElement).value).toBe('c1'),
+    );
+    fireEvent.click(within(again).getByRole('button', { name: 'Block time' }));
+    await waitFor(() =>
+      expect(sent[1]).toEqual({
+        method: 'PUT',
+        path: '/api/tasks/Report/block',
+        // 15:00 BST is 14:00Z.
+        body: { calendarId: 'c1', start: '2030-07-01T14:00:00.000Z', end: '2030-07-01T16:00:00.000Z' },
+      }),
+    );
+    expect(await within(again).findByRole('button', { name: 'Move the block' })).toBeTruthy();
   });
 
   test('a failed load shows why, with a retry', async () => {

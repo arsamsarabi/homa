@@ -3,6 +3,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { schema } from '@homa/db';
 import { createApp } from '@/http';
+import { deliverReminders } from '@/reminders';
 import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 import { completeTask } from './tasks-service';
 
@@ -50,6 +51,8 @@ describe.skipIf(!testDatabaseUrl)('tasks', () => {
     await t.db.delete(schema.tasks);
     await t.db.delete(schema.projects);
     await t.db.delete(schema.tags);
+    await t.db.delete(schema.notifications);
+    await t.db.delete(schema.events);
   });
   afterAll(async () => {
     await t.drop();
@@ -229,5 +232,103 @@ describe.skipIf(!testDatabaseUrl)('tasks', () => {
     expect(out.tasks as Json[]).toMatchObject([
       { title: 'Paint', projectId: pid, tags: ['diy'], dueDate: '2026-12-01' },
     ]);
+  });
+
+  describe('reminders', () => {
+    const senders = { push: async (): Promise<void> => {} };
+    const notes = () => t.db.select().from(schema.notifications);
+
+    test('need a due date, are sorted, and fire before the due', async () => {
+      expect((await call('POST', '/tasks', { title: 'x', tz: 'UTC', reminders: [10] })).status).toBe(400);
+      const x = await task({ title: 'Call the bank', dueDate: '2030-07-01', dueTime: '15:00', reminders: [60, 0, 60] });
+      expect(x.reminders).toEqual([0, 60]);
+      // 15:00 BST is 14:00Z; an hour before is 13:00Z.
+      await deliverReminders(t.db, senders, new Date('2030-07-01T12:59:00Z'));
+      expect(await notes()).toEqual([]);
+      await deliverReminders(t.db, senders, new Date('2030-07-01T13:00:30Z'));
+      await deliverReminders(t.db, senders, new Date('2030-07-01T13:01:30Z'));
+      const [n] = await notes();
+      expect(n).toMatchObject({ taskId: x.id, title: 'Call the bank', allDay: false });
+      const listed = (await call('GET', '/notifications')).body.items as Json[];
+      expect(listed[0]).toMatchObject({ kind: 'task', taskId: x.id });
+      // Done on the notification completes the task.
+      await call('POST', `/notifications/${n?.id}/done`);
+      expect((await call('GET', '/tasks?completed=true')).body[0]?.id).toBe(x.id);
+      // A completed task's other reminder doesn't fire.
+      await deliverReminders(t.db, senders, new Date('2030-07-01T14:00:30Z'));
+      expect(await notes()).toHaveLength(1);
+    });
+
+    test('a date-only due fires at 09:00 in its zone, and a repeating task reminds again', async () => {
+      const x = await task({ title: 'Bins', dueDate: '2030-07-01', rrule: 'FREQ=WEEKLY', reminders: [0] });
+      await deliverReminders(t.db, senders, new Date('2030-07-01T08:00:30Z'));
+      expect((await notes())[0]).toMatchObject({ allDay: true, fireAt: new Date('2030-07-01T08:00:00Z') });
+      await completeTask(t.db, adaId, String(x.id), new Date('2030-07-01T10:00:00Z'));
+      await deliverReminders(t.db, senders, new Date('2030-07-08T08:00:30Z'));
+      expect(await notes()).toHaveLength(2);
+    });
+
+    test('moving the due moves the reminder; removing it stops it', async () => {
+      const x = await task({ title: 'Pay', dueDate: '2030-07-01', reminders: [0] });
+      await call('PATCH', `/tasks/${x.id}`, { dueDate: '2030-07-02' });
+      await deliverReminders(t.db, senders, new Date('2030-07-01T08:00:30Z'));
+      expect(await notes()).toEqual([]);
+      await deliverReminders(t.db, senders, new Date('2030-07-02T08:00:30Z'));
+      expect(await notes()).toHaveLength(1);
+      expect((await call('PATCH', `/tasks/${x.id}`, { reminders: [] })).body.reminders).toEqual([]);
+    });
+  });
+
+  describe('time blocks', () => {
+    const calendar = async (as = ada): Promise<string> =>
+      String(((await call('GET', '/calendars', undefined, as)).body as Json[])[0]?.id);
+    const occurrences = async (): Promise<Json[]> =>
+      (await call('GET', '/occurrences?from=2030-07-01T00:00:00Z&to=2030-07-02T00:00:00Z')).body;
+
+    test('scheduling makes a linked event that shows done with the task, and can move or go', async () => {
+      const calendarId = await calendar();
+      const x = await task({ title: 'Write report', notes: 'Q3' });
+      const block = { calendarId, start: '2030-07-01T09:00:00Z', end: '2030-07-01T10:30:00Z' };
+      const scheduled = await call('PUT', `/tasks/${x.id}/block`, block);
+      expect(scheduled.status).toBe(200);
+      expect(scheduled.body.block).toMatchObject({ calendarId, start: '2030-07-01T09:00:00.000Z' });
+      const eventId = String((scheduled.body.block as Json).eventId);
+      expect((await call('GET', `/events/${eventId}`)).body).toMatchObject({
+        summary: 'Write report',
+        description: 'Q3',
+      });
+      expect(await occurrences()).toMatchObject([{ eventId, taskId: x.id, taskDone: false }]);
+
+      const moved = await call('PUT', `/tasks/${x.id}/block`, {
+        ...block,
+        start: '2030-07-01T13:00:00Z',
+        end: '2030-07-01T14:00:00Z',
+      });
+      expect((moved.body.block as Json).eventId).toBe(eventId);
+      expect((moved.body.block as Json).start).toBe('2030-07-01T13:00:00.000Z');
+
+      await call('POST', `/tasks/${x.id}/complete`);
+      expect(await occurrences()).toMatchObject([{ taskDone: true }]);
+
+      expect((await call('DELETE', `/tasks/${x.id}/block`)).body.block).toBeNull();
+      expect(await occurrences()).toEqual([]);
+    });
+
+    test('deleting the event on the calendar unlinks it; bad blocks and other users are refused', async () => {
+      const calendarId = await calendar();
+      const x = await task({ title: 'Read' });
+      const bad = [
+        { calendarId, start: '2030-07-01T10:00:00Z', end: '2030-07-01T09:00:00Z' },
+        { calendarId, start: '2030-07-01T10:00:00Z', end: '2030-07-02T11:00:00Z' },
+      ];
+      for (const b of bad) expect((await call('PUT', `/tasks/${x.id}/block`, b)).status).toBe(400);
+      const b = { calendarId, start: '2030-07-01T09:00:00Z', end: '2030-07-01T10:00:00Z' };
+      expect((await call('PUT', `/tasks/${x.id}/block`, b, bob)).status).toBe(404);
+      // Someone else's calendar is unknown here, as for events.
+      expect((await call('PUT', `/tasks/${x.id}/block`, { ...b, calendarId: await calendar(bob) })).status).toBe(400);
+      const eventId = String(((await call('PUT', `/tasks/${x.id}/block`, b)).body.block as Json).eventId);
+      await call('DELETE', `/events/${eventId}`);
+      expect((await open()).find((y) => y.id === x.id)?.block).toBeNull();
+    });
   });
 });

@@ -2,7 +2,8 @@
 import { type ResolvedOccurrence, resolveOccurrences } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 
-export type OccurrenceView = ResolvedOccurrence<repo.EventRow>;
+/** An occurrence, and the task it is a time block for, if any. */
+export type OccurrenceView = ResolvedOccurrence<repo.EventRow> & { task?: { id: string; done: boolean } };
 
 /** Every occurrence of the user's events overlapping [from, to), sorted by start. */
 export async function listOccurrences(
@@ -16,6 +17,13 @@ export async function listOccurrences(
   const late = await repo.listEventsPastCache(db, userId, to, calendarIds);
   const ids = [...new Set([...cached.map((c) => c.eventId), ...late.map((e) => e.id)])];
   if (!ids.length) return [];
-  const [events, overrides] = await Promise.all([repo.listEventsByIds(db, ids), repo.listOverrides(db, ids)]);
-  return resolveOccurrences({ cached, late, events, overrides, from, to });
+  const [events, overrides, blocks] = await Promise.all([
+    repo.listEventsByIds(db, ids),
+    repo.listOverrides(db, ids),
+    repo.tasksByBlock(db, ids),
+  ]);
+  return resolveOccurrences({ cached, late, events, overrides, from, to }).map((o) => ({
+    ...o,
+    task: blocks.get(o.event.id),
+  }));
 }

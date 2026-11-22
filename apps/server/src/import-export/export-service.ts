@@ -5,7 +5,7 @@ import { type Db, repo } from '@homa/db';
 import type { z } from '@hono/zod-openapi';
 import { calendarOut, eventOut } from '@/calendar';
 import { reminderOut } from '@/reminders';
-import { projectOut, tagOut, taskOut } from '@/tasks';
+import { projectOut, tagOut, taskOut, withReminders } from '@/tasks';
 import { DataExport, EXPORT_VERSION } from './schemas';
 
 export async function exportData(db: Db, userId: string, now = new Date()): Promise<z.infer<typeof DataExport>> {
@@ -45,6 +45,6 @@ export async function exportData(db: Db, userId: string, now = new Date()): Prom
     reminders: standalone.map(reminderOut),
     projects: projects.map(projectOut),
     tags: tags.map(tagOut),
-    tasks: tasks.map(taskOut),
+    tasks: (await withReminders(db, tasks)).map(taskOut),
   });
 }

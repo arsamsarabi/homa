@@ -34,6 +34,9 @@ export const OccurrenceSchema = z.object({
   tz: z.string(),
   recurring: z.boolean(),
   overridden: z.boolean(),
+  /** The task this event is a time block for, and whether it is done. */
+  taskId: z.string().nullable().default(null),
+  taskDone: z.boolean().default(false),
 });
 export type Occurrence = z.infer<typeof OccurrenceSchema>;
 export const OccurrenceListSchema = z.array(OccurrenceSchema);

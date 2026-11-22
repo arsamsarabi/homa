@@ -67,7 +67,8 @@
       "moved": "رویداد جابه‌جا شد",
       "deleted": "رویداد حذف شد"
     },
-    "timeZone": "منطقهٔ زمانی"
+    "timeZone": "منطقهٔ زمانی",
+    "taskDone": "کار انجام شد"
   },
   "common": {
     "cancel": "لغو",
@@ -455,7 +456,8 @@
     },
     "reminderKinds": {
       "event": "یادآوری رویدادها",
-      "standalone": "یادآوری‌های مستقل"
+      "standalone": "یادآوری‌های مستقل",
+      "task": "یادآوری کارها"
     },
     "allReminders": "همهٔ یادآوری‌ها",
     "failing": "ناموفق",
@@ -583,6 +585,27 @@
     "tagFailed": "برچسب تغییر نکرد: {{message}}",
     "tagDelete": "حذف برچسب",
     "tagDeleteHint": "از همهٔ کارها برداشته می‌شود.",
-    "tagDeleted": "برچسب «{{name}}» حذف شد"
+    "tagDeleted": "برچسب «{{name}}» حذف شد",
+    "reminderHint": "پیش از ساعت موعد، یا پیش از ساعت ۹ صبح روز موعد اگر ساعتی ندارد. حداکثر ۵ تا.",
+    "reminderNeedsDate": "برای افزودن یادآوری، تاریخ موعد را انتخاب کنید.",
+    "hasReminders": "یادآوری دارد",
+    "block": "زمان‌بندی",
+    "blockHint": "برای این کار در تقویم وقت بگذارید. وقتی کار انجام شود، آنجا هم انجام‌شده نشان داده می‌شود.",
+    "blockDate": "روز",
+    "blockStart": "شروع",
+    "blockLength": "مدت",
+    "blockCalendar": "تقویم",
+    "length": "{{count}} دقیقه",
+    "blockAdd": "رزرو وقت",
+    "blockMove": "جابه‌جایی زمان",
+    "blockRemove": "حذف زمان‌بندی",
+    "blockSaved": "وقت در تقویم رزرو شد",
+    "blockRemoved": "زمان‌بندی حذف شد",
+    "blockFailed": "زمان‌بندی تغییر نکرد: {{message}}",
+    "blockAt": "{{when}}، {{calendar}}",
+    "blocked": "زمان‌بندی: {{when}}",
+    "noCalendars": "برای رزرو وقت به تقویمی نیاز دارید که بتوانید ویرایشش کنید.",
+    "atDue": "سر موعد",
+    "dayTime": "{{day}}، {{time}}"
   }
 }

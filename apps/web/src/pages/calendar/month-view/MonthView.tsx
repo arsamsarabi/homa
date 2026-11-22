@@ -70,6 +70,7 @@ export function MonthView(): JSX.Element {
                 title={o.summary || t('calendar.untitled')}
                 color={colors[o.calendarId]}
                 time={o.allDay ? undefined : formats.time.format(m.span(o).start)}
+                done={o.taskDone ? t('calendar.taskDone') : undefined}
                 onPointerDown={(e: PointerEvent<HTMLButtonElement>): void => m.beginDrag(e, o, d)}
                 onClick={(e: MouseEvent<HTMLButtonElement>): void => {
                   // Mouse clicks open through the drag handler; touch taps and the keyboard open here.

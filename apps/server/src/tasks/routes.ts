@@ -7,6 +7,7 @@ import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/
 import * as projects from './projects-service';
 import { projectOut, tagOut, taskOut } from './responses';
 import {
+  BlockInput,
   Id,
   Project,
   ProjectInput,
@@ -71,6 +72,24 @@ const r = {
     summary: 'Open a completed task again (and its parent)',
     request: { params: Id },
     responses: changed,
+  }),
+  scheduleTask: createRoute({
+    method: 'put',
+    path: '/tasks/{id}/block',
+    operationId: 'scheduleTask',
+    tags: tags.tasks,
+    summary: 'Block time for the task on the calendar (an event linked to it), or move its block',
+    request: { params: Id, ...jsonBody(BlockInput) },
+    responses: { ...changed, 400: errors[400], 403: errors[403] },
+  }),
+  unscheduleTask: createRoute({
+    method: 'delete',
+    path: '/tasks/{id}/block',
+    operationId: 'unscheduleTask',
+    tags: tags.tasks,
+    summary: "Take the task's time block off the calendar (deletes its event)",
+    request: { params: Id },
+    responses: { ...changed, 403: errors[403] },
   }),
   deleteTask: createRoute({
     method: 'delete',
@@ -170,6 +189,10 @@ export function tasksApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars> {
     )
     .openapi(r.completeTask, async (c) => c.json(taskOut(await tasks.completeTask(db(), c.var.userId, id(c))), 200))
     .openapi(r.reopenTask, async (c) => c.json(taskOut(await tasks.reopenTask(db(), c.var.userId, id(c))), 200))
+    .openapi(r.scheduleTask, async (c) =>
+      c.json(taskOut(await tasks.scheduleTask(db(), c.var.userId, id(c), c.req.valid('json'))), 200),
+    )
+    .openapi(r.unscheduleTask, async (c) => c.json(taskOut(await tasks.unscheduleTask(db(), c.var.userId, id(c))), 200))
     .openapi(r.deleteTask, async (c) => {
       await tasks.deleteTask(db(), c.var.userId, id(c));
       return c.body(null, 204);

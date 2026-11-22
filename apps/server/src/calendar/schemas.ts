@@ -115,6 +115,8 @@ export const Occurrence = z
     tz: z.string(),
     recurring: z.boolean(),
     overridden: z.boolean(),
+    taskId: z.uuid().nullable().openapi({ description: 'The task this event is a time block for' }),
+    taskDone: z.boolean().openapi({ description: 'That task is completed' }),
   })
   .openapi('Occurrence');
 

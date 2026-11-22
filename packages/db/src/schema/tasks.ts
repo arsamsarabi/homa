@@ -18,6 +18,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from './auth';
+import { events } from './calendar';
 
 /** A group of tasks. Tasks without one are in the Inbox. */
 export const projects = pgTable(
@@ -74,6 +75,8 @@ export const tasks = pgTable(
     /** The zone the due time is in (and the one the task was made in). */
     tz: text('tz').notNull(),
     rrule: text('rrule'),
+    /** The time block: an event on the calendar for working on the task. */
+    scheduledEventId: uuid('scheduled_event_id').references(() => events.id, { onDelete: 'set null' }),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
@@ -87,6 +90,7 @@ export const tasks = pgTable(
     index('tasks_completed_idx').on(t.ownerUserId, t.completedAt).where(sql`${t.completedAt} is not null`),
     index('tasks_parent_idx').on(t.parentId),
     index('tasks_project_idx').on(t.projectId),
+    index('tasks_scheduled_event_idx').on(t.scheduledEventId),
     check('tasks_priority', sql`${t.priority} between 0 and 3`),
     check('tasks_due_time_needs_date', sql`${t.dueTime} is null or ${t.dueDate} is not null`),
     check('tasks_rrule_needs_date', sql`${t.rrule} is null or ${t.dueDate} is not null`),
