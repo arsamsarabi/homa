@@ -13,6 +13,9 @@ import type { Calendar, Connection } from '@/schemas';
 const CALDAV_HOSTS: [RegExp, string][] = [
   [/icloud\.com$/, 'iCloud'],
   [/fastmail\.com$/, 'Fastmail'],
+  [/mailbox\.org$/, 'mailbox.org'],
+  [/posteo\.de$/, 'Posteo'],
+  [/(^|\.)zoho\.[a-z.]+$/, 'Zoho Calendar'],
 ];
 
 /** A connected account's group heading: the provider, and the account in its own case (e.g. Google, ada@example.com). */

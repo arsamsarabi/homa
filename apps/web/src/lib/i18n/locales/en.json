@@ -280,12 +280,18 @@
     "presets": {
       "icloud": "iCloud",
       "fastmail": "Fastmail",
+      "mailbox": "mailbox.org",
+      "posteo": "Posteo",
+      "zoho": "Zoho Calendar",
       "nextcloud": "Nextcloud",
       "other": "Other CalDAV server"
     },
     "hints": {
       "icloud": "Use an app-specific password from account.apple.com, not your Apple Account password.",
       "fastmail": "Create an app password for CalDAV under Settings → Privacy & Security in Fastmail.",
+      "mailbox": "Create an app password in your mailbox.org security settings and use it instead of your mailbox.org password.",
+      "posteo": "Create an app password in your Posteo settings and use it instead of your Posteo password. The user name is your full Posteo address.",
+      "zoho": "Create an app-specific password in your Zoho account's security settings (required when two-factor authentication is on). The user name is your Zoho email address. If your account is in another region, change .com in the address, for example to .eu.",
       "nextcloud": "Your server's address followed by /remote.php/dav, for example https://cloud.example.com/remote.php/dav. Create an app password under Settings → Security.",
       "other": "The address of your CalDAV server. Homa also tries /.well-known/caldav on it."
     },
