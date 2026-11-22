@@ -4,11 +4,15 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-22
+
 Email confirmation and password reset. On a server with email set up (`HOMA_SMTP_URL` and `HOMA_MAIL_FROM`), new accounts confirm their address from a link before they can sign in, and "Forgot password?" on the sign-in page emails a reset link that works once, for 1 hour. Both emails are in English or Farsi. `HOMA_REQUIRE_EMAIL_VERIFICATION=false` turns confirmation off; `true` without email stops the server at startup. Without email, the sign-in page says to ask the admin, who can set a password with `bun apps/server/src/auth/set-password.ts <email>` in the `api` container. Migration `0014_verify_existing_users` marks every existing account confirmed.
 
 `GET /api/ready` answers `200` only when the database answers and its migrations are applied, and `503` with the reason otherwise. The image's health check now uses it; point uptime monitors at it. `/api/health` stays a liveness check.
 
 Reminder emails now use the same branded layout as the account emails, in English or Farsi, light or dark. The button opens the event's day in the calendar, the Tasks page or the Reminders page, and a note says how to change email reminders under Settings → Notification channels. The plain-text part stays, with the same link.
+
+The CalDAV account drawer has presets for mailbox.org, Posteo and Zoho Calendar, each with its server address and an app password hint, and the calendar filter names those accounts after their service. Thanks to @nguyenmaimyan for the first outside contribution (#62).
 
 Sign-up refused because sign-ups are closed or the setup code is wrong now answers `400` instead of `403`, with the same message.
 
