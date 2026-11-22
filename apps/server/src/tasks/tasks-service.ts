@@ -63,7 +63,7 @@ async function placement(
   return f.projectId;
 }
 
-async function setTags(tx: Executor, userId: string, taskId: string, names: readonly string[]): Promise<void> {
+export async function setTags(tx: Executor, userId: string, taskId: string, names: readonly string[]): Promise<void> {
   const wanted = uniqueNames(names);
   const known = await repo.findTagsByName(tx, userId, wanted);
   const added = wanted.length - known.length;

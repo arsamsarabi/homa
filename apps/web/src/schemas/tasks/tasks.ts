@@ -54,3 +54,12 @@ export const TasksSearchSchema = z.object({
   tag: z.string().max(100).optional().catch(undefined),
 });
 export type TasksSearch = z.infer<typeof TasksSearchSchema>;
+
+export const TodoistSummarySchema = z.object({
+  createdProjects: z.number(),
+  imported: z.number(),
+  skipped: z.number(),
+  unreadDates: z.number(),
+  sections: z.number(),
+});
+export type TodoistSummary = z.infer<typeof TodoistSummarySchema>;

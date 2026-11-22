@@ -1,6 +1,6 @@
 # Phase 5: tasks
 
-Status: 5a (tasks, projects, tags, subtasks and the lists) built in the `phase-5a-tasks` PR, 2026-11-22. 5b (reminders on tasks and time-blocking) built in the `phase-5b-task-reminders-blocks` PR, 2026-11-22. 5c (Todoist import) follows in its own PR and fills in its section below.
+Status: 5a (tasks, projects, tags, subtasks and the lists) built in the `phase-5a-tasks` PR, 2026-11-22. 5b (reminders on tasks and time-blocking) built in the `phase-5b-task-reminders-blocks` PR, 2026-11-22. 5c (Todoist import) built in the `phase-5c-todoist-import` PR, 2026-11-22.
 
 ## Scope
 
@@ -111,7 +111,37 @@ Not in 5b: dragging a task from the list onto the calendar (the drawer's form do
 
 ## Todoist import (5c)
 
-To be designed in the 5c PR, after checking Todoist's current export formats and API terms.
+**Decision: import Todoist's CSV files, not its API.** Checked 2026-11-22 against Todoist's help center and developer docs:
+
+| Route | What it needs | Verdict |
+| --- | --- | --- |
+| Project CSV ("Export as a template" → CSV) | Nothing; every plan, one project per file | Used |
+| Backup ZIP (Settings → Backups) | Pro or Business; a ZIP with the same CSV per active project | Works: unzip and choose all the files |
+| REST API with a personal token | The user pastes a token from Settings → Integrations → Developer | Not now; see below |
+| REST API with OAuth | An app registered in Todoist's App Management Console, and Todoist's brand rules ("x for Todoist", a not-affiliated notice) | No: a self-hosted app can't share one registration safely |
+
+A personal token would work without registration, but asking people to paste a credential with full access to their Todoist account into another app is more than an import needs, and the CSV carries the same fields except completed tasks. The API stays an open question if people want completed history or comments.
+
+**The CSV.** Columns `TYPE` (`task`, `section`, `note`), `CONTENT`, `DESCRIPTION`, `PRIORITY` (1 is p1, the highest), `INDENT` (1 top level, 2 a subtask, 3 a sub-subtask), `AUTHOR`, `RESPONSIBLE`, `DATE` (the due as Todoist writes it, natural language such as "every mon" or "Dec 5 17:00"), `DATE_LANG`, `TIMEZONE`, `DURATION`, `DURATION_UNIT`, `DEADLINE`, `DEADLINE_LANG`, plus `IS_COLLAPSED` on sections and a `meta` row. Columns are found by name, so extra or missing ones don't matter beyond `TYPE` and `CONTENT`.
+
+| Todoist | Homa |
+| --- | --- |
+| The file ("Garden.csv") | The project "Garden", matched by name ignoring case, else created |
+| `task` row | A task; `CONTENT` is the title |
+| `@label` words in `CONTENT` | Tags, taken out of the title |
+| `DESCRIPTION` | Notes |
+| `note` rows (comments) | Added to the notes of the task above them |
+| `PRIORITY` 1, 2, 3, 4 | High, medium, low, none |
+| `INDENT` 2 | A subtask of the task above. Deeper levels are flattened onto the top-level task (5a keeps one level) |
+| `DATE` | Read with the quick-add parser (the same English and Farsi grammar), in the row's `TIMEZONE` if it is a valid zone, else the importer's home zone. Only a string read completely becomes the due and repeat rule; anything else ("every other full moon", "12/05/2026", which is ambiguous) is kept in the notes as "Todoist date: …" and counted in the summary, never guessed |
+| `section` rows | Counted and left out; their tasks are imported (Homa has no sections) |
+| `AUTHOR`, `RESPONSIBLE`, `DURATION`, `DEADLINE` | Ignored |
+
+**Re-importing** adds only what is missing: an open task with the same title, project and parent is skipped, and a new subtask under an existing task goes under it. Completed tasks are never in Todoist's export.
+
+**API.** `POST /api/tasks/import/todoist` `{ tz, files: [{ name, csv }] }`: up to 300 files and 5 MB, all in one transaction. A file that isn't a Todoist CSV refuses the whole batch with its name in the message, and so does going over the project or open-task limits. The answer is `{ createdProjects, imported, skipped, unreadDates, sections }`. The web app reads the chosen files in the browser and sends their text, so the server needs no multipart or ZIP handling.
+
+**Web.** Settings → Import from Todoist: a file picker for one or more `.csv` files, with the steps to export from Todoist, and the summary afterwards.
 
 ## Limits
 
@@ -134,6 +164,8 @@ To be designed in the 5c PR, after checking Todoist's current export formats and
 - Repeat from the completion date (Todoist's `every!`, "3 days after I last did it").
 - Priority and tag markers in quick add ("p1", "#errand", "!!").
 - Deeper subtasks, if the Todoist import shows people rely on them.
+- Importing through Todoist's API (completed tasks, comments), and reading a backup ZIP directly.
+- Todoist's `DEADLINE` column (a hard date beside the due) and `DURATION` (could prefill a time block).
 - Should Today and Upcoming include tasks from the time blocks (5b) that are scheduled today but due later?
 - Drag a task from the list onto the calendar, once there's a split tasks-and-calendar view.
 - Should a task's reminders also be able to count from its time block's start?

@@ -607,5 +607,20 @@
     "noCalendars": "You need a calendar you can edit to block time.",
     "atDue": "At due time",
     "dayTime": "{{day}}, {{time}}"
+  },
+  "todoist": {
+    "title": "Import from Todoist",
+    "hint": "In Todoist, open a project's menu and choose Export as a template, then Export as a CSV file. On Pro, Settings → Backups gives a ZIP with a CSV per project: unzip it and choose all the files. Each file becomes a project named after it (or goes into the project with that name). Importing again skips tasks that are already there. Completed tasks aren't in Todoist's export.",
+    "files": "Todoist CSV files",
+    "filesPlaceholder": "Choose one or more .csv files",
+    "import": "Import tasks",
+    "importing": "Importing…",
+    "failed": "Couldn't import: {{message}}",
+    "done": "Todoist import finished",
+    "summary": "Tasks added: {{imported}}. Already there: {{skipped}}. New projects: {{createdProjects}}.",
+    "unreadDates_one": "{{count}} due date couldn't be read. Its text is in the task's notes.",
+    "unreadDates_other": "{{count}} due dates couldn't be read. Their text is in the tasks' notes.",
+    "sections_one": "{{count}} section was left out (Homa has no sections). Its tasks were imported.",
+    "sections_other": "{{count}} sections were left out (Homa has no sections). Their tasks were imported."
   }
 }

@@ -6,6 +6,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 Task reminders and time blocks. A task with a due date can have reminders (minutes before its due time, or before 09:00 on a date-only due); they arrive in the bell, by push and through channels, and Done on one completes the task. Channels get a third kind, task reminders, which existing channels that take standalone reminders get automatically. The task drawer can block time for the task on a calendar: an ordinary event linked to the task, struck through once the task is done. Migration `0013_task_reminders_and_blocks` adds `reminders.task_id`, `notifications.task_id` and `tasks.scheduled_event_id`.
 
+Import from Todoist. Settings → Import from Todoist takes the CSV files Todoist exports per project (or every file from a Pro backup ZIP): each becomes a project, with subtasks, priorities, labels as tags, descriptions and comments as notes, and due dates read like quick add. A date it can't read is kept in the notes. Importing again adds only what is new. No migration.
+
 Tasks. A Tasks page (the checklist icon in the header) has an Inbox, Today (with overdue tasks), Upcoming, Completed, and a list per project and per tag. Tasks have notes, a due date with an optional time, priority, tags and one level of subtasks; a repeating task moves to its next due date when completed. The field at the top of each list reads dates like the calendar's quick add ("Buy milk tomorrow"). Tasks, projects and tags are in the JSON export. Migration `0012_tasks` adds the `projects`, `tags`, `tasks` and `task_tags` tables.
 
 ## [0.1.0] - unreleased
