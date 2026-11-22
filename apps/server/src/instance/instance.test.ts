@@ -38,13 +38,14 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       defaultLanguage: 'en',
       googleCalendar: false,
       microsoftCalendar: false,
+      passwordReset: false,
     });
   });
 
   test('the first account needs the setup code from the log', async () => {
-    expect((await signUp('admin@example.com')).status).toBe(403);
+    expect((await signUp('admin@example.com')).status).toBe(400);
     const wrong = await signUp('admin@example.com', '1111');
-    expect(wrong.status).toBe(403);
+    expect(wrong.status).toBe(400);
     expect(((await wrong.json()) as { message: string }).message).toMatch(/setup code/);
     expect((await publicInstance()).needsSetup).toBe(true);
   });
@@ -87,6 +88,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       defaultLanguage: 'fa',
       googleCalendar: false,
       microsoftCalendar: false,
+      passwordReset: false,
     });
   });
 
@@ -120,7 +122,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
     expect((await patchAdmin(admin, { signUps: 'closed' })).status).toBe(200);
     expect((await publicInstance()).signUpsOpen).toBe(false);
     const res = await signUp('late@example.com');
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(400);
     expect(((await res.json()) as { message: string }).message).toContain('Sign-ups are closed');
     expect(await t.db.$count(schema.users)).toBe(2);
   });

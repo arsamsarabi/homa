@@ -16,6 +16,7 @@ export type PublicInstance = {
   defaultLanguage: string;
   googleCalendar: boolean;
   microsoftCalendar: boolean;
+  passwordReset: boolean;
 };
 
 const fromRow = ({ instanceName, ...rest }: repo.InstanceSettingsRow): InstanceSettings => ({
@@ -38,7 +39,7 @@ export async function updateInstanceSettings(db: Db, patch: Partial<InstanceSett
 /** Which OAuth providers the server is set up for. */
 export async function getPublicInstance(
   db: Db,
-  { googleCalendar = false, microsoftCalendar = false } = {},
+  { googleCalendar = false, microsoftCalendar = false, passwordReset = false } = {},
 ): Promise<PublicInstance> {
   const [s, users] = await Promise.all([getInstanceSettings(db), repo.countUsers(db)]);
   const needsSetup = users === 0;
@@ -49,6 +50,7 @@ export async function getPublicInstance(
     defaultLanguage: s.defaultLanguage,
     googleCalendar,
     microsoftCalendar,
+    passwordReset,
   };
 }
 

@@ -85,6 +85,27 @@
       "when": 1795187227166,
       "tag": "0011_notification_channels",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795305384142,
+      "tag": "0012_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795306745773,
+      "tag": "0013_task_reminders_and_blocks",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795342142619,
+      "tag": "0014_verify_existing_users",
+      "breakpoints": true
     }
   ]
 }

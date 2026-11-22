@@ -82,6 +82,15 @@ const Env = z
     ),
     // The sender, such as `Homa <homa@example.com>`.
     HOMA_MAIL_FROM: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    // Whether new accounts must confirm their email address before they can sign in. Defaults to
+    // true when email is set up (HOMA_SMTP_URL), false otherwise; true needs email.
+    HOMA_REQUIRE_EMAIL_VERIFICATION: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z
+        .enum(['true', 'false'])
+        .optional()
+        .transform((v) => (v === undefined ? undefined : v === 'true')),
+    ),
     // Better Auth's per-IP limits on sign-in and sign-up. Turn off only for automated tests, where
     // one machine signs up several accounts within seconds.
     HOMA_AUTH_RATE_LIMIT: z
@@ -104,7 +113,16 @@ const Env = z
   .refine((env) => !env.HOMA_VAPID_PUBLIC_KEY === !env.HOMA_VAPID_PRIVATE_KEY, {
     message: 'set both HOMA_VAPID_PUBLIC_KEY and HOMA_VAPID_PRIVATE_KEY, or neither',
     path: ['HOMA_VAPID_PRIVATE_KEY'],
-  });
+  })
+  .refine((env) => !(env.HOMA_REQUIRE_EMAIL_VERIFICATION && !env.HOMA_SMTP_URL), {
+    message:
+      'HOMA_REQUIRE_EMAIL_VERIFICATION=true needs email: set HOMA_SMTP_URL and HOMA_MAIL_FROM, or leave it unset',
+    path: ['HOMA_REQUIRE_EMAIL_VERIFICATION'],
+  })
+  .transform((env) => ({
+    ...env,
+    HOMA_REQUIRE_EMAIL_VERIFICATION: env.HOMA_REQUIRE_EMAIL_VERIFICATION ?? Boolean(env.HOMA_SMTP_URL),
+  }));
 
 export type Config = z.infer<typeof Env>;
 

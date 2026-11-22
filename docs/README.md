@@ -6,7 +6,8 @@ The docs in this repository, for people running Homa and people working on it. U
 
 - [Quick start](./self-hosting/quick-start.md): run Homa with Docker Compose and create the admin account.
 - [Environment variables](./self-hosting/environment.md): every setting, its default, and which ones are required.
-- [Operations](./self-hosting/operations.md): reverse proxy, upgrades, backup and restore, roles and health checks.
+- [Operations](./self-hosting/operations.md): reverse proxy, upgrades, verifying the image, backup and restore, roles and health checks.
+- [Releasing](./self-hosting/releasing.md): maintainer steps to cut a release.
 - [Google Calendar](./self-hosting/google.md): creating the Google OAuth client for Google connections.
 - [Microsoft](./self-hosting/microsoft.md): creating the Entra ID app for Outlook.com and Microsoft 365.
 
@@ -21,6 +22,7 @@ The docs in this repository, for people running Homa and people working on it. U
 
 - [Phase 4a: reminders](./design/phase-4a-reminders.md): reminders, in-app notifications and web push.
 - [Phase 4c: quick add](./design/phase-4c-quick-add.md): the natural-language quick add parser and its grammar.
+- [Phase 5: tasks](./design/phase-5-tasks.md): tasks, projects, tags, subtasks and their lists; task reminders, time-blocking and the Todoist import.
 
 ## Changes
 

@@ -30,6 +30,39 @@
           "version"
         ]
       },
+      "Ready": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "NotReady": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "not-ready"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "example": "the database did not answer within 2 seconds"
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ]
+      },
       "Calendar": {
         "type": "object",
         "properties": {
@@ -428,6 +461,18 @@
           },
           "overridden": {
             "type": "boolean"
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The task this event is a time block for"
+          },
+          "taskDone": {
+            "type": "boolean",
+            "description": "That task is completed"
           }
         },
         "required": [
@@ -442,7 +487,9 @@
           "allDay",
           "tz",
           "recurring",
-          "overridden"
+          "overridden",
+          "taskId",
+          "taskDone"
         ]
       },
       "Settings": {
@@ -566,6 +613,10 @@
           "microsoftCalendar": {
             "type": "boolean",
             "description": "Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected"
+          },
+          "passwordReset": {
+            "type": "boolean",
+            "description": "Whether this server can email password reset links (it has email set up)"
           }
         },
         "required": [
@@ -574,7 +625,8 @@
           "needsSetup",
           "defaultLanguage",
           "googleCalendar",
-          "microsoftCalendar"
+          "microsoftCalendar",
+          "passwordReset"
         ]
       },
       "InstanceSettings": {
@@ -824,6 +876,24 @@
             "items": {
               "$ref": "#/components/schemas/Reminder"
             }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
           }
         },
         "required": [
@@ -832,7 +902,10 @@
           "settings",
           "calendars",
           "events",
-          "reminders"
+          "reminders",
+          "projects",
+          "tags",
+          "tasks"
         ]
       },
       "Reminder": {
@@ -880,6 +953,196 @@
           "rrule",
           "nextFireAt",
           "createdAt"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "createdAt"
+        ]
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uid": {
+            "type": "string",
+            "description": "The iCalendar UID"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Null for the Inbox"
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The parent task's id, for a subtask"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3,
+            "description": "0 none, 1 low, 2 medium, 3 high"
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "YYYY-MM-DD, in the task’s zone"
+          },
+          "dueTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "HH:MM, or null for a date-only due"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "rrule": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Repeats from the due date; completing moves it on"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Minutes before the due"
+          },
+          "block": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "eventId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "calendarId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "end": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "eventId",
+              "calendarId",
+              "start",
+              "end"
+            ],
+            "description": "The time block: an event on the calendar for working on the task"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "uid",
+          "title",
+          "notes",
+          "projectId",
+          "parentId",
+          "tags",
+          "priority",
+          "dueDate",
+          "dueTime",
+          "tz",
+          "rrule",
+          "reminders",
+          "block",
+          "completedAt",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "Connection": {
@@ -1222,7 +1485,8 @@
             "type": "string",
             "enum": [
               "event",
-              "standalone"
+              "standalone",
+              "task"
             ]
           },
           "title": {
@@ -1231,12 +1495,19 @@
           "start": {
             "type": "string",
             "format": "date-time",
-            "description": "The occurrence's start, or when the standalone reminder was due"
+            "description": "The occurrence's start, the task's due, or when the standalone reminder was due"
           },
           "allDay": {
             "type": "boolean"
           },
           "eventId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "taskId": {
             "type": [
               "string",
               "null"
@@ -1265,6 +1536,7 @@
           "start",
           "allDay",
           "eventId",
+          "taskId",
           "recurrenceId",
           "fireAt",
           "read"
@@ -1389,7 +1661,8 @@
               "type": "string",
               "enum": [
                 "event",
-                "standalone"
+                "standalone",
+                "task"
               ]
             }
           },
@@ -1489,11 +1762,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               }
             },
             "required": [
@@ -1521,11 +1795,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               },
               "server": {
                 "type": "string",
@@ -1570,11 +1845,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               },
               "server": {
                 "type": "string",
@@ -1614,11 +1890,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               },
               "url": {
                 "type": "string",
@@ -1651,11 +1928,12 @@
               "type": "string",
               "enum": [
                 "event",
-                "standalone"
+                "standalone",
+                "task"
               ]
             },
             "minItems": 1,
-            "description": "Which reminders it gets: event reminders, standalone ones, or both"
+            "description": "Which reminders it gets: event, standalone and task reminders"
           },
           "server": {
             "type": "string",
@@ -1700,6 +1978,325 @@
         "required": [
           "ok"
         ]
+      },
+      "TodoistSummary": {
+        "type": "object",
+        "properties": {
+          "createdProjects": {
+            "type": "integer"
+          },
+          "imported": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Open tasks already there with the same title, project and parent"
+          },
+          "unreadDates": {
+            "type": "integer",
+            "description": "Due dates that weren't read; their text is in the notes"
+          },
+          "sections": {
+            "type": "integer",
+            "description": "Todoist sections, which Homa doesn't have"
+          }
+        },
+        "required": [
+          "createdProjects",
+          "imported",
+          "skipped",
+          "unreadDates",
+          "sections"
+        ]
+      },
+      "TodoistImport": {
+        "type": "object",
+        "properties": {
+          "tz": {
+            "type": "string",
+            "example": "Europe/London",
+            "description": "The zone for tasks whose file gives none: the home zone, else the browser's"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "The file name; it names the project"
+                },
+                "csv": {
+                  "type": "string",
+                  "maxLength": 5242880
+                }
+              },
+              "required": [
+                "name",
+                "csv"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 300
+          }
+        },
+        "required": [
+          "tz",
+          "files"
+        ]
+      },
+      "TaskInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10000
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            },
+            "maxItems": 20
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "example": "2026-11-27"
+          },
+          "dueTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "17:30"
+          },
+          "tz": {
+            "type": "string",
+            "example": "Europe/London"
+          },
+          "rrule": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              0,
+              60
+            ],
+            "description": "Minutes before the due (09:00 for a date-only due), at most 5"
+          }
+        },
+        "required": [
+          "title",
+          "tz"
+        ],
+        "description": "Omitted fields are empty: Inbox, no tags, no priority, no due"
+      },
+      "TaskPatch": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10000
+          },
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            },
+            "maxItems": 20
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "example": "2026-11-27"
+          },
+          "dueTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "example": "17:30"
+          },
+          "tz": {
+            "type": "string",
+            "example": "Europe/London"
+          },
+          "rrule": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              0,
+              60
+            ],
+            "description": "Minutes before the due (09:00 for a date-only due), at most 5"
+          }
+        }
+      },
+      "TaskBlockInput": {
+        "type": "object",
+        "properties": {
+          "calendarId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "calendarId",
+          "start",
+          "end"
+        ]
+      },
+      "ProjectInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^#[0-9a-f]{6}$/i"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "ProjectPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^#[0-9a-f]{6}$/i"
+          }
+        }
+      },
+      "TagPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          }
+        },
+        "required": [
+          "name"
+        ]
       }
     },
     "parameters": {}
@@ -1719,6 +2316,37 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "getReady",
+        "tags": [
+          "System"
+        ],
+        "summary": "Readiness check: the database answers and its migrations are current",
+        "responses": {
+          "200": {
+            "description": "Ready to serve requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ready"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not ready, and why",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotReady"
                 }
               }
             }
@@ -4343,6 +4971,875 @@
                   "required": [
                     "error"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/import/todoist": {
+      "post": {
+        "operationId": "importTodoist",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Import Todoist's project CSV files",
+        "description": "One file per project (Todoist: a project's menu → Export as a template → CSV, or the files in a backup ZIP). Each goes into the Homa project with the file's name, made if needed. Importing again skips open tasks with the same title in the same place. Completed tasks aren't in Todoist's export.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoistImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What was imported",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoistSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "operationId": "listTasks",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Your open tasks (subtasks too), soonest due first; or the most recently completed ones",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "true: the 200 most recently completed tasks"
+            },
+            "required": false,
+            "description": "true: the 200 most recently completed tasks",
+            "name": "completed",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Task"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Create a task (a subtask with parentId)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "patch": {
+        "operationId": "updateTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Change a task; tags replace the old ones",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Delete a task and its subtasks",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/complete": {
+      "post": {
+        "operationId": "completeTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Complete a task and its subtasks; a repeating task moves to its next due instead",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/reopen": {
+      "post": {
+        "operationId": "reopenTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Open a completed task again (and its parent)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/block": {
+      "put": {
+        "operationId": "scheduleTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Block time for the task on the calendar (an event linked to it), or move its block",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskBlockInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed (or a read-only calendar)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unscheduleTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Take the task's time block off the calendar (deletes its event)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed (or a read-only calendar)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Your projects, by name",
+        "responses": {
+          "200": {
+            "description": "Projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Project"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createProject",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Create a project",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "patch": {
+        "operationId": "updateProject",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Rename or recolor a project",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteProject",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Delete a project; its tasks move to the Inbox",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tags": {
+      "get": {
+        "operationId": "listTags",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Your tags, by name (a task creates the tags it names)",
+        "responses": {
+          "200": {
+            "description": "Tags",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tag"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tags/{id}": {
+      "patch": {
+        "operationId": "renameTag",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Rename a tag",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renamed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tag"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTag",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Delete a tag; it comes off every task",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

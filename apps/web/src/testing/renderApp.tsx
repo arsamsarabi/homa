@@ -20,6 +20,7 @@ export const setUpInstance = {
   defaultLanguage: 'en',
   googleCalendar: false,
   microsoftCalendar: false,
+  passwordReset: false,
 };
 
 /** Better Auth's get-session body for Ada, with `role` ('user' unless given). */

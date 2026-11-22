@@ -26,8 +26,8 @@ const api =
 
 const section = async (): Promise<HTMLElement> => screen.findByRole('region', { name: 'Import and export' });
 
-function chooseFile(): void {
-  const input = document.querySelector('input[type=file]');
+function chooseFile(within: HTMLElement): void {
+  const input = within.querySelector('input[type=file]');
   if (!input) throw new Error('no file input');
   fireEvent.change(input, { target: { files: [new File([ics], 'cal.ics', { type: 'text/calendar' })] } });
 }
@@ -48,7 +48,7 @@ describe('import and export section', () => {
     await waitFor(() =>
       expect((within(s).getByRole('combobox', { name: 'Calendar' }) as HTMLInputElement).value).toBe('Personal'),
     );
-    chooseFile();
+    chooseFile(s);
     await waitFor(() => expect(button.hasAttribute('disabled')).toBe(false));
     fireEvent.click(button);
 
@@ -67,7 +67,7 @@ describe('import and export section', () => {
     await waitFor(() =>
       expect((within(s).getByRole('combobox', { name: 'Calendar' }) as HTMLInputElement).value).toBe('Personal'),
     );
-    chooseFile();
+    chooseFile(s);
     fireEvent.click(within(s).getByRole('button', { name: 'Import' }));
     expect(await within(s).findByText('Importing…')).toBeTruthy();
     answer(json({ error: 'Not a valid iCalendar file: expected BEGIN:VCALENDAR' }, 400));

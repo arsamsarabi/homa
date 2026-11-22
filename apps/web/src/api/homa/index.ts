@@ -5,5 +5,7 @@ export {
   type EventInput,
   type EventPatch,
   homaClient,
+  type TaskInput,
+  type TaskPatch,
   unwrap,
 } from './client';

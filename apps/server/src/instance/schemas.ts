@@ -20,6 +20,9 @@ export const PublicInstance = z
     microsoftCalendar: z
       .boolean()
       .openapi({ description: 'Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected' }),
+    passwordReset: z
+      .boolean()
+      .openapi({ description: 'Whether this server can email password reset links (it has email set up)' }),
   })
   .openapi('PublicInstance');
 

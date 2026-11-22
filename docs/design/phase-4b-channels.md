@@ -13,7 +13,7 @@ Status: built in the `phase-4b-channels` PR, 2026-11-20, on top of Phase 4a (`do
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `notification_channels` | `owner_user_id`, `kind` (`email`, `ntfy`, `gotify`, `webhook`), `name`, `enabled`, `reminder_kinds` (text[]: `event`, `standalone`), `config` (AES-256-GCM ciphertext, null for email), `consecutive_failures`, `last_error`, `last_error_at`, `last_sent_at` | One row per channel. At most 10 per user |
+| `notification_channels` | `owner_user_id`, `kind` (`email`, `ntfy`, `gotify`, `webhook`), `name`, `enabled`, `reminder_kinds` (text[]: `event`, `standalone`, `task` since 5b), `config` (AES-256-GCM ciphertext, null for email), `consecutive_failures`, `last_error`, `last_error_at`, `last_sent_at` | One row per channel. At most 10 per user |
 
 `config` holds everything a channel needs to send, encrypted with `HOMA_ENCRYPTION_KEY` the way connections are (`encryptCredentials`, with `channel:{id}` as the row id so a ciphertext can't move between rows or tables):
 
@@ -32,7 +32,7 @@ Deliveries reuse 4a's `notification_deliveries`. The `channel` column is `push` 
 
 ## Job flow
 
-1. When a notification is created or comes back from snooze, `deliveriesFor` queues one delivery per enabled channel of its owner whose `reminder_kinds` include the notification's kind (`event` if it has an event, else `standalone`), plus `push` if the user has a push subscription.
+1. When a notification is created or comes back from snooze, `deliveriesFor` queues one delivery per enabled channel of its owner whose `reminder_kinds` include the notification's kind (`task` if it has a task, `event` if it has an event, else `standalone`), plus `push` if the user has a push subscription.
 2. The `reminders.deliver` job sends them as before: a 5-minute lease, then sent, or retried after 1, 2, 4 … minutes, and failed after 8 tries. A channel that was deleted or disabled since then fails its delivery without sending.
 3. Each send records the result on the channel: success clears `consecutive_failures` and `last_error` and sets `last_sent_at`; a failure increments the counter and stores the error. Settings shows a channel as failing at 3 consecutive failures, with its last error.
 

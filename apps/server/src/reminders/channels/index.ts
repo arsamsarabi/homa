@@ -1,3 +1,3 @@
 export { channelsApi } from './routes';
 export { channelSender } from './senders';
-export { type NotifySettings, notifySettingsFrom } from './settings';
+export { type Mail, type NotifySettings, notifySettingsFrom } from './settings';

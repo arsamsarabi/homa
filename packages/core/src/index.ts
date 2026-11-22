@@ -5,4 +5,5 @@ export * from './ics';
 export * from './quick-add';
 export * from './recurrence';
 export * from './reminders';
+export * from './tasks';
 export * from './time';

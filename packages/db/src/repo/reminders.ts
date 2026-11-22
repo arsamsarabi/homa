@@ -1,8 +1,8 @@
-// Reminders: an event's alarms (replaced whole) and a user's standalone reminders, always filtered
+// Reminders: an event's or a task's alarms (replaced whole) and a user's standalone reminders, always filtered
 // by owner where a user asks. The delivery job reads due ones across every owner.
 import { and, asc, count, eq, inArray, isNotNull, isNull, lte, type SQL, sql } from 'drizzle-orm';
 import type { Executor } from '../client';
-import { eventInstances, eventOverrides, events, type ReminderAction, reminders, users } from '../schema';
+import { eventInstances, eventOverrides, events, type ReminderAction, reminders, tasks, users } from '../schema';
 
 export type ReminderRow = typeof reminders.$inferSelect;
 export type EventReminder = { minutes: number; action: ReminderAction };
@@ -106,8 +106,10 @@ export type StandaloneValues = {
   nextFireAt: Date | null;
 };
 
+const isStandalone: SQL | undefined = and(isNull(reminders.eventId), isNull(reminders.taskId));
+
 const standalone = (ownerUserId: string, id: string): SQL | undefined =>
-  and(eq(reminders.id, id), eq(reminders.ownerUserId, ownerUserId), isNull(reminders.eventId));
+  and(eq(reminders.id, id), eq(reminders.ownerUserId, ownerUserId), isStandalone);
 
 export async function insertStandalone(db: Executor, ownerUserId: string, v: StandaloneValues): Promise<ReminderRow> {
   const [row] = await db
@@ -149,14 +151,14 @@ export const listStandalone = (db: Executor, ownerUserId: string): Promise<Remin
   db
     .select()
     .from(reminders)
-    .where(and(eq(reminders.ownerUserId, ownerUserId), isNull(reminders.eventId), isNull(reminders.doneAt)))
+    .where(and(eq(reminders.ownerUserId, ownerUserId), isStandalone, isNull(reminders.doneAt)))
     .orderBy(sql`${reminders.nextFireAt} asc nulls last`, asc(reminders.startsAt));
 
 export async function countOpenStandalone(db: Executor, ownerUserId: string): Promise<number> {
   const [row] = await db
     .select({ n: count() })
     .from(reminders)
-    .where(and(eq(reminders.ownerUserId, ownerUserId), isNull(reminders.eventId), isNull(reminders.doneAt)));
+    .where(and(eq(reminders.ownerUserId, ownerUserId), isStandalone, isNull(reminders.doneAt)));
   return row?.n ?? 0;
 }
 
@@ -165,7 +167,7 @@ export const claimDueStandalone = (db: Executor, now: Date, limit: number): Prom
   db
     .select()
     .from(reminders)
-    .where(and(isNotNull(reminders.nextFireAt), lte(reminders.nextFireAt, now), isNull(reminders.doneAt)))
+    .where(and(isNotNull(reminders.nextFireAt), lte(reminders.nextFireAt, now), isNull(reminders.doneAt), isStandalone))
     .orderBy(asc(reminders.nextFireAt))
     .limit(limit)
     .for('update', { skipLocked: true });
@@ -173,3 +175,67 @@ export const claimDueStandalone = (db: Executor, now: Date, limit: number): Prom
 export async function setNextFire(db: Executor, id: string, nextFireAt: Date | null): Promise<void> {
   await db.update(reminders).set({ nextFireAt }).where(eq(reminders.id, id));
 }
+
+// --- Task reminders ---
+
+/** Each task's reminders (minutes before its due), sorted. Tasks without any are missing from the map. */
+export async function listTaskReminders(db: Executor, taskIds: readonly string[]): Promise<Map<string, number[]>> {
+  const out = new Map<string, number[]>();
+  if (!taskIds.length) return out;
+  const rows = await db
+    .select({ taskId: reminders.taskId, minutes: reminders.minutesBefore })
+    .from(reminders)
+    .where(inArray(reminders.taskId, [...taskIds]))
+    .orderBy(asc(reminders.minutesBefore));
+  for (const r of rows) {
+    if (!r.taskId || r.minutes === null) continue;
+    out.set(r.taskId, [...(out.get(r.taskId) ?? []), r.minutes]);
+  }
+  return out;
+}
+
+/** Replaces a task's reminders, each with when it fires next (null: not while the task is done or has no due). */
+export async function replaceTaskReminders(
+  db: Executor,
+  ownerUserId: string,
+  taskId: string,
+  list: readonly { minutes: number; nextFireAt: Date | null }[],
+): Promise<void> {
+  await db.delete(reminders).where(eq(reminders.taskId, taskId));
+  if (list.length)
+    await db
+      .insert(reminders)
+      .values(list.map((r) => ({ ownerUserId, taskId, minutesBefore: r.minutes, nextFireAt: r.nextFireAt })));
+}
+
+/** A due task reminder with its task, as the delivery job reads it. */
+export type DueTaskReminder = {
+  id: string;
+  ownerUserId: string;
+  taskId: string;
+  nextFireAt: Date;
+  title: string;
+  dueDate: string | null;
+  dueTime: string | null;
+  tz: string;
+};
+
+/** Task reminders due by `now`, locked for this transaction (others skip them). */
+export const claimDueTaskReminders = (db: Executor, now: Date, limit: number): Promise<DueTaskReminder[]> =>
+  db
+    .select({
+      id: reminders.id,
+      ownerUserId: reminders.ownerUserId,
+      taskId: tasks.id,
+      nextFireAt: sql<Date>`${reminders.nextFireAt}`.mapWith(asDate),
+      title: tasks.title,
+      dueDate: tasks.dueDate,
+      dueTime: tasks.dueTime,
+      tz: tasks.tz,
+    })
+    .from(reminders)
+    .innerJoin(tasks, eq(tasks.id, reminders.taskId))
+    .where(and(isNotNull(reminders.nextFireAt), lte(reminders.nextFireAt, now)))
+    .orderBy(asc(reminders.nextFireAt))
+    .limit(limit)
+    .for('update', { of: reminders, skipLocked: true });

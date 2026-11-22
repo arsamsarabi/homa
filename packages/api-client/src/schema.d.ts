@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness check: the database answers and its migrations are current */
+        get: operations["getReady"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendars": {
         parameters: {
             query?: never;
@@ -669,6 +686,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/import/todoist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Todoist's project CSV files
+         * @description One file per project (Todoist: a project's menu → Export as a template → CSV, or the files in a backup ZIP). Each goes into the Homa project with the file's name, made if needed. Importing again skips open tasks with the same title in the same place. Completed tasks aren't in Todoist's export.
+         */
+        post: operations["importTodoist"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your open tasks (subtasks too), soonest due first; or the most recently completed ones */
+        get: operations["listTasks"];
+        put?: never;
+        /** Create a task (a subtask with parentId) */
+        post: operations["createTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a task and its subtasks */
+        delete: operations["deleteTask"];
+        options?: never;
+        head?: never;
+        /** Change a task; tags replace the old ones */
+        patch: operations["updateTask"];
+        trace?: never;
+    };
+    "/tasks/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete a task and its subtasks; a repeating task moves to its next due instead */
+        post: operations["completeTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open a completed task again (and its parent) */
+        post: operations["reopenTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Block time for the task on the calendar (an event linked to it), or move its block */
+        put: operations["scheduleTask"];
+        post?: never;
+        /** Take the task's time block off the calendar (deletes its event) */
+        delete: operations["unscheduleTask"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your projects, by name */
+        get: operations["listProjects"];
+        put?: never;
+        /** Create a project */
+        post: operations["createProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a project; its tasks move to the Inbox */
+        delete: operations["deleteProject"];
+        options?: never;
+        head?: never;
+        /** Rename or recolor a project */
+        patch: operations["updateProject"];
+        trace?: never;
+    };
+    "/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your tags, by name (a task creates the tags it names) */
+        get: operations["listTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a tag; it comes off every task */
+        delete: operations["deleteTag"];
+        options?: never;
+        head?: never;
+        /** Rename a tag */
+        patch: operations["renameTag"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -678,6 +874,16 @@ export interface components {
             status: "ok";
             /** @example 0.0.0 */
             version: string;
+        };
+        Ready: {
+            /** @enum {string} */
+            status: "ready";
+        };
+        NotReady: {
+            /** @enum {string} */
+            status: "not-ready";
+            /** @example the database did not answer within 2 seconds */
+            reason: string;
         };
         Calendar: {
             /** Format: uuid */
@@ -812,6 +1018,13 @@ export interface components {
             tz: string;
             recurring: boolean;
             overridden: boolean;
+            /**
+             * Format: uuid
+             * @description The task this event is a time block for
+             */
+            taskId: string | null;
+            /** @description That task is completed */
+            taskDone: boolean;
         };
         Settings: {
             /**
@@ -876,6 +1089,8 @@ export interface components {
             googleCalendar: boolean;
             /** @description Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected */
             microsoftCalendar: boolean;
+            /** @description Whether this server can email password reset links (it has email set up) */
+            passwordReset: boolean;
         };
         InstanceSettings: {
             /**
@@ -967,6 +1182,9 @@ export interface components {
                 }[];
             })[];
             reminders: components["schemas"]["Reminder"][];
+            projects: components["schemas"]["Project"][];
+            tags: components["schemas"]["Tag"][];
+            tasks: components["schemas"]["Task"][];
         };
         Reminder: {
             /** Format: uuid */
@@ -986,6 +1204,66 @@ export interface components {
             nextFireAt: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        Project: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            color: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        Tag: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        Task: {
+            /** Format: uuid */
+            id: string;
+            /** @description The iCalendar UID */
+            uid: string;
+            title: string;
+            notes: string | null;
+            /**
+             * Format: uuid
+             * @description Null for the Inbox
+             */
+            projectId: string | null;
+            /**
+             * Format: uuid
+             * @description The parent task's id, for a subtask
+             */
+            parentId: string | null;
+            tags: string[];
+            /** @description 0 none, 1 low, 2 medium, 3 high */
+            priority: number;
+            /** @description YYYY-MM-DD, in the task’s zone */
+            dueDate: string | null;
+            /** @description HH:MM, or null for a date-only due */
+            dueTime: string | null;
+            tz: string;
+            /** @description Repeats from the due date; completing moves it on */
+            rrule: string | null;
+            /** @description Minutes before the due */
+            reminders: number[];
+            /** @description The time block: an event on the calendar for working on the task */
+            block: {
+                /** Format: uuid */
+                eventId: string;
+                /** Format: uuid */
+                calendarId: string;
+                /** Format: date-time */
+                start: string;
+                /** Format: date-time */
+                end: string;
+            } | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         Connection: {
             /** Format: uuid */
@@ -1079,16 +1357,18 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "event" | "standalone";
+            kind: "event" | "standalone" | "task";
             title: string;
             /**
              * Format: date-time
-             * @description The occurrence's start, or when the standalone reminder was due
+             * @description The occurrence's start, the task's due, or when the standalone reminder was due
              */
             start: string;
             allDay: boolean;
             /** Format: uuid */
             eventId: string | null;
+            /** Format: uuid */
+            taskId: string | null;
             /** Format: date-time */
             recurrenceId: string | null;
             /** Format: date-time */
@@ -1128,7 +1408,7 @@ export interface components {
             kind: "email" | "ntfy" | "gotify" | "webhook";
             name: string;
             enabled: boolean;
-            reminderKinds: ("event" | "standalone")[];
+            reminderKinds: ("event" | "standalone" | "task")[];
             /** @description ntfy and Gotify */
             server: string | null;
             /** @description ntfy */
@@ -1152,14 +1432,14 @@ export interface components {
             /** @enum {string} */
             kind: "email";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
         } | {
             /** @enum {string} */
             kind: "ntfy";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             /** @default https://ntfy.sh */
             server: string;
             /** @example homa-reminders-3f9a */
@@ -1169,23 +1449,23 @@ export interface components {
             /** @enum {string} */
             kind: "gotify";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             server: string;
             token: string;
         } | {
             /** @enum {string} */
             kind: "webhook";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             url: string;
         };
         NotificationChannelPatch: {
             name?: string;
             enabled?: boolean;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             server?: string;
             /** @example homa-reminders-3f9a */
             topic?: string;
@@ -1198,6 +1478,106 @@ export interface components {
         NotificationChannelTestResult: {
             ok: boolean;
             error?: string;
+        };
+        TodoistSummary: {
+            createdProjects: number;
+            imported: number;
+            /** @description Open tasks already there with the same title, project and parent */
+            skipped: number;
+            /** @description Due dates that weren't read; their text is in the notes */
+            unreadDates: number;
+            /** @description Todoist sections, which Homa doesn't have */
+            sections: number;
+        };
+        TodoistImport: {
+            /**
+             * @description The zone for tasks whose file gives none: the home zone, else the browser's
+             * @example Europe/London
+             */
+            tz: string;
+            files: {
+                /** @description The file name; it names the project */
+                name: string;
+                csv: string;
+            }[];
+        };
+        /** @description Omitted fields are empty: Inbox, no tags, no priority, no due */
+        TaskInput: {
+            title: string;
+            notes?: string | null;
+            /** Format: uuid */
+            projectId?: string | null;
+            /** Format: uuid */
+            parentId?: string | null;
+            tags?: string[];
+            priority?: number;
+            /**
+             * Format: date
+             * @example 2026-11-27
+             */
+            dueDate?: string | null;
+            /** @example 17:30 */
+            dueTime?: string | null;
+            /** @example Europe/London */
+            tz: string;
+            /** @example FREQ=WEEKLY;BYDAY=MO */
+            rrule?: string | null;
+            /**
+             * @description Minutes before the due (09:00 for a date-only due), at most 5
+             * @example [
+             *       0,
+             *       60
+             *     ]
+             */
+            reminders?: number[];
+        };
+        TaskPatch: {
+            title?: string;
+            notes?: string | null;
+            /** Format: uuid */
+            projectId?: string | null;
+            /** Format: uuid */
+            parentId?: string | null;
+            tags?: string[];
+            priority?: number;
+            /**
+             * Format: date
+             * @example 2026-11-27
+             */
+            dueDate?: string | null;
+            /** @example 17:30 */
+            dueTime?: string | null;
+            /** @example Europe/London */
+            tz?: string;
+            /** @example FREQ=WEEKLY;BYDAY=MO */
+            rrule?: string | null;
+            /**
+             * @description Minutes before the due (09:00 for a date-only due), at most 5
+             * @example [
+             *       0,
+             *       60
+             *     ]
+             */
+            reminders?: number[];
+        };
+        TaskBlockInput: {
+            /** Format: uuid */
+            calendarId: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+        };
+        ProjectInput: {
+            name: string;
+            color?: string | null;
+        };
+        ProjectPatch: {
+            name?: string;
+            color?: string | null;
+        };
+        TagPatch: {
+            name: string;
         };
     };
     responses: never;
@@ -1224,6 +1604,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    getReady: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ready to serve requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ready"];
+                };
+            };
+            /** @description Not ready, and why */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotReady"];
                 };
             };
         };
@@ -3250,6 +3659,695 @@ export interface operations {
                     "application/json": {
                         error: string;
                     };
+                };
+            };
+        };
+    };
+    importTodoist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TodoistImport"];
+            };
+        };
+        responses: {
+            /** @description What was imported */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodoistSummary"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listTasks: {
+        parameters: {
+            query?: {
+                /** @description true: the 200 most recently completed tasks */
+                completed?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tasks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskPatch"];
+            };
+        };
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    completeTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    reopenTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    scheduleTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskBlockInput"];
+            };
+        };
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unscheduleTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Projects */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"][];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updateProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectPatch"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tags */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"][];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deleteTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    renameTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagPatch"];
+            };
+        };
+        responses: {
+            /** @description Renamed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

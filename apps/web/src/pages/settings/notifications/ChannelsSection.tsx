@@ -4,7 +4,7 @@ import { type ChangeEvent, type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { useChannelMutations, useChannels } from '@/hooks/reminders';
-import type { Channel, ChannelTest } from '@/schemas';
+import { type Channel, type ChannelTest, REMINDER_KINDS } from '@/schemas';
 import { useAnnouncer } from '@/stores';
 import { type ChannelDraft, ChannelDrawer } from './ChannelDrawer';
 import classes from './ChannelsSection.module.css';
@@ -19,7 +19,7 @@ export function ChannelsSection(): JSX.Element {
   const [results, setResults] = useState<Record<string, string>>({});
 
   const which = (c: Channel): string =>
-    c.reminderKinds.length === 2
+    c.reminderKinds.length === REMINDER_KINDS.length
       ? t('channels.allReminders')
       : c.reminderKinds.map((k) => t(`channels.reminderKinds.${k}`)).join(', ');
   const sendTest = (c: Channel): void =>

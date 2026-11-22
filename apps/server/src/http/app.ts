@@ -10,9 +10,11 @@ import { importExportApi } from '@/import-export';
 import { instanceApi } from '@/instance';
 import { channelsApi, type NotifySettings, type PushSettings, remindersApi } from '@/reminders';
 import { settingsApi } from '@/settings';
+import { tasksApi } from '@/tasks';
 import { handleError, notFound } from './errors';
 import { healthApi } from './health';
 import { newApi, openApiConfig } from './openapi';
+import { readyApi } from './ready';
 
 /**
  * `sync` is the connected-calendar settings, `push` web push and `notify` the notification channels;
@@ -24,6 +26,7 @@ export type AppDeps = { db: Db; auth: Auth; sync?: SyncSettings; push?: PushSett
 export function createApi(deps?: AppDeps): OpenAPIHono {
   const api = newApi();
   api.route('/', healthApi());
+  api.route('/', readyApi(deps?.db));
   api.route('/', calendarApi(deps));
   api.route('/', settingsApi(deps));
   api.route('/', instanceApi(deps));
@@ -31,6 +34,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   api.route('/', connectionsApi(deps));
   api.route('/', remindersApi(deps));
   api.route('/', channelsApi(deps));
+  api.route('/', tasksApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;

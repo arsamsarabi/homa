@@ -4,13 +4,15 @@ import { sql } from 'drizzle-orm';
 import { boolean, check, index, integer, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { events } from './calendar';
+import { tasks } from './tasks';
 
 export const REMINDER_ACTIONS = ['display', 'email'] as const;
 export type ReminderAction = (typeof REMINDER_ACTIONS)[number];
 
 /**
- * An event reminder (`event_id` and `minutes_before`: every occurrence of the event) or a
- * standalone one (`title`, `starts_at` in `tz`, optionally repeating by `rrule`).
+ * An event reminder (`event_id` and `minutes_before`: every occurrence of the event), a task
+ * reminder (`task_id` and `minutes_before` its due, fired at `next_fire_at`) or a standalone one
+ * (`title`, `starts_at` in `tz`, optionally repeating by `rrule`).
  */
 export const reminders = pgTable(
   'reminders',
@@ -20,6 +22,7 @@ export const reminders = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'cascade' }),
+    taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'cascade' }),
     minutesBefore: integer('minutes_before'),
     /** Kept from the source (VALARM ACTION, Google method) so a round trip doesn't change it. */
     action: text('action', { enum: REMINDER_ACTIONS }).notNull().default('display'),
@@ -27,7 +30,7 @@ export const reminders = pgTable(
     startsAt: timestamp('starts_at', { withTimezone: true }),
     tz: text('tz'),
     rrule: text('rrule'),
-    /** Standalone only: when it fires next; null once it never will again. */
+    /** Standalone and task reminders: when it fires next; null once it never will again. */
     nextFireAt: timestamp('next_fire_at', { withTimezone: true }),
     doneAt: timestamp('done_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -38,11 +41,12 @@ export const reminders = pgTable(
   },
   (t) => [
     index('reminders_event_idx').on(t.eventId),
+    index('reminders_task_idx').on(t.taskId),
     index('reminders_owner_idx').on(t.ownerUserId),
     index('reminders_next_fire_idx').on(t.nextFireAt).where(sql`${t.nextFireAt} is not null`),
     check(
       'reminders_kind',
-      sql`(${t.eventId} is not null and ${t.minutesBefore} is not null) or (${t.eventId} is null and ${t.title} is not null and ${t.startsAt} is not null and ${t.tz} is not null)`,
+      sql`(${t.eventId} is not null and ${t.taskId} is null and ${t.minutesBefore} is not null) or (${t.taskId} is not null and ${t.eventId} is null and ${t.minutesBefore} is not null) or (${t.eventId} is null and ${t.taskId} is null and ${t.title} is not null and ${t.startsAt} is not null and ${t.tz} is not null)`,
     ),
   ],
 );
@@ -57,9 +61,10 @@ export const notifications = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     reminderId: uuid('reminder_id').references(() => reminders.id, { onDelete: 'set null' }),
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'cascade' }),
+    taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'cascade' }),
     recurrenceId: timestamp('recurrence_id', { withTimezone: true }),
     title: text('title').notNull(),
-    /** The occurrence's start (event reminders), or when the standalone reminder was due. */
+    /** The occurrence's start (event reminders), the task's due, or when the standalone reminder was due. */
     occurrenceStart: timestamp('occurrence_start', { withTimezone: true }).notNull(),
     allDay: boolean('all_day').notNull().default(false),
     fireAt: timestamp('fire_at', { withTimezone: true }).notNull(),

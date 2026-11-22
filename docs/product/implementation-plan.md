@@ -53,6 +53,8 @@ Phase 3 is done. On 2026-11-20 it passed hand tests against real iCloud (CalDAV)
 
 ## Phase 4: reminders and notifications
 
+Status: done. 4a (#44), 4b (#48), 4c (#40).
+
 - Reminder model on events and standalone reminders.
 - Web push, email, ntfy, Gotify and webhook channels; snooze and done.
 - Natural-language quick add.
@@ -65,9 +67,14 @@ Comes right after phase 4, before phase 5. Everything that makes Homa easy to in
 - A published Docker image on GHCR (`ghcr.io/arsamsarabi/homa`), multi-arch (amd64 and arm64), tagged by version and `latest`, built and pushed from the release workflow. Compose files and docs switch from building locally to pulling it.
 - Supply chain: images signed with cosign (keyless), an SBOM and provenance attestation attached to each release.
 - One-click templates for home-server platforms: Unraid, TrueNAS, CasaOS, Umbrel and YunoHost.
-- A public demo instance with made-up data that resets every night, and a short demo video for the README.
+- A public demo instance with made-up data that resets every night.
+- A short demo video for the README. Done (#47).
+
+Status: the release workflow, the GHCR image and its signing are built (#50). The first release, v0.1.0, includes phases 1 to 5. One-click templates and the demo instance are still to do; hosting is planned in the infra repo.
 
 ## Phase 5: tasks
+
+Status: done. 5a (#51), 5b (#52), 5c (#53).
 
 - Tasks, projects, tags, subtasks; Inbox, Today and Upcoming lists.
 - Reminders on tasks.

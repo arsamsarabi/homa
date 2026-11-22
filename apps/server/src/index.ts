@@ -53,6 +53,8 @@ const server =
               baseURL: config.HOMA_URL,
               setupGate,
               rateLimit: config.HOMA_AUTH_RATE_LIMIT,
+              sendMail: notify.sendMail,
+              requireEmailVerification: config.HOMA_REQUIRE_EMAIL_VERIFICATION,
             }),
             sync,
             push,

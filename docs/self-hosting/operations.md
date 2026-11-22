@@ -1,6 +1,6 @@
 # Operations
 
-Running a Homa instance after the [quick start](./quick-start.md): reverse proxy, upgrades, backups, roles and health checks. Run every command from the repository root.
+Running a Homa instance after the [quick start](./quick-start.md): reverse proxy, upgrades, verifying the image, backups, roles and health checks. Run every command from the repository root.
 
 ## Reverse proxy
 
@@ -16,17 +16,34 @@ HTTPS is also what browsers need for push notifications.
 
 Migrations apply when `api` starts, so there is no separate migration step. There is no downgrade: to go back, restore the backup you took before upgrading. Before you upgrade:
 
-1. Read the `### Breaking` entries in the [changelog](../CHANGELOG.md) for every version since yours. They list the steps an upgrade needs.
+1. Read the `### Breaking` entries in the [changelog](../CHANGELOG.md) (or the [release notes](https://github.com/arsamsarabi/homa/releases)) for every version since yours. They list the steps an upgrade needs.
 2. Take a [backup](#backup).
 
-Then:
+Then set `HOMA_VERSION` in `deploy/docker/.env` to the new version, such as `HOMA_VERSION=0.2.0`, and run:
 
 ```sh
 git pull
-docker compose -f deploy/docker/compose.yaml up -d --build --wait
+docker compose -f deploy/docker/compose.yaml pull
+docker compose -f deploy/docker/compose.yaml up -d --wait
 ```
 
+`git pull` brings the Compose file up to date with the release. Pinning a version is better than following `latest`: an upgrade happens only when you choose it, after reading its breaking steps. On `latest`, the same `pull` and `up` take the newest release.
+
+If you built the image yourself with `--build`, run `pull` before `up`, or Compose keeps using the local build.
+
 To check that it worked, look for `migrations applied` in `docker compose -f deploy/docker/compose.yaml logs api`, and check [health](#health).
+
+## Verify the image
+
+Each release image is signed with [cosign](https://docs.sigstore.dev/cosign/) by the release workflow, without a long-lived key, and carries an SBOM and a provenance attestation. To check a version before you run it:
+
+```sh
+cosign verify ghcr.io/arsamsarabi/homa:0.1.0 \
+  --certificate-identity-regexp '^https://github\.com/arsamsarabi/homa/\.github/workflows/release\.yml@refs/tags/v' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+It succeeds only for an image signed by `release.yml` in this repository, on a version tag. To see the SBOM: `docker buildx imagetools inspect ghcr.io/arsamsarabi/homa:0.1.0 --format '{{json .SBOM}}'`.
 
 ## Backup
 
@@ -66,9 +83,34 @@ The Compose file runs `api` and `worker` as separate services, with `worker` sta
 
 ## Health
 
-`GET /api/health` answers `200` with `{"status":"ok","version":"…"}` while the API is up. It doesn't check the database, and `version` is `0.0.0` until `HOMA_VERSION` is set (no build sets it yet). The image's Docker health check calls it for the `api` and `all` roles; `worker` has no HTTP port and always reports healthy.
+Two endpoints, for two questions:
+
+- `GET /api/health` (liveness) answers `200` with `{"status":"ok","version":"…"}` while the API process is up. It doesn't check the database. `version` is the release the image was built for, or `0.0.0` for an image you built yourself.
+- `GET /api/ready` (readiness) answers `200` with `{"status":"ready"}` only when the database answers within 2 seconds and has every migration this release ships. Otherwise it answers `503` with the reason, such as `{"status":"not-ready","reason":"the database could not be reached"}`.
+
+The image's Docker health check calls `/api/ready` for the `api` and `all` roles, so Compose starts `worker` only once the database is migrated; `worker` has no HTTP port and always reports healthy. Point uptime monitors (Uptime Kuma, a load balancer's health check) at `/api/ready`: it catches a stopped database too, which `/api/health` doesn't.
 
 ```sh
-curl -fsS http://localhost:3000/api/health
+curl -fsS http://localhost:3000/api/ready
 docker compose -f deploy/docker/compose.yaml ps
+```
+
+## Accounts and passwords
+
+With email set up (`HOMA_SMTP_URL` and `HOMA_MAIL_FROM`, see [Notifications](./notifications.md#email)):
+
+- New accounts confirm their email address before they can sign in. The link works for 1 hour; signing in unconfirmed sends a new one, and the confirmation page can send one too. Turn this off with `HOMA_REQUIRE_EMAIL_VERIFICATION=false`. The admin account made with the setup code is confirmed when it's made.
+- "Forgot password?" on the sign-in page emails a reset link that works once, for 1 hour. Setting a new password signs the account out everywhere.
+
+Without email, the sign-in page tells people to ask the admin instead. To set a password on the server (it asks for the new one, then signs that account out everywhere):
+
+```sh
+docker compose -f deploy/docker/compose.yaml exec api bun apps/server/src/auth/set-password.ts ada@example.com
+```
+
+There's no admin page for accounts yet. To mark an address confirmed by hand, for someone whose confirmation emails don't arrive:
+
+```sh
+docker compose -f deploy/docker/compose.yaml exec postgres \
+  psql -U homa -d homa -c "UPDATE users SET email_verified = true WHERE email = 'ada@example.com';"
 ```

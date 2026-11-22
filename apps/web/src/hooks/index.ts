@@ -6,3 +6,4 @@ export * from './locale';
 export * from './reminders';
 export * from './session';
 export * from './settings';
+export * from './tasks';

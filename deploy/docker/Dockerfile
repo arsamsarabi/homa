@@ -48,8 +48,12 @@ COPY packages/core/src packages/core/src
 COPY packages/sync/package.json packages/sync/
 COPY packages/sync/src packages/sync/src
 COPY --from=build /app/apps/web/dist apps/web/dist
+# The release workflow passes the tag's version; /api/health and the OpenAPI document report it.
+ARG HOMA_VERSION=0.0.0
+ENV HOMA_VERSION=${HOMA_VERSION}
 USER bun
 EXPOSE 3000
+# Healthy once /api/ready says the database answers and its migrations are applied.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
-  CMD [ "$HOMA_ROLE" = "worker" ] || bun -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
+  CMD [ "$HOMA_ROLE" = "worker" ] || bun -e "fetch('http://localhost:'+(process.env.PORT||3000)+'/api/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
 CMD ["bun", "apps/server/src/index.ts"]

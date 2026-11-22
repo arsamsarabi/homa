@@ -1,0 +1,221 @@
+# Push a tag such as v0.1.0 on a commit in main (see docs/self-hosting/releasing.md). The workflow:
+#   1. checks the tag is on main and that docs/CHANGELOG.md has a dated section for its version,
+#   2. runs CI,
+#   3. builds the image for linux/amd64 and linux/arm64 on native runners, with an SBOM and a
+#      provenance attestation, and pushes each platform by digest,
+#   4. joins the digests under X.Y.Z, X.Y and latest on GHCR and signs it with keyless cosign,
+#   5. creates the GitHub Release with that changelog section as its notes.
+# A tag with a pre-release suffix (v1.0.0-rc.1) is published as a pre-release, without X.Y or latest.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/arsamsarabi/homa
+
+jobs:
+  check:
+    name: Tag and changelog
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: version
+        run: |
+          if ! [[ $GITHUB_REF_NAME =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::$GITHUB_REF_NAME is not a vX.Y.Z tag"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at a commit that is not on main"
+            exit 1
+          fi
+          version=${GITHUB_REF_NAME#v}
+          prerelease=false
+          [[ $version == *-* ]] && prerelease=true
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+      - name: Changelog section for this version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: .github/scripts/release-notes.sh "$VERSION"
+
+  ci:
+    needs: [check]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  # Each platform builds on its own native runner (much faster than arm64 under QEMU) and pushes
+  # by digest only. The image job joins the digests under the tags.
+  build:
+    name: Build image (${{ matrix.platform }})
+    needs: [check, ci]
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Platform slug
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: echo "PLATFORM_SLUG=${PLATFORM//\//-}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.title=Homa
+            org.opencontainers.image.description=A self-hostable calendar that puts every calendar you use on one timeline
+
+      # sbom and provenance attach an SPDX SBOM and a SLSA provenance attestation to the image in
+      # the registry (docker buildx imagetools inspect --format '{{json .SBOM}}').
+      - id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: deploy/docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          build-args: HOMA_VERSION=${{ needs.check.outputs.version }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          sbom: true
+          provenance: mode=max
+
+      - name: Save digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digest-${{ env.PLATFORM_SLUG }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  image:
+    name: Tag and sign image
+    needs: [check, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      # Keyless cosign gets its signing certificate from Sigstore with this job's OIDC token.
+      id-token: write
+    outputs:
+      digest: ${{ steps.manifest.outputs.digest }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # X.Y.Z always; X.Y and latest only for a release without a pre-release suffix.
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ needs.check.outputs.prerelease == 'false' }}
+
+      - id: manifest
+        name: Create the multi-platform manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          # shellcheck disable=SC2046 # one -t per tag, one source per digest
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "$IMAGE@sha256:%s " *)
+          digest=$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          docker buildx imagetools inspect "$IMAGE@$digest"
+
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
+      # Verify with (docs/self-hosting/operations.md):
+      #   cosign verify ghcr.io/arsamsarabi/homa:<version> \
+      #     --certificate-identity-regexp '^https://github\.com/arsamsarabi/homa/\.github/workflows/release\.yml@refs/tags/v' \
+      #     --certificate-oidc-issuer https://token.actions.githubusercontent.com
+      - name: Sign the image (keyless)
+        env:
+          DIGEST: ${{ steps.manifest.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$DIGEST"
+
+  release:
+    name: Create GitHub Release
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+          PRERELEASE: ${{ needs.check.outputs.prerelease }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+        run: |
+          {
+            .github/scripts/release-notes.sh "$VERSION"
+            # shellcheck disable=SC2016 # the backticks are Markdown
+            printf '\n---\n\nImage: `%s:%s` (`%s`), for linux/amd64 and linux/arm64, signed with cosign. ' "$IMAGE" "$VERSION" "$DIGEST"
+            printf 'Upgrade steps: [Operations](https://github.com/%s/blob/%s/docs/self-hosting/operations.md#upgrades).\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME"
+          } > "$RUNNER_TEMP/notes.md"
+          flags=()
+          [ "$PRERELEASE" = true ] && flags+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md" "${flags[@]}"

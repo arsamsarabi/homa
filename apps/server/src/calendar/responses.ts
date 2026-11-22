@@ -51,4 +51,6 @@ export const occurrenceOut = (o: OccurrenceView): z.infer<typeof Occurrence> => 
   tz: o.event.tz,
   recurring: o.event.rrule !== null,
   overridden: o.overridden,
+  taskId: o.task?.id ?? null,
+  taskDone: o.task?.done ?? false,
 });

@@ -1,5 +1,5 @@
 // Agenda: the next 30 days as a list, grouped by day.
-import { Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { Stack, Text, Title, UnstyledButton, VisuallyHidden } from '@mantine/core';
 import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCalendarPageModel } from '@/pages/calendar/model';
@@ -43,7 +43,10 @@ export function AgendaView(): JSX.Element {
                     ? t('calendar.allDay')
                     : `${formats.time.format(span(o).start)} – ${formats.time.format(span(o).end)}`}
                 </span>
-                <span className={classes.title}>{o.summary || t('calendar.untitled')}</span>
+                <span className={classes.title}>
+                  {o.taskDone ? <s>{o.summary || t('calendar.untitled')}</s> : o.summary || t('calendar.untitled')}
+                  {o.taskDone && <VisuallyHidden>{t('calendar.taskDone')}</VisuallyHidden>}
+                </span>
                 {o.location && <span className={classes.location}>{o.location}</span>}
               </UnstyledButton>
             ))}

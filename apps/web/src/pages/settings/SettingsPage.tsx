@@ -8,7 +8,7 @@ import { useSession } from '@/hooks/session';
 import { useSettingsDraft } from '@/hooks/settings';
 import { CalendarsSection } from '@/pages/settings/calendars';
 import { ConnectedCalendarsSection } from '@/pages/settings/connections';
-import { ImportExportSection } from '@/pages/settings/import-export';
+import { ImportExportSection, TodoistImportSection } from '@/pages/settings/import-export';
 import { ChannelsSection, NotificationsSection } from '@/pages/settings/notifications';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
@@ -63,6 +63,7 @@ export function SettingsPage(): JSX.Element {
         <CalendarsSection />
         <ConnectedCalendarsSection />
         <ImportExportSection />
+        <TodoistImportSection />
       </Stack>
     </Container>
   );
