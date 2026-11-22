@@ -201,7 +201,31 @@ describe('connected calendars section', () => {
       ]),
     );
   });
+  test('offers mailbox.org, Posteo and Zoho Calendar presets, each with its server address and hint', async () => {
+    renderApp(
+      '/settings',
+      api(() => json([])),
+    );
+    fireEvent.click(within(await section()).getByRole('button', { name: 'Connect account' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Connect a CalDAV account' });
+    const server = within(drawer).getByLabelText(/Server address/) as HTMLInputElement;
+    const choose = async (name: string): Promise<void> => {
+      fireEvent.click(within(drawer).getByRole('combobox', { name: 'Provider' }));
+      fireEvent.click(await screen.findByRole('option', { name, hidden: true }));
+    };
 
+    await choose('mailbox.org');
+    await waitFor(() => expect(server.value).toBe('https://dav.mailbox.org'));
+    expect(within(drawer).getByText(/mailbox\.org security settings/)).toBeTruthy();
+
+    await choose('Posteo');
+    await waitFor(() => expect(server.value).toBe('https://posteo.de:8443'));
+    expect(within(drawer).getByText(/full Posteo address/)).toBeTruthy();
+
+    await choose('Zoho Calendar');
+    await waitFor(() => expect(server.value).toBe('https://calendar.zoho.com'));
+    expect(within(drawer).getByText(/another region/)).toBeTruthy();
+  });
   test('a CalDAV account shows its notice and calendars; notices dismiss and calendars rename', async () => {
     const sent: Sent[] = [];
     renderApp(

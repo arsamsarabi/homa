@@ -75,6 +75,47 @@ describe('calendar page', () => {
     expect(screen.getByText('High Street')).toBeTruthy();
   });
 
+  test('the calendar filter names CalDAV accounts after their service', async () => {
+    const hosts = [
+      { id: 'k3', label: 'ada on dav.mailbox.org', service: 'mailbox.org' },
+      { id: 'k4', label: 'ada on posteo.de', service: 'Posteo' },
+      { id: 'k5', label: 'ada on calendar.zoho.eu', service: 'Zoho Calendar' },
+    ];
+    const stamp = '2026-11-02T00:00:00Z';
+    const mine = hosts.map((h) => ({
+      id: `c-${h.id}`,
+      name: `${h.service} calendar`,
+      color: '#336699',
+      connectionId: h.id,
+      createdAt: stamp,
+      updatedAt: stamp,
+    }));
+    const accounts = hosts.map((h) => ({
+      id: h.id,
+      provider: 'caldav',
+      label: h.label,
+      status: 'ok',
+      lastError: null,
+      lastSyncedAt: stamp,
+      notice: null,
+      noticeAt: null,
+      createdAt: stamp,
+      calendars: [],
+    }));
+    const fallback = api(() => json([]));
+    renderApp('/?view=agenda', (url, req) => {
+      if (url.pathname === '/api/calendars') return json(mine);
+      if (url.pathname === '/api/connections') return json(accounts);
+      return fallback(url, req);
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Calendars' }));
+    for (const h of hosts) {
+      expect(
+        await screen.findByRole('group', { name: (name) => name.startsWith(h.service), hidden: true }),
+      ).toBeTruthy();
+    }
+  });
+
   test('a response that breaks the schema is an error, not a broken page', async () => {
     renderApp(
       '/?view=agenda',
