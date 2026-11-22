@@ -1,5 +1,5 @@
 import { Badge, Checkbox, Group, Text, UnstyledButton } from '@mantine/core';
-import { IconRepeat } from '@tabler/icons-react';
+import { IconBell, IconCalendarTime, IconRepeat } from '@tabler/icons-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Task } from '@/schemas';
@@ -40,6 +40,12 @@ function Row({ task, parent }: { task: Task; parent?: Task }): JSX.Element {
             </Text>
           )}
           {task.rrule && <IconRepeat size={12} aria-label={t('tasks.repeats')} />}
+          {task.reminders.length > 0 && <IconBell size={12} aria-label={t('tasks.hasReminders')} />}
+          {task.block && (
+            <Text size="xs" c="dimmed">
+              <IconCalendarTime size={12} aria-hidden /> {t('tasks.blocked', { when: m.labels.block(task.block) })}
+            </Text>
+          )}
           {task.priority > 0 && (
             <Text size="xs" c="dimmed">
               {t('tasks.priorityOf', { level: t(`tasks.priorities.${task.priority}`) })}

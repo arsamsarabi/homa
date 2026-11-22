@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { nextDue } from './tasks';
+import { dueInstant, nextDue, taskReminderAt } from './tasks';
 
 describe('nextDue', () => {
   test('a daily task done on time moves to the next day', () => {
@@ -48,5 +48,23 @@ describe('nextDue', () => {
     expect(
       nextDue({ date: '2026-11-21', time: null, tz: 'UTC', rrule: 'FREQ=DAILY;COUNT=1' }, '2026-11-21'),
     ).toBeNull();
+  });
+});
+
+describe('task reminders', () => {
+  test('a date-only due is reminded about at 09:00 in its zone', () => {
+    expect(dueInstant({ date: '2026-07-01', time: null, tz: 'Europe/London' }).toISOString()).toBe(
+      '2026-07-01T08:00:00.000Z',
+    );
+    expect(taskReminderAt({ date: '2026-07-01', time: null, tz: 'Asia/Tehran' }, 0).toISOString()).toBe(
+      '2026-07-01T05:30:00.000Z',
+    );
+  });
+
+  test('a timed due fires its offset before, keeping wall-clock days across a clock change', () => {
+    const due = { date: '2026-03-29', time: '10:00', tz: 'Europe/London' };
+    // 10:00 BST is 09:00Z; a day before is 10:00 GMT, 10:00Z.
+    expect(taskReminderAt(due, 30).toISOString()).toBe('2026-03-29T08:30:00.000Z');
+    expect(taskReminderAt(due, 1440).toISOString()).toBe('2026-03-28T10:00:00.000Z');
   });
 });

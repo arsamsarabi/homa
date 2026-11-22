@@ -4,6 +4,7 @@
 // Todoist's due work. A repeating task is one row: completing it moves the due to its next
 // occurrence instead of making a new task.
 import { expand } from '../recurrence';
+import { fireAt } from '../reminders';
 import { instantOf, wallOf } from '../time';
 
 export const TASK_LIMITS = {
@@ -18,6 +19,8 @@ export const TASK_LIMITS = {
   tagsPerUser: 500,
   tagName: 50,
   tagsPerTask: 20,
+  /** A date-only due is reminded about as if it were due at this time, in minutes after midnight. */
+  dateOnlyMinutes: 9 * 60,
 } as const;
 
 /** 0 none, 1 low, 2 medium, 3 high. */
@@ -62,3 +65,18 @@ export function nextDue(d: TaskDue, today: string): { date: string; time: string
   const iso = w.toISOString();
   return { date: iso.slice(0, 10), time: d.time ? iso.slice(11, 16) : null };
 }
+
+/** A task's due as an instant: its time in its zone, or 09:00 there for a date-only due. */
+export function dueInstant(d: Pick<TaskDue, 'date' | 'time' | 'tz'>): Date {
+  const base = wall(d.date, d.time);
+  if (!d.time) base.setUTCMinutes(TASK_LIMITS.dateOnlyMinutes);
+  return instantOf(base, d.tz);
+}
+
+/**
+ * When a reminder `minutes` before a task's due fires. Like event reminders, whole days are
+ * wall-clock days in the task's zone, so "1 day before" a 09:00 due is 09:00 the day before.
+ * @example taskReminderAt({ date: '2026-11-27', time: null, tz: 'Europe/London' }, 0) // 09:00 on the 27th
+ */
+export const taskReminderAt = (d: Pick<TaskDue, 'date' | 'time' | 'tz'>, minutes: number): Date =>
+  fireAt({ start: dueInstant(d), allDay: false, tz: d.tz, homeTz: null }, minutes);

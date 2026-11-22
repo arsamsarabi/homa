@@ -10,7 +10,7 @@ const channel = (over: Record<string, unknown> = {}) => ({
   kind: 'ntfy',
   name: 'Phone',
   enabled: true,
-  reminderKinds: ['event', 'standalone'],
+  reminderKinds: ['event', 'standalone', 'task'],
   server: 'https://ntfy.sh/',
   topic: 'ada-123',
   host: null,

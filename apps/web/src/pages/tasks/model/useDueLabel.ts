@@ -11,6 +11,8 @@ export type DueLabels = {
   due: (t: Pick<Task, 'dueDate' | 'dueTime' | 'tz'>) => string;
   /** A day heading: "Monday 23 November", with the Solar Hijri date when it is on. */
   day: (date: string) => string;
+  /** A time block: "Today, 10:00 – 11:00". */
+  block: (b: { start: string; end: string }) => string;
 };
 
 /**
@@ -36,6 +38,12 @@ export function useDueLabel(today: string): DueLabels {
         wall,
       );
       return task.dueTime ? `${date}, ${formats.time.format(wall)}` : date;
+    },
+    block: (b: { start: string; end: string }): string => {
+      const s = wallOf(new Date(b.start), tz);
+      const rel = relativeDay(isoDate(s), today);
+      const date = rel ? t(`tasks.rel.${rel}`) : `${formats.weekdayShort.format(s)} ${formats.shortDayMonth.format(s)}`;
+      return t('tasks.dayTime', { day: date, time: formats.time.formatRange(s, wallOf(new Date(b.end), tz)) });
     },
     day: (date: string): string => {
       const d = new Date(`${date}T00:00:00Z`);

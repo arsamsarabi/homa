@@ -15,6 +15,8 @@ const task = (id: string, extra: Partial<Task> = {}): Task => ({
   dueTime: null,
   tz: 'Europe/London',
   rrule: null,
+  reminders: [],
+  block: null,
   completedAt: null,
   createdAt: '2026-11-01T00:00:00Z',
   updatedAt: '2026-11-01T00:00:00Z',

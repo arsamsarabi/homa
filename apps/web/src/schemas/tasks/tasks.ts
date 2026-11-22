@@ -20,6 +20,10 @@ export const TaskSchema = z.object({
   dueTime: z.string().nullable(),
   tz: z.string(),
   rrule: z.string().nullable(),
+  /** Minutes before the due (09:00 for a date-only due). */
+  reminders: z.array(z.number().int()),
+  /** The time block on the calendar. */
+  block: z.object({ eventId: z.string(), calendarId: z.string(), start: isoDateTime, end: isoDateTime }).nullable(),
   completedAt: isoDateTime.nullable(),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,

@@ -1,6 +1,6 @@
 # Phase 5: tasks
 
-Status: 5a (tasks, projects, tags, subtasks and the lists) built in the `phase-5a-tasks` PR, 2026-11-22. 5b (reminders on tasks and time-blocking) and 5c (Todoist import) follow in their own PRs and fill in their sections below.
+Status: 5a (tasks, projects, tags, subtasks and the lists) built in the `phase-5a-tasks` PR, 2026-11-22. 5b (reminders on tasks and time-blocking) built in the `phase-5b-task-reminders-blocks` PR, 2026-11-22. 5c (Todoist import) follows in its own PR and fills in its section below.
 
 ## Scope
 
@@ -76,11 +76,38 @@ The lists that show subtasks on their own name the parent ("In Plant bulbs"); li
 
 ## Reminders on tasks (5b)
 
-To be designed in the 5b PR, reusing 4a's `reminders`, `notifications` and `notification_deliveries` and 4b's channels.
+A task's reminders are rows in 4a's `reminders` table with the new `task_id` column (cascading), so they go through the same delivery job, notifications, snooze and channels as event and standalone reminders. A row has exactly one of `event_id`, `task_id` or neither (standalone); a check enforces it. `notifications.task_id` (cascading) records which task fired it.
+
+| Rule | Why |
+| --- | --- |
+| Reminders are offsets in minutes before the due, like an event's (at most 5, up to 4 weeks) | One chip picker for events and tasks |
+| A date-only due counts from 09:00 in the task's zone; whole-day offsets keep that time across a clock change | "Remind me a day before" a Friday task means Thursday morning, not Thursday midnight |
+| A reminder needs a due date (a 400 otherwise); removing the due removes them | Nothing to count back from |
+| Each reminder keeps one `next_fire_at`: the fire time for the current due, null once fired, or when the task is completed, or when the fire time is past (with 4a's catch-up window) | A task has one due at a time, so there's no series to expand |
+| Changing the due or the offsets, completing, and reopening recompute `next_fire_at`. Completing a repeating task moves the due, so its reminders fire again for the next one | Same rule in one place: `syncTaskReminders` |
+
+The delivery job claims due task reminders (`claimDueTaskReminders`, `FOR UPDATE SKIP LOCKED`, like the other kinds) and makes one notification each, with the task's title and its due as the start (a date-only due shows as all-day). The dedupe key is `task:{taskId}:{due}:{fireAt}`, so a reminder fires once per due even if two workers race.
+
+Notifications and channels get a third kind, `task`. A channel's `reminder_kinds` can include `task`; the migration adds it to every channel that already takes standalone reminders, and new channels take all three. In the bell, **Done** on a task notification also completes the task (a repeating one moves on). Snooze works as for any notification.
 
 ## Time-blocking (5b)
 
-To be designed in the 5b PR. The direction: dragging a task onto the calendar makes a linked event (`events.source = 'task_block'`, `tasks.scheduled_event_id`), rather than a separate "block" record, so the block shows in every view, syncs to connected calendars as busy time, and later counts in availability like any event.
+**Decision: a block is an ordinary event linked from the task**, `tasks.scheduled_event_id` (references `events`, set null when the event goes), not a separate "block" record and not an `events.source` column.
+
+- An event shows in every calendar view, can be dragged and resized there, and syncs to a connected calendar as busy time, with no new code. A separate record would need its own rendering, sync and availability rules.
+- The link sits on the task because a task has at most one block, and the event needs to know nothing about it. Deleting the event on the calendar (or on the remote side, through sync) just unlinks it. `events.source` was dropped from the plan: the link already says which events are blocks.
+- The block's start is the VTODO `DTSTART` a later sync writes.
+
+| API | Does |
+| --- | --- |
+| `PUT /api/tasks/{id}/block` `{ calendarId, start, end }` | Makes the event (named after the task, its notes as the description, in the task's zone) and links it; a task with a block moves it instead. At most 24 hours, end after start. An unknown calendar is a 400 and a read-only one a 403, as for events |
+| `DELETE /api/tasks/{id}/block` | Deletes the event |
+
+A task's answer includes `block: { eventId, calendarId, start, end }` or null. Occurrences include `taskId` and `taskDone`, and the calendar strikes through the block of a completed task (with "Task done" for screen readers). Moving or resizing the block on the calendar is an ordinary event edit; the task shows the new time.
+
+In the web app the task drawer has a **Time block** section: day, start, length (15 minutes to 4 hours) and a writable calendar (the last one used for events), with **Block time**, **Move the block** and **Remove the block**. It starts at the task's due time, else the next whole hour. Rows show "Blocked Today, 10:00 – 11:00" and a bell when the task has reminders.
+
+Not in 5b: dragging a task from the list onto the calendar (the drawer's form does the same job, and drag between two pages needs a split view first), and blocking a repeating task's every occurrence.
 
 ## Todoist import (5c)
 
@@ -108,4 +135,6 @@ To be designed in the 5c PR, after checking Todoist's current export formats and
 - Priority and tag markers in quick add ("p1", "#errand", "!!").
 - Deeper subtasks, if the Todoist import shows people rely on them.
 - Should Today and Upcoming include tasks from the time blocks (5b) that are scheduled today but due later?
+- Drag a task from the list onto the calendar, once there's a split tasks-and-calendar view.
+- Should a task's reminders also be able to count from its time block's start?
 - Server-side list filters for API and MCP clients.

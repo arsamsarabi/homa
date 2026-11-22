@@ -739,6 +739,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Block time for the task on the calendar (an event linked to it), or move its block */
+        put: operations["scheduleTask"];
+        post?: never;
+        /** Take the task's time block off the calendar (deletes its event) */
+        delete: operations["unscheduleTask"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects": {
         parameters: {
             query?: never;
@@ -953,6 +971,13 @@ export interface components {
             tz: string;
             recurring: boolean;
             overridden: boolean;
+            /**
+             * Format: uuid
+             * @description The task this event is a time block for
+             */
+            taskId: string | null;
+            /** @description That task is completed */
+            taskDone: boolean;
         };
         Settings: {
             /**
@@ -1171,6 +1196,19 @@ export interface components {
             tz: string;
             /** @description Repeats from the due date; completing moves it on */
             rrule: string | null;
+            /** @description Minutes before the due */
+            reminders: number[];
+            /** @description The time block: an event on the calendar for working on the task */
+            block: {
+                /** Format: uuid */
+                eventId: string;
+                /** Format: uuid */
+                calendarId: string;
+                /** Format: date-time */
+                start: string;
+                /** Format: date-time */
+                end: string;
+            } | null;
             /** Format: date-time */
             completedAt: string | null;
             /** Format: date-time */
@@ -1270,16 +1308,18 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "event" | "standalone";
+            kind: "event" | "standalone" | "task";
             title: string;
             /**
              * Format: date-time
-             * @description The occurrence's start, or when the standalone reminder was due
+             * @description The occurrence's start, the task's due, or when the standalone reminder was due
              */
             start: string;
             allDay: boolean;
             /** Format: uuid */
             eventId: string | null;
+            /** Format: uuid */
+            taskId: string | null;
             /** Format: date-time */
             recurrenceId: string | null;
             /** Format: date-time */
@@ -1319,7 +1359,7 @@ export interface components {
             kind: "email" | "ntfy" | "gotify" | "webhook";
             name: string;
             enabled: boolean;
-            reminderKinds: ("event" | "standalone")[];
+            reminderKinds: ("event" | "standalone" | "task")[];
             /** @description ntfy and Gotify */
             server: string | null;
             /** @description ntfy */
@@ -1343,14 +1383,14 @@ export interface components {
             /** @enum {string} */
             kind: "email";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
         } | {
             /** @enum {string} */
             kind: "ntfy";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             /** @default https://ntfy.sh */
             server: string;
             /** @example homa-reminders-3f9a */
@@ -1360,23 +1400,23 @@ export interface components {
             /** @enum {string} */
             kind: "gotify";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             server: string;
             token: string;
         } | {
             /** @enum {string} */
             kind: "webhook";
             name: string;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             url: string;
         };
         NotificationChannelPatch: {
             name?: string;
             enabled?: boolean;
-            /** @description Which reminders it gets: event reminders, standalone ones, or both */
-            reminderKinds?: ("event" | "standalone")[];
+            /** @description Which reminders it gets: event, standalone and task reminders */
+            reminderKinds?: ("event" | "standalone" | "task")[];
             server?: string;
             /** @example homa-reminders-3f9a */
             topic?: string;
@@ -1411,6 +1451,14 @@ export interface components {
             tz: string;
             /** @example FREQ=WEEKLY;BYDAY=MO */
             rrule?: string | null;
+            /**
+             * @description Minutes before the due (09:00 for a date-only due), at most 5
+             * @example [
+             *       0,
+             *       60
+             *     ]
+             */
+            reminders?: number[];
         };
         TaskPatch: {
             title?: string;
@@ -1432,6 +1480,22 @@ export interface components {
             tz?: string;
             /** @example FREQ=WEEKLY;BYDAY=MO */
             rrule?: string | null;
+            /**
+             * @description Minutes before the due (09:00 for a date-only due), at most 5
+             * @example [
+             *       0,
+             *       60
+             *     ]
+             */
+            reminders?: number[];
+        };
+        TaskBlockInput: {
+            /** Format: uuid */
+            calendarId: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
         };
         ProjectInput: {
             name: string;
@@ -3735,6 +3799,117 @@ export interface operations {
             };
             /** @description Not signed in */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    scheduleTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskBlockInput"];
+            };
+        };
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    unscheduleTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The task */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

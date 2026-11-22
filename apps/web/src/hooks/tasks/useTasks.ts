@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { homaClient, type TaskInput, type TaskPatch, unwrap } from '@/api';
+import { calendarKeys } from '@/hooks/calendar';
 import {
   type Project,
   ProjectListSchema,
@@ -61,7 +62,12 @@ export type TaskMutations = {
   complete: UseMutationResult<Task, Error, string>;
   reopen: UseMutationResult<Task, Error, string>;
   remove: UseMutationResult<void, Error, string>;
+  schedule: UseMutationResult<Task, Error, BlockVars>;
+  unschedule: UseMutationResult<Task, Error, string>;
 };
+
+/** A time block: the calendar and the instants it starts and ends. */
+export type BlockVars = { id: string; calendarId: string; start: string; end: string };
 
 const path = (id: string): { params: { path: { id: string } } } => ({ params: { path: { id } } });
 
@@ -73,6 +79,10 @@ export function useTaskMutations(): TaskMutations {
       qc.invalidateQueries({ queryKey: taskKeys.all }),
       qc.invalidateQueries({ queryKey: taskKeys.tags }),
     ]);
+  };
+  // A time block is an event; completing a task changes how its block shows.
+  const refreshWithCalendar = async (): Promise<void> => {
+    await Promise.all([refresh(), qc.invalidateQueries({ queryKey: calendarKeys.occurrences })]);
   };
   return {
     create: useMutation({
@@ -88,18 +98,28 @@ export function useTaskMutations(): TaskMutations {
     complete: useMutation({
       mutationFn: async (id: string): Promise<Task> =>
         TaskSchema.parse(await unwrap(homaClient.POST('/tasks/{id}/complete', path(id)))),
-      onSettled: refresh,
+      onSettled: refreshWithCalendar,
     }),
     reopen: useMutation({
       mutationFn: async (id: string): Promise<Task> =>
         TaskSchema.parse(await unwrap(homaClient.POST('/tasks/{id}/reopen', path(id)))),
-      onSettled: refresh,
+      onSettled: refreshWithCalendar,
     }),
     remove: useMutation({
       mutationFn: async (id: string): Promise<void> => {
         await unwrap(homaClient.DELETE('/tasks/{id}', path(id)));
       },
       onSettled: refresh,
+    }),
+    schedule: useMutation({
+      mutationFn: async ({ id, ...body }: BlockVars): Promise<Task> =>
+        TaskSchema.parse(await unwrap(homaClient.PUT('/tasks/{id}/block', { ...path(id), body }))),
+      onSettled: refreshWithCalendar,
+    }),
+    unschedule: useMutation({
+      mutationFn: async (id: string): Promise<Task> =>
+        TaskSchema.parse(await unwrap(homaClient.DELETE('/tasks/{id}/block', path(id)))),
+      onSettled: refreshWithCalendar,
     }),
   };
 }

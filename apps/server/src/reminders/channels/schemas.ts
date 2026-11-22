@@ -7,7 +7,7 @@ const Kinds = z
   .array(z.enum(REMINDER_KINDS))
   .min(1)
   .transform((v) => [...new Set(v)])
-  .openapi({ description: 'Which reminders it gets: event reminders, standalone ones, or both' });
+  .openapi({ description: 'Which reminders it gets: event, standalone and task reminders' });
 const Address = z.string().trim().min(1).max(2000);
 const Token = z.string().trim().min(1).max(500);
 const Topic = z
