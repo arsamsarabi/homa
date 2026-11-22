@@ -1941,6 +1941,74 @@
           "ok"
         ]
       },
+      "TodoistSummary": {
+        "type": "object",
+        "properties": {
+          "createdProjects": {
+            "type": "integer"
+          },
+          "imported": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Open tasks already there with the same title, project and parent"
+          },
+          "unreadDates": {
+            "type": "integer",
+            "description": "Due dates that weren't read; their text is in the notes"
+          },
+          "sections": {
+            "type": "integer",
+            "description": "Todoist sections, which Homa doesn't have"
+          }
+        },
+        "required": [
+          "createdProjects",
+          "imported",
+          "skipped",
+          "unreadDates",
+          "sections"
+        ]
+      },
+      "TodoistImport": {
+        "type": "object",
+        "properties": {
+          "tz": {
+            "type": "string",
+            "example": "Europe/London",
+            "description": "The zone for tasks whose file gives none: the home zone, else the browser's"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "The file name; it names the project"
+                },
+                "csv": {
+                  "type": "string",
+                  "maxLength": 5242880
+                }
+              },
+              "required": [
+                "name",
+                "csv"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 300
+          }
+        },
+        "required": [
+          "tz",
+          "files"
+        ]
+      },
       "TaskInput": {
         "type": "object",
         "properties": {
@@ -4834,6 +4902,58 @@
                   "required": [
                     "error"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/import/todoist": {
+      "post": {
+        "operationId": "importTodoist",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Import Todoist's project CSV files",
+        "description": "One file per project (Todoist: a project's menu → Export as a template → CSV, or the files in a backup ZIP). Each goes into the Homa project with the file's name, made if needed. Importing again skips open tasks with the same title in the same place. Completed tasks aren't in Todoist's export.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoistImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What was imported",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoistSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

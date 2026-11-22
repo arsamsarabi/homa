@@ -1,7 +1,10 @@
 // REST routes for tasks, projects and tags. Every route needs a signed-in user; another user's
 // task, project or tag is a 404.
+
+import { ValidationError } from '@homa/core';
 import type { Db } from '@homa/db';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
+import { bodyLimit } from 'hono/body-limit';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
 import * as projects from './projects-service';
@@ -18,8 +21,12 @@ import {
   TaskInput,
   TaskListQuery,
   TaskPatch,
+  TODOIST_BODY_BYTES,
+  TodoistImport,
+  TodoistSummary,
 } from './schemas';
 import * as tasks from './tasks-service';
+import { importTodoist } from './todoist-import';
 
 const tags = { tasks: ['Tasks'] };
 const changed: Record<200 | 401 | 404, ReturnType<typeof jsonContent>> = {
@@ -90,6 +97,25 @@ const r = {
     summary: "Take the task's time block off the calendar (deletes its event)",
     request: { params: Id },
     responses: { ...changed, 403: errors[403] },
+  }),
+  importTodoist: createRoute({
+    method: 'post',
+    path: '/tasks/import/todoist',
+    operationId: 'importTodoist',
+    tags: tags.tasks,
+    summary: "Import Todoist's project CSV files",
+    description:
+      "One file per project (Todoist: a project's menu → Export as a template → CSV, or the files in a backup ZIP). Each goes into the Homa project with the file's name, made if needed. Importing again skips open tasks with the same title in the same place. Completed tasks aren't in Todoist's export.",
+    middleware: [
+      bodyLimit({
+        maxSize: TODOIST_BODY_BYTES,
+        onError: (): never => {
+          throw new ValidationError('The files are larger than 5 MB');
+        },
+      }),
+    ] as const,
+    request: jsonBody(TodoistImport),
+    responses: { 200: jsonContent(TodoistSummary, 'What was imported'), 400: errors[400], 401: errors[401] },
   }),
   deleteTask: createRoute({
     method: 'delete',
@@ -178,6 +204,10 @@ export function tasksApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars> {
   const id = (c: { req: { valid: (k: 'param') => { id: string } } }): string => c.req.valid('param').id;
 
   return app
+    .openapi(r.importTodoist, async (c) => {
+      const body = c.req.valid('json');
+      return c.json(await importTodoist(db(), c.var.userId, body.files, body.tz), 200);
+    })
     .openapi(r.listTasks, async (c) =>
       c.json((await tasks.listTasks(db(), c.var.userId, c.req.valid('query').completed === 'true')).map(taskOut), 200),
     )

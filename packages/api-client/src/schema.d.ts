@@ -669,6 +669,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/import/todoist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Todoist's project CSV files
+         * @description One file per project (Todoist: a project's menu → Export as a template → CSV, or the files in a backup ZIP). Each goes into the Homa project with the file's name, made if needed. Importing again skips open tasks with the same title in the same place. Completed tasks aren't in Todoist's export.
+         */
+        post: operations["importTodoist"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tasks": {
         parameters: {
             query?: never;
@@ -1429,6 +1449,28 @@ export interface components {
         NotificationChannelTestResult: {
             ok: boolean;
             error?: string;
+        };
+        TodoistSummary: {
+            createdProjects: number;
+            imported: number;
+            /** @description Open tasks already there with the same title, project and parent */
+            skipped: number;
+            /** @description Due dates that weren't read; their text is in the notes */
+            unreadDates: number;
+            /** @description Todoist sections, which Homa doesn't have */
+            sections: number;
+        };
+        TodoistImport: {
+            /**
+             * @description The zone for tasks whose file gives none: the home zone, else the browser's
+             * @example Europe/London
+             */
+            tz: string;
+            files: {
+                /** @description The file name; it names the project */
+                name: string;
+                csv: string;
+            }[];
         };
         /** @description Omitted fields are empty: Inbox, no tags, no priority, no due */
         TaskInput: {
@@ -3559,6 +3601,48 @@ export interface operations {
                     "application/json": {
                         error: string;
                     };
+                };
+            };
+        };
+    };
+    importTodoist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TodoistImport"];
+            };
+        };
+        responses: {
+            /** @description What was imported */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodoistSummary"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

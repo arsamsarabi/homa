@@ -91,3 +91,33 @@ export const Tag = z.object({ id: z.uuid(), name: z.string() }).openapi('Tag');
 export const TagPatch = z.object({ name: TagName }).openapi('TagPatch');
 
 export const Id = z.object({ id: z.uuid() });
+
+const TODOIST_MAX_BYTES: number = 5 * 1024 * 1024;
+export const TodoistImport = z
+  .object({
+    tz: Tz.openapi({ description: "The zone for tasks whose file gives none: the home zone, else the browser's" }),
+    files: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1).max(200).openapi({ description: 'The file name; it names the project' }),
+          csv: z.string().max(TODOIST_MAX_BYTES),
+        }),
+      )
+      .min(1)
+      .max(300),
+  })
+  .openapi('TodoistImport');
+export const TODOIST_BODY_BYTES: number = TODOIST_MAX_BYTES + 64 * 1024;
+
+export const TodoistSummary = z
+  .object({
+    createdProjects: z.number().int(),
+    imported: z.number().int(),
+    skipped: z
+      .number()
+      .int()
+      .openapi({ description: 'Open tasks already there with the same title, project and parent' }),
+    unreadDates: z.number().int().openapi({ description: "Due dates that weren't read; their text is in the notes" }),
+    sections: z.number().int().openapi({ description: "Todoist sections, which Homa doesn't have" }),
+  })
+  .openapi('TodoistSummary');

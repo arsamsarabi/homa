@@ -25,6 +25,7 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 - **Lists:** Inbox (no project), Today (with overdue tasks), Upcoming (by day), Completed, and a list per project and per tag.
 - **Reminders:** remind me before a task's due time (or before 09:00 on its due date), through the bell, push and your channels. Done on the reminder completes the task.
 - **Time blocks:** put time for a task on your calendar as an event; it shows as done there once the task is.
+- **Import from Todoist:** choose the CSV files Todoist exports (one per project, or all the files from a backup ZIP). Projects, subtasks, priorities, labels, notes and due dates come across; importing again adds only what is new.
 - **Quick add:** type "Buy milk tomorrow" or "Call the bank mon 3pm" at the top of a list; the date and time set the due.
 
 ## Other calendars

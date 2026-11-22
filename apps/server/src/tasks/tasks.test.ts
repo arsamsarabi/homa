@@ -331,4 +331,79 @@ describe.skipIf(!testDatabaseUrl)('tasks', () => {
       expect((await open()).find((y) => y.id === x.id)?.block).toBeNull();
     });
   });
+
+  describe('Todoist import', () => {
+    const HEAD =
+      'TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE,DURATION,DURATION_UNIT,DEADLINE,DEADLINE_LANG';
+    const garden = [
+      HEAD,
+      'section,Beds,,,,,,,,,,,,',
+      'task,Plant bulbs @outdoors,Tulips,1,1,Ada (1),,2030-12-05,en,,,,,',
+      'task,Buy compost,,4,2,Ada (1),,,,,,,,',
+      'task,Water plants,,4,1,Ada (1),,every day,en,,,,,',
+      'task,Prune roses,,4,1,Ada (1),,every other full moon,en,,,,,',
+    ].join('\n');
+    const importIt = (files: Json[], as = ada) =>
+      call('POST', '/tasks/import/todoist', { tz: 'Europe/London', files }, as);
+
+    test('makes a project per file, keeps subtasks, tags and dates, and skips what is there on a re-import', async () => {
+      const first = await importIt([{ name: 'Garden.csv', csv: garden }]);
+      expect(first.status).toBe(200);
+      expect(first.body as Json).toEqual({ createdProjects: 1, imported: 4, skipped: 0, unreadDates: 1, sections: 1 });
+      const [project] = (await call('GET', '/projects')).body as Json[];
+      expect(project?.name).toBe('Garden');
+      const tasks = await open();
+      const bulbs = tasks.find((x) => x.title === 'Plant bulbs');
+      expect(bulbs).toMatchObject({
+        projectId: project?.id,
+        priority: 3,
+        tags: ['outdoors'],
+        notes: 'Tulips',
+        dueDate: '2030-12-05',
+      });
+      expect(tasks.find((x) => x.title === 'Buy compost')).toMatchObject({
+        parentId: bulbs?.id,
+        projectId: project?.id,
+      });
+      expect(tasks.find((x) => x.title === 'Water plants')?.rrule).toBe('FREQ=DAILY');
+      expect(tasks.find((x) => x.title === 'Prune roses')).toMatchObject({
+        dueDate: null,
+        notes: 'Todoist date: every other full moon',
+      });
+
+      // Again: nothing new.
+      const again = await importIt([{ name: 'garden.CSV', csv: garden }]);
+      expect(again.body).toMatchObject({ createdProjects: 0, imported: 0, skipped: 4 });
+      expect(await open()).toHaveLength(4);
+    });
+
+    test('a new subtask on a re-import goes under the existing parent', async () => {
+      await importIt([{ name: 'Home', csv: `${HEAD}\ntask,Paint the hall,,4,1,,,,,,,,,` }]);
+      const again = await importIt([
+        { name: 'Home', csv: `${HEAD}\ntask,Paint the hall,,4,1,,,,,,,,,\ntask,Buy paint,,4,2,,,,,,,,,` },
+      ]);
+      expect(again.body).toMatchObject({ imported: 1, skipped: 1 });
+      const tasks = await open();
+      expect(tasks.find((x) => x.title === 'Buy paint')?.parentId).toBe(
+        tasks.find((x) => x.title === 'Paint the hall')?.id,
+      );
+    });
+
+    test('a file that is not Todoist CSV is refused, and nothing from the batch is kept', async () => {
+      const res = await importIt([
+        { name: 'Garden.csv', csv: garden },
+        { name: 'calendar.csv', csv: 'Subject,Start Date\nDentist,2030-12-01' },
+      ]);
+      expect(res.status).toBe(400);
+      expect(String(res.body.error)).toContain('calendar.csv');
+      expect(await open()).toEqual([]);
+      expect((await call('GET', '/projects')).body as Json[]).toEqual([]);
+    });
+
+    test("each user's import is their own", async () => {
+      await importIt([{ name: 'Garden.csv', csv: garden }], bob);
+      expect(await open()).toEqual([]);
+      expect((await open(bob)).length).toBe(4);
+    });
+  });
 });

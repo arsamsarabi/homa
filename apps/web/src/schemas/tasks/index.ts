@@ -12,4 +12,6 @@ export {
   TaskSchema,
   type TasksSearch,
   TasksSearchSchema,
+  type TodoistSummary,
+  TodoistSummarySchema,
 } from './tasks';
