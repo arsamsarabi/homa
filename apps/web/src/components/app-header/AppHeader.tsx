@@ -1,5 +1,6 @@
-import { Avatar, Group, Image, Menu, Text, Title, UnstyledButton } from '@mantine/core';
+import { ActionIcon, Avatar, Group, Image, Menu, Text, Title, UnstyledButton } from '@mantine/core';
 import {
+  IconChecklist,
   IconChevronDown,
   IconKeyboard,
   IconLogout,
@@ -37,7 +38,7 @@ const initials = (name: string): string =>
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
 
-/** The app's top bar: the logo (home), the bell, and one menu with search, settings, language, theme and sign out. */
+/** The app's top bar: the logo (home), tasks, the bell, and one menu with search, settings, language, theme and sign out. */
 export function AppHeader(props: AppHeaderProps): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -49,6 +50,9 @@ export function AppHeader(props: AppHeaderProps): JSX.Element {
         </Title>
       </UnstyledButton>
       <Group gap="xs" wrap="nowrap">
+        <ActionIcon component={Link} to="/tasks" variant="subtle" size="lg" aria-label={t('nav.tasks')}>
+          <IconChecklist size={20} aria-hidden />
+        </ActionIcon>
         {props.bell}
         <Menu position="bottom-end" width={240}>
           <Menu.Target>

@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+Tasks. A Tasks page (the checklist icon in the header) has an Inbox, Today (with overdue tasks), Upcoming, Completed, and a list per project and per tag. Tasks have notes, a due date with an optional time, priority, tags and one level of subtasks; a repeating task moves to its next due date when completed. The field at the top of each list reads dates like the calendar's quick add ("Buy milk tomorrow"). Tasks, projects and tags are in the JSON export. Migration `0012_tasks` adds the `projects`, `tags`, `tasks` and `task_tags` tables.
+
 ## [0.1.0] - unreleased
 
 The first release, and the first published image: `ghcr.io/arsamsarabi/homa`, for linux/amd64 and linux/arm64, signed with cosign. Compose now pulls it instead of building from source; set `HOMA_VERSION` in `deploy/docker/.env` to pin a version (see `docs/self-hosting/operations.md`). `HOMA_IMAGE` is gone. `/api/health` reports the version.

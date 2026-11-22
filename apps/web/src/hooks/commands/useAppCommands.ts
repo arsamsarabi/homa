@@ -1,4 +1,4 @@
-// The command palette's actions: calendar navigation, settings, theme, language and sign out.
+// The command palette's actions: calendar navigation, task lists, settings, theme, language and sign out.
 import type { SpotlightActionGroupData } from '@mantine/spotlight';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,14 @@ export function useAppCommands(h: AppCommandHandlers): SpotlightActionGroupData[
           onClick: (): void => go({ view: v }),
         })),
       ],
+    },
+    {
+      group: t('palette.tasks'),
+      actions: (['inbox', 'today', 'upcoming'] as const).map((list) => ({
+        id: `tasks.${list}`,
+        label: `${t('nav.tasks')}: ${t(`tasks.${list}`)}`,
+        onClick: (): void => void navigate({ to: '/tasks', search: { list } }),
+      })),
     },
     {
       group: t('palette.app'),

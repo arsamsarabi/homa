@@ -9,5 +9,6 @@ export * from './quick-add';
 export * from './reminders';
 export * from './series-change';
 export * from './shortcuts';
+export * from './tasks';
 export * from './time-grid';
 export * from './zones';

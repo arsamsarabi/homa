@@ -19,6 +19,12 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 - **Delivery:** due reminders appear in the bell in the header, with snooze (5, 10 or 30 minutes, 1 hour, tomorrow) and done, and as web push notifications in browsers that turn push on. Other channels (email, ntfy, Gotify, webhooks) are not built yet.
 - **Sync:** reminders sync as `VALARM`s with CalDAV and `.ics` files, with Google's reminders, and with Outlook (which keeps only one). Reminders on read-only calendars stay in Homa.
 
+## Tasks
+
+- **Tasks:** a title, notes, a due date with an optional time, priority, a project, tags and one level of subtasks. A repeating task moves to its next due date when you complete it.
+- **Lists:** Inbox (no project), Today (with overdue tasks), Upcoming (by day), Completed, and a list per project and per tag.
+- **Quick add:** type "Buy milk tomorrow" or "Call the bank mon 3pm" at the top of a list; the date and time set the due.
+
 ## Other calendars
 
 - **Subscriptions:** read-only ICS feeds by URL, and a catalog of public-holiday feeds to subscribe to in one click.
@@ -40,4 +46,4 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 
 ## What's next
 
-Tasks, sharing, group date-finding, routines and more are planned, not built. The order and status of each phase are in the [implementation plan](./implementation-plan.md).
+Reminders on tasks, time-blocking, the Todoist import, sharing, group date-finding, routines and more are planned, not built. The order and status of each phase are in the [implementation plan](./implementation-plan.md).
