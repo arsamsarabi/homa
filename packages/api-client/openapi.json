@@ -30,6 +30,39 @@
           "version"
         ]
       },
+      "Ready": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "NotReady": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "not-ready"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "example": "the database did not answer within 2 seconds"
+          }
+        },
+        "required": [
+          "status",
+          "reason"
+        ]
+      },
       "Calendar": {
         "type": "object",
         "properties": {
@@ -580,6 +613,10 @@
           "microsoftCalendar": {
             "type": "boolean",
             "description": "Whether Microsoft accounts (Outlook.com, Microsoft 365) can be connected"
+          },
+          "passwordReset": {
+            "type": "boolean",
+            "description": "Whether this server can email password reset links (it has email set up)"
           }
         },
         "required": [
@@ -588,7 +625,8 @@
           "needsSetup",
           "defaultLanguage",
           "googleCalendar",
-          "microsoftCalendar"
+          "microsoftCalendar",
+          "passwordReset"
         ]
       },
       "InstanceSettings": {
@@ -2278,6 +2316,37 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "getReady",
+        "tags": [
+          "System"
+        ],
+        "summary": "Readiness check: the database answers and its migrations are current",
+        "responses": {
+          "200": {
+            "description": "Ready to serve requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ready"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Not ready, and why",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotReady"
                 }
               }
             }

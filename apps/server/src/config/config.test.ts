@@ -68,3 +68,14 @@ test('email: HOMA_SMTP_URL and HOMA_MAIL_FROM together, or neither', () => {
   expect(() => loadConfig({ ...valid, HOMA_SMTP_URL: 'smtp://mail.example.com:587' })).toThrow(/HOMA_MAIL_FROM/);
   expect(() => loadConfig({ ...valid, HOMA_SMTP_URL: 'http://mail', HOMA_MAIL_FROM: 'x' })).toThrow(/smtp:\/\//);
 });
+
+test('email verification: on by default with email, off without, and true needs email', () => {
+  const mail = { ...valid, HOMA_SMTP_URL: 'smtp://mail.example.com:587', HOMA_MAIL_FROM: 'Homa <h@example.com>' };
+  expect(loadConfig(valid).HOMA_REQUIRE_EMAIL_VERIFICATION).toBe(false);
+  expect(loadConfig(mail).HOMA_REQUIRE_EMAIL_VERIFICATION).toBe(true);
+  expect(loadConfig({ ...mail, HOMA_REQUIRE_EMAIL_VERIFICATION: 'false' }).HOMA_REQUIRE_EMAIL_VERIFICATION).toBe(false);
+  expect(loadConfig({ ...valid, HOMA_REQUIRE_EMAIL_VERIFICATION: '' }).HOMA_REQUIRE_EMAIL_VERIFICATION).toBe(false);
+  expect(() => loadConfig({ ...valid, HOMA_REQUIRE_EMAIL_VERIFICATION: 'true' })).toThrow(
+    /HOMA_REQUIRE_EMAIL_VERIFICATION=true needs email/,
+  );
+});

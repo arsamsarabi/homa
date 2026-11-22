@@ -45,3 +45,8 @@ export async function requireSetup({ context }: GuardArgs): Promise<void> {
   if (!session) throw redirect({ to: '/sign-in' });
   if (session.user.role !== 'admin') throw redirect({ to: '/' });
 }
+
+/** Pages that read the session either way (signed in or not) before they render. */
+export async function loadSession({ context }: GuardArgs): Promise<void> {
+  await context.queryClient.ensureQueryData(sessionQuery);
+}

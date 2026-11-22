@@ -55,3 +55,6 @@ void i18n.use(initReactI18next).init({
 });
 
 export default i18n as I18n;
+
+/** Keeps a left-to-right value (an email address) in one piece inside right-to-left text. */
+export const isolate = (value: string): string => `⁨${value}⁩`;

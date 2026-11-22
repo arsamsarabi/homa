@@ -8,8 +8,12 @@ export const authClient = createAuthClient({
   plugins: [adminClient()],
   // Look fetch up per request (not once at import) so tests can fake the network.
   fetchOptions: {
-    customFetchImpl: (input: string | URL | Request, init?: RequestInit): Promise<Response> =>
-      globalThis.fetch(input, init),
+    customFetchImpl: (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      // Account emails (confirm your address, reset your password) come in the app's language.
+      const headers = new Headers(init?.headers);
+      if (document.documentElement.lang) headers.set('accept-language', document.documentElement.lang);
+      return globalThis.fetch(input, { ...init, headers });
+    },
   },
 });
 

@@ -4,6 +4,14 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+Email confirmation and password reset. On a server with email set up (`HOMA_SMTP_URL` and `HOMA_MAIL_FROM`), new accounts confirm their address from a link before they can sign in, and "Forgot password?" on the sign-in page emails a reset link that works once, for 1 hour. Both emails are in English or Farsi. `HOMA_REQUIRE_EMAIL_VERIFICATION=false` turns confirmation off; `true` without email stops the server at startup. Without email, the sign-in page says to ask the admin, who can set a password with `bun apps/server/src/auth/set-password.ts <email>` in the `api` container. Migration `0014_verify_existing_users` marks every existing account confirmed.
+
+`GET /api/ready` answers `200` only when the database answers and its migrations are applied, and `503` with the reason otherwise. The image's health check now uses it; point uptime monitors at it. `/api/health` stays a liveness check.
+
+Sign-up refused because sign-ups are closed or the setup code is wrong now answers `400` instead of `403`, with the same message.
+
+Upgrading: nothing to do. Existing accounts stay confirmed and nobody is signed out. With email set up, people who sign up from now on must confirm their address first.
+
 ## [0.1.0] - 2026-11-22
 
 The first release, and the first published image: `ghcr.io/arsamsarabi/homa`, for linux/amd64 and linux/arm64, signed with cosign. Compose now pulls it instead of building from source; set `HOMA_VERSION` in `deploy/docker/.env` to pin a version (see `docs/self-hosting/operations.md`). `HOMA_IMAGE` is gone. `/api/health` reports the version.

@@ -1,1 +1,1 @@
-export { createDb, type Db, type Executor, runMigrations, type Tx } from './client';
+export { createDb, type Db, type Executor, pendingMigrations, runMigrations, type Tx } from './client';

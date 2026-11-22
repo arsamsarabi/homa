@@ -17,6 +17,8 @@ HOMA_MAIL_FROM="Homa <homa@example.com>"
 
 URL-encode special characters in the password (`@` is `%40`). Without these settings the email option is hidden. Email channels only send to the account's own address. If the mail server refuses a message for good (a 5xx reply), the delivery isn't retried; a busy server (4xx) or a dropped connection is retried with backoff for about two hours.
 
+The same settings send account emails: address confirmation for new accounts (required by default once email is set up) and password reset links. See [Accounts and passwords](./operations.md#accounts-and-passwords).
+
 ## ntfy and Gotify
 
 People enter the server address, the topic (ntfy) and a token. Tokens, topics and webhook addresses are stored encrypted with `HOMA_ENCRYPTION_KEY`, so it must be set before anyone adds one of these channels.

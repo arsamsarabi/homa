@@ -1,5 +1,6 @@
 export {
   applyInstanceLanguage,
+  loadSession,
   type RouterContext,
   requireAdmin,
   requireSetup,
