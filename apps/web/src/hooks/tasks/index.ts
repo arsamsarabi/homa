@@ -1,4 +1,5 @@
 export {
+  type BlockVars,
   type ProjectFields,
   type ProjectMutations,
   type TagMutations,

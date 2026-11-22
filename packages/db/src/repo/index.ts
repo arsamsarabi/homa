@@ -131,8 +131,10 @@ export {
 } from './projects';
 export {
   claimDueStandalone,
+  claimDueTaskReminders,
   countOpenStandalone,
   type DueEventReminder,
+  type DueTaskReminder,
   deleteStandalone,
   type EventReminder,
   findOwnedStandalone,
@@ -140,8 +142,10 @@ export {
   listEventReminders,
   listEventRemindersBetween,
   listStandalone,
+  listTaskReminders,
   type ReminderRow,
   replaceEventReminders,
+  replaceTaskReminders,
   type StandaloneValues,
   setNextFire,
   updateStandalone,
@@ -164,5 +168,6 @@ export {
   type TaskPatch,
   type TaskRow,
   type TaskWithTags,
+  tasksByBlock,
   updateOwnedTask,
 } from './tasks';

@@ -1,21 +1,36 @@
 // Tasks and their tags, always filtered by owner. Tag names come back on each task, sorted.
 import { and, asc, count, desc, eq, getTableColumns, inArray, isNull, type SQL, sql } from 'drizzle-orm';
 import type { Executor } from '../client';
-import { tags, tasks, taskTags } from '../schema';
+import { events, tags, tasks, taskTags } from '../schema';
 
 export type TaskRow = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
-export type TaskWithTags = TaskRow & { tags: string[] };
+/** A task with its tag names and its time block's event (start, end, calendar), if any. */
+export type TaskWithTags = TaskRow & {
+  tags: string[];
+  blockStart: Date | null;
+  blockEnd: Date | null;
+  blockCalendarId: string | null;
+};
 export type TaskPatch = Partial<Omit<NewTask, 'id' | 'ownerUserId' | 'uid' | 'createdAt' | 'updatedAt'>>;
 
 // Spelled out: Drizzle leaves column names unqualified in a one-table select, which is ambiguous here.
 const tagNames: SQL<string[]> = sql<
   string[]
 >`coalesce((select array_agg(tg.name order by lower(tg.name)) from task_tags tt join tags tg on tg.id = tt.tag_id where tt.task_id = "tasks"."id"), '{}')`;
-const withTags: ReturnType<typeof getTableColumns<typeof tasks>> & { tags: SQL<string[]> } = {
+const withTags: ReturnType<typeof getTableColumns<typeof tasks>> & {
+  tags: SQL<string[]>;
+  blockStart: typeof events.startAt;
+  blockEnd: typeof events.endAt;
+  blockCalendarId: typeof events.calendarId;
+} = {
   ...getTableColumns(tasks),
   tags: tagNames,
+  blockStart: events.startAt,
+  blockEnd: events.endAt,
+  blockCalendarId: events.calendarId,
 };
+const block: SQL = eq(events.id, tasks.scheduledEventId);
 const owned = (ownerUserId: string, id: string): SQL | undefined =>
   and(eq(tasks.id, id), eq(tasks.ownerUserId, ownerUserId));
 
@@ -24,6 +39,7 @@ export const listOpenTasks = (db: Executor, ownerUserId: string): Promise<TaskWi
   db
     .select(withTags)
     .from(tasks)
+    .leftJoin(events, block)
     .where(and(eq(tasks.ownerUserId, ownerUserId), isNull(tasks.completedAt)))
     .orderBy(
       sql`${tasks.dueDate} asc nulls last`,
@@ -37,16 +53,22 @@ export const listCompletedTasks = (db: Executor, ownerUserId: string, limit: num
   db
     .select(withTags)
     .from(tasks)
+    .leftJoin(events, block)
     .where(and(eq(tasks.ownerUserId, ownerUserId), sql`${tasks.completedAt} is not null`))
     .orderBy(desc(tasks.completedAt))
     .limit(limit);
 
 /** Every task the owner has, for the JSON export. */
 export const listOwnerTasks = (db: Executor, ownerUserId: string): Promise<TaskWithTags[]> =>
-  db.select(withTags).from(tasks).where(eq(tasks.ownerUserId, ownerUserId)).orderBy(asc(tasks.createdAt));
+  db
+    .select(withTags)
+    .from(tasks)
+    .leftJoin(events, block)
+    .where(eq(tasks.ownerUserId, ownerUserId))
+    .orderBy(asc(tasks.createdAt));
 
 export async function findOwnedTask(db: Executor, ownerUserId: string, id: string): Promise<TaskWithTags | undefined> {
-  const [row] = await db.select(withTags).from(tasks).where(owned(ownerUserId, id));
+  const [row] = await db.select(withTags).from(tasks).leftJoin(events, block).where(owned(ownerUserId, id));
   return row;
 }
 
@@ -133,4 +155,17 @@ export async function reopenSubtasks(db: Executor, parentId: string): Promise<vo
     .update(tasks)
     .set({ completedAt: null })
     .where(and(eq(tasks.parentId, parentId), sql`${tasks.completedAt} is not null`));
+}
+
+/** The tasks whose time block is one of these events, by event id. */
+export async function tasksByBlock(
+  db: Executor,
+  eventIds: readonly string[],
+): Promise<Map<string, { id: string; done: boolean }>> {
+  if (!eventIds.length) return new Map();
+  const rows = await db
+    .select({ id: tasks.id, eventId: tasks.scheduledEventId, completedAt: tasks.completedAt })
+    .from(tasks)
+    .where(inArray(tasks.scheduledEventId, [...eventIds]));
+  return new Map(rows.flatMap((r) => (r.eventId ? [[r.eventId, { id: r.id, done: r.completedAt !== null }]] : [])));
 }

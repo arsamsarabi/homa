@@ -49,11 +49,14 @@ export const ReminderPatch = ReminderFields.partial()
 export const Notification = z
   .object({
     id: z.uuid(),
-    kind: z.enum(['event', 'standalone']),
+    kind: z.enum(['event', 'standalone', 'task']),
     title: z.string(),
-    start: z.iso.datetime().openapi({ description: "The occurrence's start, or when the standalone reminder was due" }),
+    start: z.iso
+      .datetime()
+      .openapi({ description: "The occurrence's start, the task's due, or when the standalone reminder was due" }),
     allDay: z.boolean(),
     eventId: z.uuid().nullable(),
+    taskId: z.uuid().nullable(),
     recurrenceId: z.iso.datetime().nullable(),
     fireAt: z.iso.datetime(),
     read: z.boolean(),

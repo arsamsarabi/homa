@@ -428,6 +428,18 @@
           },
           "overridden": {
             "type": "boolean"
+          },
+          "taskId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The task this event is a time block for"
+          },
+          "taskDone": {
+            "type": "boolean",
+            "description": "That task is completed"
           }
         },
         "required": [
@@ -442,7 +454,9 @@
           "allDay",
           "tz",
           "recurring",
-          "overridden"
+          "overridden",
+          "taskId",
+          "taskDone"
         ]
       },
       "Settings": {
@@ -1019,6 +1033,44 @@
             ],
             "description": "Repeats from the due date; completing moves it on"
           },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Minutes before the due"
+          },
+          "block": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "eventId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "calendarId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "end": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "eventId",
+              "calendarId",
+              "start",
+              "end"
+            ],
+            "description": "The time block: an event on the calendar for working on the task"
+          },
           "completedAt": {
             "type": [
               "string",
@@ -1048,6 +1100,8 @@
           "dueTime",
           "tz",
           "rrule",
+          "reminders",
+          "block",
           "completedAt",
           "createdAt",
           "updatedAt"
@@ -1393,7 +1447,8 @@
             "type": "string",
             "enum": [
               "event",
-              "standalone"
+              "standalone",
+              "task"
             ]
           },
           "title": {
@@ -1402,12 +1457,19 @@
           "start": {
             "type": "string",
             "format": "date-time",
-            "description": "The occurrence's start, or when the standalone reminder was due"
+            "description": "The occurrence's start, the task's due, or when the standalone reminder was due"
           },
           "allDay": {
             "type": "boolean"
           },
           "eventId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "taskId": {
             "type": [
               "string",
               "null"
@@ -1436,6 +1498,7 @@
           "start",
           "allDay",
           "eventId",
+          "taskId",
           "recurrenceId",
           "fireAt",
           "read"
@@ -1560,7 +1623,8 @@
               "type": "string",
               "enum": [
                 "event",
-                "standalone"
+                "standalone",
+                "task"
               ]
             }
           },
@@ -1660,11 +1724,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               }
             },
             "required": [
@@ -1692,11 +1757,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               },
               "server": {
                 "type": "string",
@@ -1741,11 +1807,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               },
               "server": {
                 "type": "string",
@@ -1785,11 +1852,12 @@
                   "type": "string",
                   "enum": [
                     "event",
-                    "standalone"
+                    "standalone",
+                    "task"
                   ]
                 },
                 "minItems": 1,
-                "description": "Which reminders it gets: event reminders, standalone ones, or both"
+                "description": "Which reminders it gets: event, standalone and task reminders"
               },
               "url": {
                 "type": "string",
@@ -1822,11 +1890,12 @@
               "type": "string",
               "enum": [
                 "event",
-                "standalone"
+                "standalone",
+                "task"
               ]
             },
             "minItems": 1,
-            "description": "Which reminders it gets: event reminders, standalone ones, or both"
+            "description": "Which reminders it gets: event, standalone and task reminders"
           },
           "server": {
             "type": "string",
@@ -1942,6 +2011,20 @@
             ],
             "maxLength": 500,
             "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              0,
+              60
+            ],
+            "description": "Minutes before the due (09:00 for a date-only due), at most 5"
           }
         },
         "required": [
@@ -2020,8 +2103,44 @@
             ],
             "maxLength": 500,
             "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 40320
+            },
+            "maxItems": 5,
+            "example": [
+              0,
+              60
+            ],
+            "description": "Minutes before the due (09:00 for a date-only due), at most 5"
           }
         }
+      },
+      "TaskBlockInput": {
+        "type": "object",
+        "properties": {
+          "calendarId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "calendarId",
+          "start",
+          "end"
+        ]
       },
       "ProjectInput": {
         "type": "object",
@@ -5029,6 +5148,148 @@
           },
           "401": {
             "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/block": {
+      "put": {
+        "operationId": "scheduleTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Block time for the task on the calendar (an event linked to it), or move its block",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskBlockInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed (or a read-only calendar)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unscheduleTask",
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Take the task's time block off the calendar (deletes its event)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed (or a read-only calendar)",
             "content": {
               "application/json": {
                 "schema": {

@@ -2,7 +2,7 @@
 // snoozed ones back, and sends pending deliveries. See docs/design/phase-4a-reminders.md
 // ("Delivery job"): one notification per occurrence and fire time (a unique dedupe key), however
 // many workers, restarts or overlapping runs.
-import { fireAt, nextStandaloneFire, REMINDER_LIMITS } from '@homa/core';
+import { dueInstant, fireAt, nextStandaloneFire, REMINDER_LIMITS } from '@homa/core';
 import { type Db, type Executor, repo } from '@homa/db';
 import { errorFields, log } from '@/log';
 import { DeliveryError, deliveriesFor, type Senders, senderFor } from './channels';
@@ -77,6 +77,34 @@ function fireStandalone(db: Db, now: Date): Promise<number> {
   });
 }
 
+/** Fires due task reminders; each fires once per due (completing a repeating task sets the next). */
+function fireTasks(db: Db, now: Date): Promise<number> {
+  return db.transaction(async (tx) => {
+    const due = await repo.claimDueTaskReminders(tx, now, 500);
+    const rows: repo.NewNotification[] = [];
+    for (const r of due) {
+      if (isDue(r.nextFireAt, now) && r.dueDate) {
+        const allDay = r.dueTime === null;
+        rows.push({
+          ownerUserId: r.ownerUserId,
+          reminderId: r.id,
+          taskId: r.taskId,
+          title: r.title,
+          // Like an all-day event, a date-only due is its date at UTC midnight.
+          occurrenceStart: allDay
+            ? new Date(`${r.dueDate}T00:00:00Z`)
+            : dueInstant({ date: r.dueDate, time: r.dueTime?.slice(0, 5) ?? null, tz: r.tz }),
+          allDay,
+          fireAt: r.nextFireAt,
+          dedupeKey: `task:${r.taskId}:${r.dueDate}T${r.dueTime ?? ''}:${r.nextFireAt.toISOString()}`,
+        });
+      }
+      await repo.setNextFire(tx, r.id, null);
+    }
+    return notify(tx, rows, now);
+  });
+}
+
 /** Snoozed notifications whose time came: open and unread again, sent again on every channel. */
 function resurface(db: Db, now: Date): Promise<number> {
   return db.transaction(async (tx) => {
@@ -126,7 +154,8 @@ export type DeliverResult = { notified: number; resurfaced: number; sent: number
 export async function deliverReminders(db: Db, senders: Senders, now = new Date()): Promise<DeliverResult> {
   const notified =
     (await db.transaction(async (tx) => notify(tx, await eventNotifications(tx, now), now))) +
-    (await fireStandalone(db, now));
+    (await fireStandalone(db, now)) +
+    (await fireTasks(db, now));
   const resurfaced = await resurface(db, now);
   return { notified, resurfaced, ...(await deliver(db, senders, now)) };
 }

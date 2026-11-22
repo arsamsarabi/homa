@@ -3,7 +3,10 @@ import type { repo } from '@homa/db';
 import type { z } from '@hono/zod-openapi';
 import type { Project, Tag, Task } from './schemas';
 
-export const taskOut = (t: repo.TaskWithTags): z.infer<typeof Task> => ({
+/** A task with its reminders (minutes before its due). */
+export type TaskOut = repo.TaskWithTags & { reminders: number[] };
+
+export const taskOut = (t: TaskOut): z.infer<typeof Task> => ({
   id: t.id,
   uid: t.uid,
   title: t.title,
@@ -17,6 +20,16 @@ export const taskOut = (t: repo.TaskWithTags): z.infer<typeof Task> => ({
   dueTime: t.dueTime?.slice(0, 5) ?? null,
   tz: t.tz,
   rrule: t.rrule,
+  reminders: t.reminders,
+  block:
+    t.scheduledEventId && t.blockStart && t.blockEnd && t.blockCalendarId
+      ? {
+          eventId: t.scheduledEventId,
+          calendarId: t.blockCalendarId,
+          start: t.blockStart.toISOString(),
+          end: t.blockEnd.toISOString(),
+        }
+      : null,
   completedAt: t.completedAt?.toISOString() ?? null,
   createdAt: t.createdAt.toISOString(),
   updatedAt: t.updatedAt.toISOString(),

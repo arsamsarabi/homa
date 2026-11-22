@@ -6,7 +6,7 @@ import { users } from './auth';
 
 export const CHANNEL_KINDS = ['email', 'ntfy', 'gotify', 'webhook'] as const;
 export type ChannelKind = (typeof CHANNEL_KINDS)[number];
-export const REMINDER_KINDS = ['event', 'standalone'] as const;
+export const REMINDER_KINDS = ['event', 'standalone', 'task'] as const;
 export type ReminderKind = (typeof REMINDER_KINDS)[number];
 
 export const notificationChannels = pgTable(
@@ -19,11 +19,11 @@ export const notificationChannels = pgTable(
     kind: text('kind', { enum: CHANNEL_KINDS }).notNull(),
     name: text('name').notNull(),
     enabled: boolean('enabled').notNull().default(true),
-    /** Which notifications it gets: event reminders, standalone ones, or both. */
+    /** Which notifications it gets: event, standalone and task reminders. */
     reminderKinds: text('reminder_kinds', { enum: REMINDER_KINDS })
       .array()
       .notNull()
-      .default(sql`'{event,standalone}'::text[]`),
+      .default(sql`'{event,standalone,task}'::text[]`),
     /** Encrypted (HOMA_ENCRYPTION_KEY) server, topic, URL and tokens; null for email. */
     config: text('config'),
     consecutiveFailures: integer('consecutive_failures').notNull().default(0),

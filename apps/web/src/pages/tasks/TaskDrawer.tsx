@@ -13,11 +13,13 @@ import {
 } from '@mantine/core';
 import { type ChangeEvent, type FormEvent, type JSX, type KeyboardEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ReminderChips } from '@/components';
 import { useTaskMutations } from '@/hooks/tasks';
 import type { Task } from '@/schemas';
 import { type Repeat, repeatOf, rruleOf } from '@/services/event-form';
 import { useAnnouncer } from '@/stores';
 import { useTasksPageModel } from './model';
+import { TaskBlock } from './TaskBlock';
 
 const REPEATS: readonly Repeat[] = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
 const PRIORITIES = ['0', '1', '2', '3'] as const;
@@ -30,6 +32,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
   const [error, setError] = useState<string>();
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
   const [tags, setTags] = useState<string[]>(task.tags);
+  const [reminders, setReminders] = useState<number[]>(task.reminders);
   const [subtask, setSubtask] = useState('');
   const subtasks = task.parentId ? [] : m.subtasksOf(task.id);
   const repeat = repeatOf(task.rrule);
@@ -51,6 +54,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
         dueDate: dueDate || null,
         dueTime: dueDate && time ? time : null,
         rrule: dueDate ? rruleOf(picked, task.rrule) : null,
+        reminders: dueDate ? reminders : [],
       },
       {
         onSuccess: () => {
@@ -140,6 +144,13 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
             label: t(`repeat.${r}`),
           }))}
         />
+        <ReminderChips
+          value={reminders}
+          onChange={setReminders}
+          atStartLabel={t('tasks.atDue')}
+          disabled={!dueDate}
+          description={dueDate ? t('tasks.reminderHint') : t('tasks.reminderNeedsDate')}
+        />
         <NativeSelect
           name="priority"
           label={t('tasks.priority')}
@@ -182,6 +193,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
             />
           </Stack>
         )}
+        <TaskBlock task={task} />
         <Group justify="space-between">
           <Button variant="light" color="red" onClick={onDelete} loading={remove.isPending}>
             {t('tasks.delete')}

@@ -67,7 +67,8 @@
       "moved": "Event moved",
       "deleted": "Event deleted"
     },
-    "timeZone": "Time zone"
+    "timeZone": "Time zone",
+    "taskDone": "Task done"
   },
   "common": {
     "cancel": "Cancel",
@@ -455,7 +456,8 @@
     },
     "reminderKinds": {
       "event": "Event reminders",
-      "standalone": "Standalone reminders"
+      "standalone": "Standalone reminders",
+      "task": "Task reminders"
     },
     "allReminders": "All reminders",
     "failing": "Failing",
@@ -583,6 +585,27 @@
     "tagFailed": "Couldn't change the tag: {{message}}",
     "tagDelete": "Delete tag",
     "tagDeleteHint": "It comes off every task.",
-    "tagDeleted": "Deleted the tag \"{{name}}\""
+    "tagDeleted": "Deleted the tag \"{{name}}\"",
+    "reminderHint": "Before the due time, or before 09:00 on a due date without a time. Up to 5.",
+    "reminderNeedsDate": "Pick a due date to add reminders.",
+    "hasReminders": "Has reminders",
+    "block": "Time block",
+    "blockHint": "Put time for this task on your calendar. It shows as done there once the task is.",
+    "blockDate": "Day",
+    "blockStart": "Starts",
+    "blockLength": "Length",
+    "blockCalendar": "Calendar",
+    "length": "{{count}} min",
+    "blockAdd": "Block time",
+    "blockMove": "Move the block",
+    "blockRemove": "Remove the block",
+    "blockSaved": "Time blocked on the calendar",
+    "blockRemoved": "Time block removed",
+    "blockFailed": "Couldn't change the time block: {{message}}",
+    "blockAt": "{{when}}, {{calendar}}",
+    "blocked": "Blocked {{when}}",
+    "noCalendars": "You need a calendar you can edit to block time.",
+    "atDue": "At due time",
+    "dayTime": "{{day}}, {{time}}"
   }
 }
