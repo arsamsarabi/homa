@@ -5,3 +5,4 @@ export * from './connections';
 export * from './instance';
 export * from './outbox';
 export * from './reminders';
+export * from './tasks';

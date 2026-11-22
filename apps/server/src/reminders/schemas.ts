@@ -3,7 +3,10 @@ import { isTimeZone, parseRrule, REMINDER_LIMITS } from '@homa/core';
 import { z } from '@hono/zod-openapi';
 
 const When = z.iso.datetime({ offset: true }).transform((v) => new Date(v));
-const Tz = z.string().refine(isTimeZone, 'an IANA time zone like Europe/London').openapi({ example: 'Europe/London' });
+export const Tz = z
+  .string()
+  .refine(isTimeZone, 'an IANA time zone like Europe/London')
+  .openapi({ example: 'Europe/London' });
 
 const REPEATS = new Set(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']);
 const isRepeat = (v: string): boolean => {
@@ -13,7 +16,7 @@ const isRepeat = (v: string): boolean => {
     return false; // not a usable RRULE; the refine below reports it
   }
 };
-const Repeat = z
+export const Repeat = z
   .string()
   .max(500)
   .refine(isRepeat, 'an RRULE repeating daily, weekly, monthly or yearly, like FREQ=WEEKLY;BYDAY=MO')

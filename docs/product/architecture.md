@@ -72,7 +72,7 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | `event_overrides` | Per-occurrence changes keyed by `recurrence_id` |
 | `event_instances` | Expansion cache: one row per occurrence inside a rolling window (for example 18 months ahead), `tstzrange` with GiST index. Rebuilt per event on change |
 | `attendees` | Per event: email or user, role, RSVP |
-| `tasks`, `projects`, `tags`, `task_tags` | Tasks with optional `parent_task_id` for subtasks; `scheduled_event_id` links a time block |
+| `tasks`, `projects`, `tags`, `task_tags` | Tasks (`uid`, `title`, `notes`, `priority`, `due_date` and optional `due_time` in `tz`, `rrule`, `completed_at`), `project_id` (null for the Inbox) and `parent_id` for one level of subtasks; projects and tags are per user, names unique ignoring case. Phase 5b adds `scheduled_event_id` for a time block. See `docs/design/phase-5-tasks.md` |
 | `routines`, `routine_runs` | Routine metadata; each run is a planned slot (linked event) with a done flag for streaks |
 | `reminders` | An event's reminder (`event_id`, `minutes_before`, `action` `display` or `email`) or a standalone one (`title`, `starts_at`, `tz`, `rrule`, `next_fire_at`, `done_at`). Tasks and routine runs come later |
 | `notifications`, `notification_deliveries` | A fired reminder occurrence (`dedupe_key` unique, `read_at`, `snoozed_until`, `done_at`), and its send on each channel (`status`, `attempts`, `next_attempt_at`, `last_error`) |

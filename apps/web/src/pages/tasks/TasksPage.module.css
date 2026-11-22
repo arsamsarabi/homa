@@ -1,0 +1,88 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mantine-spacing-xl);
+}
+
+@media (min-width: 48em) {
+  .layout {
+    grid-template-columns: 14rem 1fr;
+  }
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.subtasks {
+  list-style: none;
+  margin: 0;
+  padding-inline-start: var(--mantine-spacing-xl);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+  padding-block: 6px;
+  border-block-end: 1px solid var(--mantine-color-default-border);
+}
+
+.open {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.open:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.done {
+  text-decoration: line-through;
+  color: var(--mantine-color-dimmed);
+}
+
+.overdue {
+  color: var(--mantine-color-red-text);
+}
+
+.check {
+  margin-block-start: 2px;
+}
+
+/* The checkbox ring shows the priority, as in most task apps. */
+.p3 {
+  --checkbox-color: var(--mantine-color-red-filled);
+  --p: var(--mantine-color-red-filled);
+}
+
+.p2 {
+  --checkbox-color: var(--mantine-color-orange-filled);
+  --p: var(--mantine-color-orange-filled);
+}
+
+.p1 {
+  --checkbox-color: var(--mantine-color-blue-filled);
+  --p: var(--mantine-color-blue-filled);
+}
+
+.p3 input,
+.p2 input,
+.p1 input {
+  border-color: var(--p);
+  border-width: 2px;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--c, var(--mantine-color-dimmed));
+}

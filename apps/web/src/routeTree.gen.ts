@@ -18,6 +18,7 @@ import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppOnboardingRouteImport } from './routes/_app/onboarding'
 import { Route as AppRemindersRouteImport } from './routes/_app/reminders'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppTasksRouteImport } from './routes/_app/tasks'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -63,6 +64,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTasksRoute = AppTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AppOnboardingRoute
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
+  '/tasks': typeof AppTasksRoute
 }
 export interface FileRoutesByTo {
   '/setup': typeof SetupRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AppOnboardingRoute
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
+  '/tasks': typeof AppTasksRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_app/onboarding': typeof AppOnboardingRoute
   '/_app/reminders': typeof AppRemindersRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/tasks': typeof AppTasksRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reminders'
     | '/settings'
+    | '/tasks'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/setup'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/reminders'
     | '/settings'
+    | '/tasks'
     | '/'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_app/onboarding'
     | '/_app/reminders'
     | '/_app/settings'
+    | '/_app/tasks'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -202,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/tasks': {
+      id: '/_app/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AppTasksRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -210,6 +229,7 @@ interface AppRouteChildren {
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppRemindersRoute: typeof AppRemindersRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppTasksRoute: typeof AppTasksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -218,6 +238,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOnboardingRoute: AppOnboardingRoute,
   AppRemindersRoute: AppRemindersRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppTasksRoute: AppTasksRoute,
   AppIndexRoute: AppIndexRoute,
 }
 

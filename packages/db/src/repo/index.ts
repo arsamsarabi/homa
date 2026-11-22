@@ -112,6 +112,24 @@ export {
   pendingOutboxUids,
 } from './outbox';
 export {
+  countProjects,
+  countTags,
+  deleteOwnedProject,
+  deleteOwnedTag,
+  findOwnedProject,
+  findOwnedTag,
+  findTagsByName,
+  insertProject,
+  listProjects,
+  listTags,
+  type ProjectRow,
+  type ProjectValues,
+  projectNameTaken,
+  renameOwnedTag,
+  type TagRow,
+  updateOwnedProject,
+} from './projects';
+export {
   claimDueStandalone,
   countOpenStandalone,
   type DueEventReminder,
@@ -129,3 +147,22 @@ export {
   updateStandalone,
 } from './reminders';
 export { findSettings, type SettingsRow, updateSettings } from './settings';
+export {
+  completeSubtasks,
+  countOpenTasks,
+  deleteOwnedTask,
+  findOwnedTask,
+  hasSubtasks,
+  insertTask,
+  listCompletedTasks,
+  listOpenTasks,
+  listOwnerTasks,
+  type NewTask,
+  reopenSubtasks,
+  replaceTaskTags,
+  setSubtasksProject,
+  type TaskPatch,
+  type TaskRow,
+  type TaskWithTags,
+  updateOwnedTask,
+} from './tasks';
