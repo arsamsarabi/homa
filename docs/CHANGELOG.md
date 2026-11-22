@@ -8,6 +8,8 @@ Email confirmation and password reset. On a server with email set up (`HOMA_SMTP
 
 `GET /api/ready` answers `200` only when the database answers and its migrations are applied, and `503` with the reason otherwise. The image's health check now uses it; point uptime monitors at it. `/api/health` stays a liveness check.
 
+Reminder emails now use the same branded layout as the account emails, in English or Farsi, light or dark. The button opens the event's day in the calendar, the Tasks page or the Reminders page, and a note says how to change email reminders under Settings → Notification channels. The plain-text part stays, with the same link.
+
 Sign-up refused because sign-ups are closed or the setup code is wrong now answers `400` instead of `403`, with the same message.
 
 Upgrading: nothing to do. Existing accounts stay confirmed and nobody is signed out. With email set up, people who sign up from now on must confirm their address first.
