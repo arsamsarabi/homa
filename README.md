@@ -305,7 +305,7 @@ Another self-hostable app by the same author.
           <img src="https://raw.githubusercontent.com/arsamsarabi/linkdean/main/docs/media/screenshots/library-grid-light.webp" alt="Linkdean library in grid view" width="460" />
         </picture>
       </a>
-      <h3><img src="https://raw.githubusercontent.com/arsamsarabi/linkdean/main/docs/media/linkdean-symbol-color-256.png" alt="" width="28" height="28" />&nbsp;<a href="https://github.com/arsamsarabi/linkdean">Linkdean</a></h3>
+      <h3><a href="https://github.com/arsamsarabi/linkdean"><img src="https://raw.githubusercontent.com/arsamsarabi/linkdean/main/apps/web/public/icon-192.png" alt="" width="32" height="32" align="absmiddle" /></a>&nbsp;<a href="https://github.com/arsamsarabi/linkdean">Linkdean</a></h3>
       <p>A self-hostable bookmark manager. Nested folders, encrypted vaults for private links, full-text search, import and export, and sharing on the same instance.</p>
       <p><a href="https://linkdean.app">linkdean.app</a> · <a href="https://github.com/arsamsarabi/linkdean">GitHub</a></p>
     </td>
