@@ -70,7 +70,11 @@ Comes right after phase 4, before phase 5. Everything that makes Homa easy to in
 - A public demo instance with made-up data that resets every night.
 - A short demo video for the README. Done (#47).
 
+Status: the release workflow, the GHCR image and its signing are built (#50). The first release, v0.1.0, includes phases 1 to 5. One-click templates and the demo instance are still to do; hosting is planned in the infra repo.
+
 ## Phase 5: tasks
+
+Status: done. 5a (#51), 5b (#52), 5c (#53).
 
 - Tasks, projects, tags, subtasks; Inbox, Today and Upcoming lists.
 - Reminders on tasks.
