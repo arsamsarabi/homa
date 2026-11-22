@@ -292,9 +292,9 @@ Bug reports, ideas and pull requests are welcome. Questions and early ideas go t
 
 ---
 
-## Sister projects
+## Also by Arsam Sarabi
 
-Another self-hostable app from the same maker, built the same way: source-available, runs with Docker Compose, and keeps your data on your own server.
+Another self-hostable app by the same author.
 
 <table>
   <tr>
