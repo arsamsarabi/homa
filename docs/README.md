@@ -31,6 +31,7 @@ One-click templates for home-server platforms (untested on the real platforms so
 - [Phase 4a: reminders](./design/phase-4a-reminders.md): reminders, in-app notifications and web push.
 - [Phase 4c: quick add](./design/phase-4c-quick-add.md): the natural-language quick add parser and its grammar.
 - [Phase 5: tasks](./design/phase-5-tasks.md): tasks, projects, tags, subtasks and their lists; task reminders, time-blocking and the Todoist import.
+- [Phase 6: sharing and people](./design/phase-6-sharing.md): invites, circles, calendar grants and their enforcement, the availability API, OIDC and passkeys.
 
 ## Changes
 
