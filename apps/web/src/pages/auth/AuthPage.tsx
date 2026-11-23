@@ -59,11 +59,18 @@ export function AuthPage({ mode, invite }: { mode: AuthMode; invite?: string }):
               {t('auth.notConfirmed', { email: isolate(unconfirmed) })}
             </Alert>
           )}
+          {!signUp && instance?.demo && (
+            <Alert color="blue">{t('demo.signIn', { email: isolate(instance.demo.email) })}</Alert>
+          )}
           {/* Wait for the invite so the email field starts with the address it names. */}
           {lookup.isLoading ? (
             <Loader size="sm" aria-label={t('common.loading')} />
           ) : (
-            <AccountFields signUp={signUp} fixedEmail={lookup.data?.email ?? undefined} />
+            <AccountFields
+              signUp={signUp}
+              fixedEmail={lookup.data?.email ?? undefined}
+              defaults={signUp ? null : instance?.demo}
+            />
           )}
           {!signUp &&
             (instance?.passwordReset ? (

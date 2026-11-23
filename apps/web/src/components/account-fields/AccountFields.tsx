@@ -6,10 +6,12 @@ export type AccountFieldsProps = {
   signUp: boolean;
   /** An address the account must use (an invite for it): filled in and not editable. */
   fixedEmail?: string;
+  /** Prefill email/password (demo sign-in). Ignored when `fixedEmail` is set. */
+  defaults?: { email: string; password: string } | null;
 };
 
 /** Name (for a new account), email and password, named for the form's FormData. */
-export function AccountFields({ signUp, fixedEmail }: AccountFieldsProps): JSX.Element {
+export function AccountFields({ signUp, fixedEmail, defaults }: AccountFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <>
@@ -20,7 +22,7 @@ export function AccountFields({ signUp, fixedEmail }: AccountFieldsProps): JSX.E
         label={t('auth.email')}
         required
         autoComplete="email"
-        defaultValue={fixedEmail}
+        defaultValue={fixedEmail ?? defaults?.email}
         readOnly={fixedEmail !== undefined}
       />
       <PasswordInput
@@ -29,6 +31,7 @@ export function AccountFields({ signUp, fixedEmail }: AccountFieldsProps): JSX.E
         description={signUp ? t('auth.passwordHint') : undefined}
         required
         minLength={8}
+        defaultValue={defaults?.password}
         autoComplete={signUp ? 'new-password' : 'current-password'}
       />
     </>

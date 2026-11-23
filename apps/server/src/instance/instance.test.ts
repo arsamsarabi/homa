@@ -40,6 +40,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       microsoftCalendar: false,
       passwordReset: false,
       anyoneCanInvite: false,
+      demo: null,
     });
   });
 
@@ -93,6 +94,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       microsoftCalendar: false,
       passwordReset: false,
       anyoneCanInvite: false,
+      demo: null,
     });
   });
 

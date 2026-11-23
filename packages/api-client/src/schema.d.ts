@@ -1215,6 +1215,11 @@ export interface components {
             passwordReset: boolean;
             /** @description Whether everyone, not only admins, can create invite links */
             anyoneCanInvite: boolean;
+            /** @description A demo instance's shared sign-in; null on every other instance */
+            demo: {
+                email: string;
+                password: string;
+            } | null;
         };
         InstanceSettings: {
             /**

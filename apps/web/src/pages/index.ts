@@ -4,6 +4,7 @@ export * from './auth';
 export * from './calendar';
 export * from './onboarding';
 export * from './reminders';
+export * from './root';
 export * from './settings';
 export * from './setup';
 export * from './tasks';

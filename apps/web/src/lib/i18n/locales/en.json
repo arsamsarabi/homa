@@ -716,5 +716,9 @@
       "saved": "{{name}} saved",
       "saveFailed": "Couldn't save the circle: {{message}}"
     }
+  },
+  "demo": {
+    "banner": "This is the Homa demo. Everyone shares this account, and it resets every night.",
+    "signIn": "This is the Homa demo. Sign in with the shared account ({{email}}): it's filled in for you."
   }
 }

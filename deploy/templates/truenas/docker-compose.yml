@@ -1,0 +1,39 @@
+# Homa for TrueNAS (24.10 Electric Eel and later): Apps → Discover → ⋮ → Install via YAML, then paste
+# this file. First create the dataset in POSTGRES_DATA below, and replace both REPLACE_ME values
+# (see docs/self-hosting/truenas.md).
+name: homa
+
+services:
+  homa:
+    image: ghcr.io/arsamsarabi/homa:0.2.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HOMA_ROLE: all
+      DATABASE_URL: postgres://homa:homa@postgres:5432/homa
+      # At least 32 characters: openssl rand -base64 32. The server won't start with REPLACE_ME.
+      BETTER_AUTH_SECRET: REPLACE_ME
+      # The address you open Homa at; sign-ins from any other address are refused.
+      HOMA_URL: http://REPLACE_ME:30380
+      # Optional until you connect a calendar: openssl rand -base64 32. Keep it with your backups.
+      HOMA_ENCRYPTION_KEY: ""
+    ports:
+      - "30380:3000"
+
+  postgres:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homa
+      POSTGRES_PASSWORD: homa
+      POSTGRES_DB: homa
+    volumes:
+      # POSTGRES_DATA: a dataset you created for Homa's database. Postgres sets its ownership (999).
+      - /mnt/tank/apps/homa/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homa -d homa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

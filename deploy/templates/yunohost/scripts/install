@@ -1,0 +1,30 @@
+#!/bin/bash
+source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_script_progression "Generating secrets..."
+auth_secret=$(ynh_string_random --length=48)
+encryption_key=$(head -c 32 /dev/urandom | base64)
+ynh_app_setting_set --key=auth_secret --value="$auth_secret"
+ynh_app_setting_set --key=encryption_key --value="$encryption_key"
+
+ynh_script_progression "Setting up source files..."
+ynh_setup_source --dest_dir="$install_dir/app"
+chown -R "$app:$app" "$install_dir"
+homa_build
+
+ynh_script_progression "Adding $app's configuration files..."
+ynh_config_add --template="homa.env" --destination="$install_dir/homa.env"
+chmod 400 "$install_dir/homa.env"
+chown "$app:$app" "$install_dir/homa.env"
+
+ynh_script_progression "Adding system configurations related to $app..."
+ynh_config_add_nginx
+ynh_config_add_systemd
+yunohost service add "$app" --description="Homa calendar and tasks" --log="/var/log/$app/$app.log"
+ynh_config_add_logrotate
+
+ynh_script_progression "Starting $app's systemd service..."
+ynh_systemctl --service="$app" --action="start" --log_path="/var/log/$app/$app.log" --wait_until="homa started"
+
+ynh_script_progression "Installation of $app completed"

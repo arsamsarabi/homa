@@ -1,0 +1,28 @@
+#!/bin/bash
+source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_script_progression "Stopping $app's systemd service..."
+ynh_systemctl --service="$app" --action="stop"
+
+ynh_script_progression "Upgrading source files..."
+ynh_setup_source --dest_dir="$install_dir/app" --full_replace
+chown -R "$app:$app" "$install_dir"
+homa_build
+
+ynh_script_progression "Updating $app's configuration files..."
+ynh_config_add --template="homa.env" --destination="$install_dir/homa.env"
+chmod 400 "$install_dir/homa.env"
+chown "$app:$app" "$install_dir/homa.env"
+
+ynh_script_progression "Upgrading system configurations related to $app..."
+ynh_config_add_nginx
+ynh_config_add_systemd
+yunohost service add "$app" --description="Homa calendar and tasks" --log="/var/log/$app/$app.log"
+ynh_config_add_logrotate
+
+# The server applies database migrations when it starts.
+ynh_script_progression "Starting $app's systemd service..."
+ynh_systemctl --service="$app" --action="start" --log_path="/var/log/$app/$app.log" --wait_until="homa started"
+
+ynh_script_progression "Upgrade of $app completed"

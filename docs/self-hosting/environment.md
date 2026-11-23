@@ -13,6 +13,7 @@ Homa is configured with environment variables only. With Docker Compose, put the
 | `HOMA_ROLE` | `all` | `api` (HTTP only), `worker` (background jobs only) or `all` (both in one process). Compose runs one service per role. See [Roles](./operations.md#roles) |
 | `PORT` | `3000` | The port the server listens on inside the container |
 | `HOMA_VERSION` | Set in the image | The version reported by `/api/health` and the OpenAPI document. Release images set it to their version; images you build yourself and development report `0.0.0` |
+| `HOMA_DEMO` | `false` | `true` runs a public demo: a seeded shared account, a nightly reset command, and nothing sent out. Not for normal use. See [Demo mode](./demo.md) |
 | `HOMA_WEB_DIR` | Set in the image | The built web app to serve, relative to the working directory. Unset in development, where Vite serves it |
 
 ## Auth

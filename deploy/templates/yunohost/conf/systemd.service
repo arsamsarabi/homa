@@ -1,0 +1,33 @@
+[Unit]
+Description=Homa calendar and tasks
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=__APP__
+Group=__APP__
+WorkingDirectory=__INSTALL_DIR__/app/
+EnvironmentFile=__INSTALL_DIR__/homa.env
+ExecStart=__INSTALL_DIR__/bun/bun apps/server/src/index.ts
+Restart=on-failure
+StandardOutput=append:/var/log/__APP__/__APP__.log
+StandardError=inherit
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=yes
+RestrictRealtime=yes
+DevicePolicy=closed
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProtectSystem=full
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -25,6 +25,10 @@ export const PublicInstance = z
       .boolean()
       .openapi({ description: 'Whether this server can email password reset links (it has email set up)' }),
     anyoneCanInvite: z.boolean().openapi({ description: 'Whether everyone, not only admins, can create invite links' }),
+    demo: z
+      .object({ email: z.string(), password: z.string() })
+      .nullable()
+      .openapi({ description: "A demo instance's shared sign-in; null on every other instance" }),
   })
   .openapi('PublicInstance');
 

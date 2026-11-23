@@ -621,6 +621,25 @@
           "anyoneCanInvite": {
             "type": "boolean",
             "description": "Whether everyone, not only admins, can create invite links"
+          },
+          "demo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ],
+            "description": "A demo instance's shared sign-in; null on every other instance"
           }
         },
         "required": [
@@ -631,7 +650,8 @@
           "googleCalendar",
           "microsoftCalendar",
           "passwordReset",
-          "anyoneCanInvite"
+          "anyoneCanInvite",
+          "demo"
         ]
       },
       "InstanceSettings": {
