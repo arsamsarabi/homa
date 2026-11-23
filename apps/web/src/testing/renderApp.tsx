@@ -21,6 +21,7 @@ export const setUpInstance = {
   googleCalendar: false,
   microsoftCalendar: false,
   passwordReset: false,
+  demo: null,
 };
 
 /** Better Auth's get-session body for Ada, with `role` ('user' unless given). */

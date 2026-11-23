@@ -654,5 +654,9 @@
     "unreadDates_other": "{{count}} due dates couldn't be read. Their text is in the tasks' notes.",
     "sections_one": "{{count}} section was left out (Homa has no sections). Its tasks were imported.",
     "sections_other": "{{count}} sections were left out (Homa has no sections). Their tasks were imported."
+  },
+  "demo": {
+    "banner": "This is the Homa demo. Everyone shares this account, and it resets every night.",
+    "signIn": "This is the Homa demo. Sign in with the shared account ({{email}}): it's filled in for you."
   }
 }

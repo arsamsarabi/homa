@@ -1,0 +1,8 @@
+.banner {
+  position: fixed;
+  inset-block-end: var(--mantine-spacing-sm);
+  inset-inline-start: var(--mantine-spacing-sm);
+  z-index: 300;
+  max-width: min(360px, calc(100vw - 2 * var(--mantine-spacing-sm)));
+  background: var(--mantine-color-yellow-light);
+}

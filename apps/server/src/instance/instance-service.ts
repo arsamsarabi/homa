@@ -1,5 +1,6 @@
 // The instance's settings: what the admin chooses, what everyone can see, and what new accounts get.
 import { type Db, repo } from '@homa/db';
+import { DEMO_ACCOUNT } from '@/demo/account';
 
 export type InstanceSettings = {
   name: string;
@@ -17,6 +18,8 @@ export type PublicInstance = {
   googleCalendar: boolean;
   microsoftCalendar: boolean;
   passwordReset: boolean;
+  /** On a demo instance, the shared account's sign-in. */
+  demo: { email: string; password: string } | null;
 };
 
 const fromRow = ({ instanceName, ...rest }: repo.InstanceSettingsRow): InstanceSettings => ({
@@ -39,18 +42,20 @@ export async function updateInstanceSettings(db: Db, patch: Partial<InstanceSett
 /** Which OAuth providers the server is set up for. */
 export async function getPublicInstance(
   db: Db,
-  { googleCalendar = false, microsoftCalendar = false, passwordReset = false } = {},
+  { googleCalendar = false, microsoftCalendar = false, passwordReset = false, demo = false } = {},
 ): Promise<PublicInstance> {
   const [s, users] = await Promise.all([getInstanceSettings(db), repo.countUsers(db)]);
   const needsSetup = users === 0;
   return {
     name: s.name,
-    signUpsOpen: needsSetup || s.signUps === 'open',
+    // Everyone shares the demo's account; its sign-up is turned off (demo/guard.ts).
+    signUpsOpen: !demo && (needsSetup || s.signUps === 'open'),
     needsSetup,
     defaultLanguage: s.defaultLanguage,
     googleCalendar,
     microsoftCalendar,
     passwordReset,
+    demo: demo ? { email: DEMO_ACCOUNT.email, password: DEMO_ACCOUNT.password } : null,
   };
 }
 

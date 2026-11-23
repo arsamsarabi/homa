@@ -40,7 +40,10 @@ export function AuthPage({ mode }: { mode: AuthMode }): JSX.Element {
               {t('auth.notConfirmed', { email: isolate(unconfirmed) })}
             </Alert>
           )}
-          <AccountFields signUp={signUp} />
+          {!signUp && instance?.demo && (
+            <Alert color="blue">{t('demo.signIn', { email: isolate(instance.demo.email) })}</Alert>
+          )}
+          <AccountFields signUp={signUp} defaults={signUp ? null : instance?.demo} />
           {!signUp &&
             (instance?.passwordReset ? (
               <Anchor component={Link} to="/forgot-password" size="sm">

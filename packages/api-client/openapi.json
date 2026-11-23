@@ -617,6 +617,25 @@
           "passwordReset": {
             "type": "boolean",
             "description": "Whether this server can email password reset links (it has email set up)"
+          },
+          "demo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ],
+            "description": "A demo instance's shared sign-in; null on every other instance"
           }
         },
         "required": [
@@ -626,7 +645,8 @@
           "defaultLanguage",
           "googleCalendar",
           "microsoftCalendar",
-          "passwordReset"
+          "passwordReset",
+          "demo"
         ]
       },
       "InstanceSettings": {

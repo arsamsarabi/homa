@@ -4,6 +4,7 @@ import type { PgBoss } from 'pg-boss';
 import { createAuth } from './auth';
 import { type Config, loadConfig } from './config';
 import { syncSettingsFrom } from './connections';
+import { seedDemo } from './demo';
 import { createApp } from './http';
 import { createSetupGate } from './instance';
 import { startWorker } from './jobs';
@@ -29,6 +30,11 @@ const setupGate = createSetupGate({
   announce: (code: string): void =>
     log.warn(`first-run setup code: ${code} (enter it on the setup page to create the admin)`, { setupCode: code }),
 });
+// A demo instance seeds its shared account instead of waiting for an admin.
+if (role !== 'worker' && config.HOMA_DEMO && (await repo.countUsers(db)) === 0) {
+  await seedDemo(db, { secret: config.BETTER_AUTH_SECRET, baseURL: config.HOMA_URL });
+  log.info('demo data seeded');
+}
 if (role !== 'worker' && (await repo.countUsers(db)) === 0) setupGate.current();
 
 // Connected calendars' credentials can't be read without the key they were encrypted with.
@@ -59,6 +65,7 @@ const server =
             sync,
             push,
             notify,
+            demo: config.HOMA_DEMO,
           },
           config.HOMA_WEB_DIR,
         ).fetch,
