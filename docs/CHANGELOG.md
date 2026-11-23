@@ -4,7 +4,9 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+One-click templates for home servers, in `deploy/templates/`: an Unraid template, a Compose file for TrueNAS 24.10 and later, a CasaOS app, an umbrelOS app package and a YunoHost package skeleton, each with a page in `docs/self-hosting/`. None has been tried on the real platform yet; the QA issues ask for help with that.
 Demo mode for a public demo instance. With `HOMA_DEMO=true` the server seeds a shared demo account with made-up calendars, recurring events, tasks, projects and reminders around today (a few in Farsi), fills in its sign-in on the sign-in page, and shows a note on every page that the demo resets every night. Sign-up, account changes, connected calendars, notification channels, web push and instance settings answer `403`, and the server won't start in demo mode with email or Google or Microsoft set up. `bun apps/server/src/demo-reset.ts` wipes every account and seeds again, for a nightly job. `GET /api/instance` has a new `demo` field (null except on a demo). See `docs/self-hosting/demo.md`. No migration.
+
 
 ## [0.2.0] - 2026-11-22
 

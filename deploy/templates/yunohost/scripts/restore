@@ -1,0 +1,27 @@
+#!/bin/bash
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+ynh_script_progression "Restoring source files and building..."
+ynh_setup_source --dest_dir="$install_dir/app"
+chown -R "$app:$app" "$install_dir"
+homa_build
+ynh_restore "$install_dir/homa.env"
+chmod 400 "$install_dir/homa.env"
+chown "$app:$app" "$install_dir/homa.env"
+
+ynh_script_progression "Restoring the PostgreSQL database..."
+ynh_psql_db_shell < ./db.sql
+
+ynh_script_progression "Restoring system configurations related to $app..."
+ynh_restore "/etc/nginx/conf.d/$domain.d/$app.conf"
+ynh_restore "/etc/systemd/system/$app.service"
+systemctl enable "$app.service" --quiet
+yunohost service add "$app" --description="Homa calendar and tasks" --log="/var/log/$app/$app.log"
+ynh_restore "/etc/logrotate.d/$app"
+
+ynh_script_progression "Reloading NGINX web server and $app's service..."
+ynh_systemctl --service="$app" --action="start" --log_path="/var/log/$app/$app.log" --wait_until="homa started"
+ynh_systemctl --service=nginx --action=reload
+
+ynh_script_progression "Restoration completed for $app"

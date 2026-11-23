@@ -70,7 +70,7 @@ Comes right after phase 4, before phase 5. Everything that makes Homa easy to in
 - A public demo instance with made-up data that resets every night.
 - A short demo video for the README. Done (#47).
 
-Status: the release workflow, the GHCR image and its signing are built (#50). The first release, v0.1.0, includes phases 1 to 5. One-click templates and the demo instance are still to do; hosting is planned in the infra repo.
+Status: the release workflow, the GHCR image and its signing are built (#50). The first release, v0.1.0, includes phases 1 to 5. One-click templates for Unraid, TrueNAS, CasaOS, Umbrel and YunoHost are in `deploy/templates/` (#87), untested on the real platforms (QA #88 to #92). Demo mode, its seed and nightly reset are built (#86); hosting `demo.homa.day` is planned in the infra repo.
 
 ## Phase 5: tasks
 

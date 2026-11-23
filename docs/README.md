@@ -12,6 +12,14 @@ The docs in this repository, for people running Homa and people working on it. U
 - [Google Calendar](./self-hosting/google.md): creating the Google OAuth client for Google connections.
 - [Microsoft](./self-hosting/microsoft.md): creating the Entra ID app for Outlook.com and Microsoft 365.
 
+One-click templates for home-server platforms (untested on the real platforms so far):
+
+- [Unraid](./self-hosting/unraid.md): a Community Applications template, with a separate Postgres container.
+- [TrueNAS](./self-hosting/truenas.md): a Compose file for Install via YAML on 24.10 (Electric Eel) and later.
+- [CasaOS](./self-hosting/casaos.md): a Compose file with CasaOS's `x-casaos` metadata.
+- [Umbrel](./self-hosting/umbrel.md): an umbrelOS app package for a community app store.
+- [YunoHost](./self-hosting/yunohost.md): a package skeleton that builds from source.
+
 ## Product
 
 - [Features](./product/features.md): what Homa does today.
