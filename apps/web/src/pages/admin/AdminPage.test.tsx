@@ -5,6 +5,7 @@ import { json, renderApp, signedInWith } from '@/testing/renderApp';
 const saved = {
   name: 'Family',
   signUps: 'open',
+  invites: 'admins',
   defaultLanguage: 'en',
   defaultHomeTz: 'Asia/Tehran',
   defaultSecondaryCalendar: 'none',
@@ -35,7 +36,7 @@ describe('admin page', () => {
     expect((screen.getByRole('combobox', { name: /Default home time zone/ }) as HTMLInputElement).value).toBe(
       'Asia/Tehran',
     );
-    fireEvent.click(screen.getByLabelText('Nobody new'));
+    fireEvent.click(screen.getByLabelText('Only people with an invite'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(sent).toEqual([{ signUps: 'closed' }]));
   });
@@ -63,7 +64,7 @@ describe('admin page', () => {
           ? json({ error: 'Only an admin can do that' }, 403)
           : json(saved),
     );
-    fireEvent.click(await screen.findByLabelText('Nobody new'));
+    fireEvent.click(await screen.findByLabelText('Only people with an invite'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText("Couldn't save the instance settings: Only an admin can do that")).toBeTruthy();
   });

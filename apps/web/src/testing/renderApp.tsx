@@ -21,6 +21,7 @@ export const setUpInstance = {
   googleCalendar: false,
   microsoftCalendar: false,
   passwordReset: false,
+  anyoneCanInvite: false,
 };
 
 /** Better Auth's get-session body for Ada, with `role` ('user' unless given). */
@@ -58,7 +59,9 @@ export const signedInWith =
             ? json({ items: [], unread: 0 })
             : url.pathname === '/api/notification-channels'
               ? json({ items: [], email: false })
-              : json({ error: `unexpected ${url.pathname}` }, 404);
+              : ['/api/people', '/api/circles', '/api/invites'].includes(url.pathname)
+                ? json([])
+                : json({ error: `unexpected ${url.pathname}` }, 404);
 
 export const signedIn: FakeApi = signedInWith({ homeTz: null, secondaryCalendar: 'none' });
 

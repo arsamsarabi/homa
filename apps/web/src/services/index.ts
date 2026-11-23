@@ -4,6 +4,7 @@ export * from './event-form';
 export * from './jalali';
 export * from './locale';
 export * from './month-drag';
+export * from './people';
 export * from './popover';
 export * from './quick-add';
 export * from './reminders';

@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+Invites and circles (phase 6a). Under Settings → People, an admin creates invite links: each works once, for 7 days, and can be for one address only; with email set up, Homa emails it, and signing up from the emailed link confirms the address. An invite gets past closed sign-ups, so "closed" now means invite-only. A new instance setting says whether only admins or everyone can invite (admins by default). Everyone can see the other people on the instance (`GET /api/people`) and group them into circles, which only their owner sees; circles are what calendars will be shared with in 6b. Migration `0015_people` adds the `invites`, `circles` and `circle_members` tables and `instance_settings.invites`.
+
 ## [0.2.0] - 2026-11-22
 
 Email confirmation and password reset. On a server with email set up (`HOMA_SMTP_URL` and `HOMA_MAIL_FROM`), new accounts confirm their address from a link before they can sign in, and "Forgot password?" on the sign-in page emails a reset link that works once, for 1 hour. Both emails are in English or Farsi. `HOMA_REQUIRE_EMAIL_VERIFICATION=false` turns confirmation off; `true` without email stops the server at startup. Without email, the sign-in page says to ask the admin, who can set a password with `bun apps/server/src/auth/set-password.ts <email>` in the `api` container. Migration `0014_verify_existing_users` marks every existing account confirmed.

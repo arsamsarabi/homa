@@ -39,6 +39,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       googleCalendar: false,
       microsoftCalendar: false,
       passwordReset: false,
+      anyoneCanInvite: false,
     });
   });
 
@@ -60,6 +61,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
     expect(await (await getAdmin(admin)).json()).toEqual({
       name: 'Homa',
       signUps: 'open',
+      invites: 'admins',
       defaultLanguage: 'en',
       defaultHomeTz: null,
       defaultSecondaryCalendar: 'none',
@@ -77,6 +79,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
     expect(await res.json()).toEqual({
       name: 'Family',
       signUps: 'open',
+      invites: 'admins',
       defaultLanguage: 'fa',
       defaultHomeTz: 'Asia/Tehran',
       defaultSecondaryCalendar: 'jalali',
@@ -89,6 +92,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       googleCalendar: false,
       microsoftCalendar: false,
       passwordReset: false,
+      anyoneCanInvite: false,
     });
   });
 

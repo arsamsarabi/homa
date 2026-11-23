@@ -5,6 +5,7 @@ import { instanceSettings } from '../schema';
 export type InstanceSettingsRow = {
   instanceName: string;
   signUps: string;
+  invites: string;
   defaultLanguage: string;
   defaultHomeTz: string | null;
   defaultSecondaryCalendar: string;
@@ -14,6 +15,7 @@ export type InstanceSettingsRow = {
 const columns = {
   instanceName: instanceSettings.instanceName,
   signUps: instanceSettings.signUps,
+  invites: instanceSettings.invites,
   defaultLanguage: instanceSettings.defaultLanguage,
   defaultHomeTz: instanceSettings.defaultHomeTz,
   defaultSecondaryCalendar: instanceSettings.defaultSecondaryCalendar,

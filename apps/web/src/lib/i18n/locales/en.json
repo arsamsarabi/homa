@@ -56,7 +56,9 @@
     "verifyFailedTitle": "That link didn't work",
     "verifyExpired": "This confirmation link has expired. Enter your email address to get a new one.",
     "verifyInvalid": "This confirmation link isn't valid, perhaps because it was cut short. Enter your email address to get a new one.",
-    "continue": "Continue"
+    "continue": "Continue",
+    "invitedBy": "{{name}} invited you to {{instance}}. Make your account below.",
+    "inviteUnusable": "This invite link has expired or has already been used. Ask for a new one."
   },
   "onboarding": {
     "title": "Welcome to Homa, {{name}}",
@@ -217,11 +219,11 @@
     "signUps": "Who can create an account?",
     "signUpsOption": {
       "open": "Anyone who can reach this Homa",
-      "closed": "Nobody new"
+      "closed": "Only people with an invite"
     },
     "signUpsHint": {
       "open": "The sign-in page links to sign-up.",
-      "closed": "Only existing accounts can sign in. The sign-up page goes away."
+      "closed": "The sign-up page only opens from an invite link. Invite people under Settings → People."
     },
     "defaultLanguage": "Default language",
     "defaultLanguageHint": "Used until someone picks a language on their device.",
@@ -232,7 +234,12 @@
     "loading": "Loading the instance settings",
     "loadFailed": "Couldn't load the instance settings",
     "saved": "Instance settings saved",
-    "saveFailed": "Couldn't save the instance settings: {{message}}"
+    "saveFailed": "Couldn't save the instance settings: {{message}}",
+    "invites": "Who can invite people?",
+    "invitesOption": {
+      "admins": "Only admins",
+      "everyone": "Everyone with an account"
+    }
   },
   "importExport": {
     "title": "Import and export",
@@ -654,5 +661,60 @@
     "unreadDates_other": "{{count}} due dates couldn't be read. Their text is in the tasks' notes.",
     "sections_one": "{{count}} section was left out (Homa has no sections). Its tasks were imported.",
     "sections_other": "{{count}} sections were left out (Homa has no sections). Their tasks were imported."
+  },
+  "people": {
+    "title": "People",
+    "hint": "Invite family and friends to this Homa, and group them into circles to share calendars with.",
+    "invites": {
+      "title": "Invites",
+      "new": "Invite someone",
+      "hint": "An invite link lets one person make an account here, even when sign-ups are closed. It works once, for 7 days.",
+      "empty": "No invites yet.",
+      "loadFailed": "Couldn't load the invites",
+      "anyone": "Anyone with the link",
+      "status": {
+        "pending": "Open",
+        "used": "Joined",
+        "expired": "Expired"
+      },
+      "joined": "Joined as {{name}}",
+      "expires": "Works until {{date}}",
+      "expiredOn": "Expired on {{date}}",
+      "by": "from {{name}}",
+      "revoke": "Revoke",
+      "revokeLabel": "Revoke the invite for {{who}}",
+      "revoked": "Invite for {{who}} revoked",
+      "email": "Email (optional)",
+      "emailHint": "Only this address can use the invite. With email set up on the server, Homa sends it the link.",
+      "create": "Create invite",
+      "failed": "Couldn't create the invite: {{message}}",
+      "emailed": "Homa emailed the link to {{email}}.",
+      "linkHint": "Copy the link and send it yourself. It is shown only now.",
+      "link": "Invite link",
+      "copy": "Copy link",
+      "copied": "Copied"
+    },
+    "circles": {
+      "title": "Circles",
+      "new": "New circle",
+      "hint": "Circles are groups of people here, like Family or Book club. Only you see your circles.",
+      "empty": "No circles yet.",
+      "loadFailed": "Couldn't load your circles",
+      "noMembers": "Nobody yet",
+      "edit": "Edit",
+      "editLabel": "Edit {{name}}",
+      "editTitle": "Edit circle",
+      "delete": "Delete",
+      "deleteLabel": "Delete {{name}}",
+      "deleted": "{{name}} deleted",
+      "name": "Name",
+      "namePlaceholder": "Family",
+      "members": "People",
+      "nobodyYet": "Nobody else has an account here yet. Invite someone first.",
+      "nobodyFound": "Nobody by that name",
+      "save": "Save circle",
+      "saved": "{{name}} saved",
+      "saveFailed": "Couldn't save the circle: {{message}}"
+    }
   }
 }

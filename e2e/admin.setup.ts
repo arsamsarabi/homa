@@ -26,6 +26,8 @@ test('set up a new instance as its admin @smoke', async ({ page, request }) => {
   await expect(name).toHaveValue('Homa');
   await name.fill('E2E Homa');
   await expect(page.getByLabel('Anyone who can reach this Homa')).toBeChecked();
+  // Let everyone invite, so e2e/people.spec.ts can invite without the admin's account.
+  await page.getByLabel('Everyone with an account').check();
   await page.getByRole('button', { name: 'Continue' }).click();
 
   await expect(page.getByText(/Now your own settings/)).toBeVisible();

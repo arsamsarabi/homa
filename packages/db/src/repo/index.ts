@@ -1,4 +1,4 @@
-export { countUsers, deleteExpiredAuth } from './auth';
+export { countUsers, deleteExpiredAuth, findUserRole } from './auth';
 export {
   type CalendarRow,
   type CalendarValues,
@@ -111,6 +111,33 @@ export {
   type OutboxValues,
   pendingOutboxUids,
 } from './outbox';
+export {
+  type CircleRow,
+  type CircleWithMembers,
+  circleNameTaken,
+  claimInvite,
+  countCircles,
+  countPendingInvites,
+  deleteOwnedCircle,
+  deleteUnusedInvite,
+  emailTaken,
+  existingUserIds,
+  findOwnedCircle,
+  findPendingInvite,
+  type InviteRow,
+  type InviteView,
+  insertCircle,
+  insertInvite,
+  listCircles,
+  listInvites,
+  listPeople,
+  type NewInvite,
+  type Person,
+  renameOwnedCircle,
+  replaceCircleMembers,
+  setInviteEmailed,
+  setInviteUsedByToken,
+} from './people';
 export {
   countProjects,
   countTags,

@@ -2,6 +2,7 @@ export * from './auth';
 export * from './calendar';
 export * from './connections';
 export * from './instance';
+export * from './people';
 export * from './reminders';
 export * from './settings';
 export * from './tasks';

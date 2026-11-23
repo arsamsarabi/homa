@@ -4,6 +4,7 @@ import { type Db, repo } from '@homa/db';
 export type InstanceSettings = {
   name: string;
   signUps: string;
+  invites: string;
   defaultLanguage: string;
   defaultHomeTz: string | null;
   defaultSecondaryCalendar: string;
@@ -17,6 +18,7 @@ export type PublicInstance = {
   googleCalendar: boolean;
   microsoftCalendar: boolean;
   passwordReset: boolean;
+  anyoneCanInvite: boolean;
 };
 
 const fromRow = ({ instanceName, ...rest }: repo.InstanceSettingsRow): InstanceSettings => ({
@@ -51,6 +53,7 @@ export async function getPublicInstance(
     googleCalendar,
     microsoftCalendar,
     passwordReset,
+    anyoneCanInvite: s.invites === 'everyone',
   };
 }
 

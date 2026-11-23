@@ -3,6 +3,7 @@ export * from './commands';
 export * from './connections';
 export * from './instance';
 export * from './locale';
+export * from './people';
 export * from './reminders';
 export * from './session';
 export * from './settings';

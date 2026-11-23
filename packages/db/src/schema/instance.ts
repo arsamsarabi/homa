@@ -10,6 +10,8 @@ export const instanceSettings = pgTable(
     instanceName: text('instance_name').notNull().default('Homa'),
     // 'open' or 'closed'. The first account can always sign up.
     signUps: text('sign_ups').notNull().default('open'),
+    // Who can create invite links: 'admins' or 'everyone'.
+    invites: text('invites').notNull().default('admins'),
     // 'en' or 'fa': the language the web app uses until someone picks one.
     defaultLanguage: text('default_language').notNull().default('en'),
     // What new accounts start with; null home zone means "use the browser's zone".

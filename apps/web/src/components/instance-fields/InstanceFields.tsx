@@ -2,7 +2,15 @@ import { Radio, Select, Stack, TextInput } from '@mantine/core';
 import { type ChangeEvent, type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type Language, languages } from '@/lib/i18n';
-import { type InstanceSettings, SECONDARY_CALENDARS, type SecondaryCalendar, SIGN_UPS, type SignUps } from '@/schemas';
+import {
+  type InstanceSettings,
+  SECONDARY_CALENDARS,
+  type SecondaryCalendar,
+  SIGN_UPS,
+  type SignUps,
+  WHO_CAN_INVITE,
+  type WhoCanInvite,
+} from '@/schemas';
 import { timeZones } from '@/services/zones';
 
 export type InstanceFieldsProps = {
@@ -47,6 +55,17 @@ export function InstanceFields({ value, onChange }: InstanceFieldsProps): JSX.El
               label={t(`instance.signUpsOption.${s}`)}
               description={t(`instance.signUpsHint.${s}`)}
             />
+          ))}
+        </Stack>
+      </Radio.Group>
+      <Radio.Group
+        label={t('instance.invites')}
+        value={value.invites}
+        onChange={(v: string): void => onChange({ invites: v as WhoCanInvite })}
+      >
+        <Stack mt="xs" gap="xs">
+          {WHO_CAN_INVITE.map((w) => (
+            <Radio key={w} value={w} label={t(`instance.invitesOption.${w}`)} />
           ))}
         </Stack>
       </Radio.Group>
