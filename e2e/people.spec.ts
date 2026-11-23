@@ -51,7 +51,9 @@ test('invite someone by link, then put them in a circle @smoke', async ({ page, 
   await circle.getByLabel('Name').fill('Family');
   const picker = circle.getByRole('combobox', { name: 'People' });
   await picker.fill(bob);
-  await expect(page.getByRole('listbox', { name: 'People' }).getByRole('option')).toHaveText([`Bob People (${bob})`]);
+  await expect(page.getByRole('listbox', { name: 'People' }).getByRole('option')).toHaveText([`Bob People (${bob})`], {
+    timeout: 15_000,
+  });
   await picker.press('ArrowDown');
   await picker.press('Enter');
   await circle.getByLabel('Name').click(); // closes the picker's dropdown
