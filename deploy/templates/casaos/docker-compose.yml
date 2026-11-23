@@ -1,0 +1,86 @@
+# Homa for CasaOS: import it under App Store → Custom Install (the import icon), or add it to a
+# third-party app store. Before installing, replace both REPLACE_ME values (see docs/self-hosting/casaos.md).
+name: homa
+
+services:
+  homa:
+    image: ghcr.io/arsamsarabi/homa:0.2.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HOMA_ROLE: all
+      DATABASE_URL: postgres://homa:homa@homa-postgres:5432/homa
+      # At least 32 characters: openssl rand -base64 32. The server won't start with REPLACE_ME.
+      BETTER_AUTH_SECRET: REPLACE_ME
+      # The address you open Homa at; sign-ins from any other address are refused.
+      HOMA_URL: http://casaos.local:3000
+      # Optional until you connect a calendar: openssl rand -base64 32. Keep it with your backups.
+      HOMA_ENCRYPTION_KEY: ""
+    ports:
+      - target: 3000
+        published: "3000"
+        protocol: tcp
+    networks:
+      - homa
+
+  postgres:
+    container_name: homa-postgres
+    hostname: homa-postgres
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homa
+      POSTGRES_PASSWORD: homa
+      POSTGRES_DB: homa
+    volumes:
+      - /DATA/AppData/homa/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homa -d homa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - homa
+
+networks:
+  homa:
+    driver: bridge
+
+x-casaos:
+  id: day.homa.homa
+  main: homa
+  index: /
+  port_map: "3000"
+  scheme: http
+  icon: https://raw.githubusercontent.com/arsamsarabi/homa/main/apps/web/public/icon-512.png
+  thumbnail: https://raw.githubusercontent.com/arsamsarabi/homa/main/docs/media/homa-promo-preview.webp
+  screenshot_link:
+    - https://raw.githubusercontent.com/arsamsarabi/homa/main/docs/media/screenshots/month-jalali-light.webp
+    - https://raw.githubusercontent.com/arsamsarabi/homa/main/docs/media/screenshots/agenda-light.webp
+  title:
+    en_US: Homa
+  tagline:
+    en_US: A self-hosted calendar and task app, in English and Farsi
+  description:
+    en_US: |
+      Homa is a self-hosted calendar and task app. It keeps your own calendars and syncs with CalDAV, Google and Microsoft calendars, with reminders, tasks and projects, natural-language quick add, and the Jalali calendar alongside the Gregorian one. The whole app is available in English and Farsi.
+  tips:
+    before_install:
+      en_US: |
+        Set BETTER_AUTH_SECRET to a random value of at least 32 characters (openssl rand -base64 32), and HOMA_URL to the address you will open Homa at. On first start, the 4-digit setup code for the admin account is in the homa container's log ("first-run setup code").
+  author: Arsam Sarabi
+  developer: Arsam Sarabi
+  category: Productivity
+  architectures:
+    - amd64
+    - arm64
+  version: "0.2.0"
+  update_at: "2026-11-22"
+  release_notes:
+    en_US: Email confirmation and password reset, a readiness endpoint, and branded reminder emails.
+  website: https://homa.day
+  repo: https://github.com/arsamsarabi/homa
+  support: https://github.com/arsamsarabi/homa/issues
+  docs: https://github.com/arsamsarabi/homa/blob/main/docs/self-hosting/casaos.md

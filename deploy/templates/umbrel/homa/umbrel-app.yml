@@ -1,0 +1,39 @@
+manifestVersion: 1
+id: homa
+storage:
+  dataRoot: data
+category: productivity
+name: Homa
+version: "0.2.0"
+tagline: A self-hosted calendar and task app, in English and Farsi
+description: >-
+  ⚠️ First start: Homa asks for a 4-digit setup code before it creates the admin account. Find it in the app's logs (look for "first-run setup code").
+
+
+  Homa is a self-hosted calendar and task app. It keeps your own calendars and syncs with CalDAV, Google and Microsoft calendars, with reminders, tasks and projects, natural-language quick add, and the Jalali calendar alongside the Gregorian one. The whole app is available in English and Farsi.
+
+
+  - Day, week, month, year and agenda views, with recurring events
+
+  - Tasks with projects, tags, subtasks, repeats and time blocks on the calendar
+
+  - Reminders in the app, as web push, email, ntfy, Gotify or webhooks
+
+  - Import and export .ics files
+releaseNotes: ""
+
+developer: Arsam Sarabi
+website: https://homa.day
+dependencies: []
+repo: https://github.com/arsamsarabi/homa
+support: https://github.com/arsamsarabi/homa/issues
+
+port: 3880
+gallery: []
+path: ""
+
+defaultUsername: ""
+defaultPassword: ""
+
+submitter: Arsam Sarabi
+submission: ""

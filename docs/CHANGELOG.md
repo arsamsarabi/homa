@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+One-click templates for home servers, in `deploy/templates/`: an Unraid template, a Compose file for TrueNAS 24.10 and later, a CasaOS app, an umbrelOS app package and a YunoHost package skeleton, each with a page in `docs/self-hosting/`. None has been tried on the real platform yet; the QA issues ask for help with that.
+
 ## [0.2.0] - 2026-11-22
 
 Email confirmation and password reset. On a server with email set up (`HOMA_SMTP_URL` and `HOMA_MAIL_FROM`), new accounts confirm their address from a link before they can sign in, and "Forgot password?" on the sign-in page emails a reset link that works once, for 1 hour. Both emails are in English or Farsi. `HOMA_REQUIRE_EMAIL_VERIFICATION=false` turns confirmation off; `true` without email stops the server at startup. Without email, the sign-in page says to ask the admin, who can set a password with `bun apps/server/src/auth/set-password.ts <email>` in the `api` container. Migration `0014_verify_existing_users` marks every existing account confirmed.

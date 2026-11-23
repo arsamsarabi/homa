@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>homa</Name>
+  <Repository>ghcr.io/arsamsarabi/homa:latest</Repository>
+  <Registry>https://github.com/arsamsarabi/homa/pkgs/container/homa</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/arsamsarabi/homa/issues</Support>
+  <Project>https://github.com/arsamsarabi/homa</Project>
+  <ReadMe>https://github.com/arsamsarabi/homa/blob/main/docs/self-hosting/unraid.md</ReadMe>
+  <Overview>Homa is a self-hosted calendar and task app. It keeps your own calendars and syncs with CalDAV, Google and Microsoft calendars, with reminders, tasks and projects, natural-language quick add, and the Jalali calendar alongside the Gregorian one. English and Farsi.&#xD;
+&#xD;
+Needs Postgres 16 or newer: install a Postgres container first and create a database and user for Homa, then fill in DATABASE_URL. On first start, the 4-digit setup code for the admin account is in this container's log ("first-run setup code").</Overview>
+  <Requires>A Postgres 16 or newer container (for example the official postgres image) with a database and user for Homa.</Requires>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/arsamsarabi/homa/main/deploy/templates/unraid/homa.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/arsamsarabi/homa/main/apps/web/public/icon-512.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <Config Name="Web UI port" Target="3000" Default="3000" Mode="tcp" Description="The port Homa's web app and API listen on." Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="DATABASE_URL" Target="DATABASE_URL" Default="" Mode="" Description="Postgres connection string, such as postgres://homa:PASSWORD@[IP]:5432/homa" Type="Variable" Display="always" Required="true" Mask="true"/>
+  <Config Name="BETTER_AUTH_SECRET" Target="BETTER_AUTH_SECRET" Default="" Mode="" Description="Signs sessions. At least 32 random characters: openssl rand -base64 32. Don't change it later, or everyone is signed out." Type="Variable" Display="always" Required="true" Mask="true"/>
+  <Config Name="HOMA_URL" Target="HOMA_URL" Default="http://[IP]:3000" Mode="" Description="The address you open Homa at (your server's IP or domain). Sign-ins from any other address are refused." Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="HOMA_ENCRYPTION_KEY" Target="HOMA_ENCRYPTION_KEY" Default="" Mode="" Description="Encrypts connected calendars' credentials. Needed once you connect a calendar: openssl rand -base64 32. Keep it with your backups." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="HOMA_ROLE" Target="HOMA_ROLE" Default="all" Mode="" Description="all runs the web app and background jobs in this one container." Type="Variable" Display="advanced" Required="false" Mask="false">all</Config>
+</Container>

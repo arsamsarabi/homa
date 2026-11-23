@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: homa_web_1
+      APP_PORT: 3000
+
+  web:
+    image: ghcr.io/arsamsarabi/homa:0.2.0@sha256:eae8dd372b490ee14f7bd6365f2ee16240dc844f778e700aceae646befdfbb19
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      HOMA_ROLE: all
+      DATABASE_URL: postgres://homa:${APP_HOMA_DB_PASSWORD}@homa_postgres_1:5432/homa
+      BETTER_AUTH_SECRET: ${APP_HOMA_AUTH_SECRET}
+      HOMA_ENCRYPTION_KEY: ${APP_HOMA_ENCRYPTION_KEY}
+      # Sign-ins are only accepted from this address.
+      HOMA_URL: http://${DEVICE_DOMAIN_NAME}:${APP_PROXY_PORT}
+
+  postgres:
+    image: postgres:18.6-alpine@sha256:9ba53c7d41ea093baf5c1ba635ba5434c4f979880527d49bb7d9237d3193085b
+    restart: on-failure
+    environment:
+      POSTGRES_USER: homa
+      POSTGRES_PASSWORD: ${APP_HOMA_DB_PASSWORD}
+      POSTGRES_DB: homa
+    volumes:
+      - ${APP_DATA_DIR}/data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homa -d homa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
