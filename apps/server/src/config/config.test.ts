@@ -79,3 +79,14 @@ test('email verification: on by default with email, off without, and true needs 
     /HOMA_REQUIRE_EMAIL_VERIFICATION=true needs email/,
   );
 });
+
+test('demo mode: off by default, and refuses settings that send anything out', () => {
+  expect(loadConfig(valid).HOMA_DEMO).toBe(false);
+  expect(loadConfig({ ...valid, HOMA_DEMO: 'true' }).HOMA_DEMO).toBe(true);
+  expect(() =>
+    loadConfig({ ...valid, HOMA_DEMO: 'true', HOMA_SMTP_URL: 'smtp://h:587', HOMA_MAIL_FROM: 'a@example.com' }),
+  ).toThrow(/HOMA_DEMO/);
+  expect(() =>
+    loadConfig({ ...valid, HOMA_DEMO: 'true', HOMA_GOOGLE_CLIENT_ID: 'id', HOMA_GOOGLE_CLIENT_SECRET: 's' }),
+  ).toThrow(/HOMA_DEMO/);
+});

@@ -39,6 +39,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       googleCalendar: false,
       microsoftCalendar: false,
       passwordReset: false,
+      demo: null,
     });
   });
 
@@ -89,6 +90,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       googleCalendar: false,
       microsoftCalendar: false,
       passwordReset: false,
+      demo: null,
     });
   });
 

@@ -50,6 +50,7 @@ export function instanceApi(deps?: {
   auth: Auth;
   sync?: SyncSettings;
   notify?: NotifySettings;
+  demo?: boolean;
 }): OpenAPIHono<UserVars> {
   const app = newApi<UserVars>();
   app.use('/admin/instance', requireAdmin(deps?.auth));
@@ -69,6 +70,7 @@ export function instanceApi(deps?: {
             googleCalendar: Boolean(deps?.sync?.google && deps.sync.key),
             microsoftCalendar: Boolean(deps?.sync?.microsoft && deps.sync.key),
             passwordReset: Boolean(deps?.notify?.sendMail),
+            demo: Boolean(deps?.demo),
           }),
         ),
         200,

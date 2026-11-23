@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+Demo mode for a public demo instance. With `HOMA_DEMO=true` the server seeds a shared demo account with made-up calendars, recurring events, tasks, projects and reminders around today (a few in Farsi), fills in its sign-in on the sign-in page, and shows a note on every page that the demo resets every night. Sign-up, account changes, connected calendars, notification channels, web push and instance settings answer `403`, and the server won't start in demo mode with email or Google or Microsoft set up. `bun apps/server/src/demo-reset.ts` wipes every account and seeds again, for a nightly job. `GET /api/instance` has a new `demo` field (null except on a demo). See `docs/self-hosting/demo.md`. No migration.
+
 ## [0.2.0] - 2026-11-22
 
 Email confirmation and password reset. On a server with email set up (`HOMA_SMTP_URL` and `HOMA_MAIL_FROM`), new accounts confirm their address from a link before they can sign in, and "Forgot password?" on the sign-in page emails a reset link that works once, for 1 hour. Both emails are in English or Farsi. `HOMA_REQUIRE_EMAIL_VERIFICATION=false` turns confirmation off; `true` without email stops the server at startup. Without email, the sign-in page says to ask the admin, who can set a password with `bun apps/server/src/auth/set-password.ts <email>` in the `api` container. Migration `0014_verify_existing_users` marks every existing account confirmed.

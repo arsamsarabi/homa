@@ -1091,6 +1091,11 @@ export interface components {
             microsoftCalendar: boolean;
             /** @description Whether this server can email password reset links (it has email set up) */
             passwordReset: boolean;
+            /** @description A demo instance's shared sign-in; null on every other instance */
+            demo: {
+                email: string;
+                password: string;
+            } | null;
         };
         InstanceSettings: {
             /**

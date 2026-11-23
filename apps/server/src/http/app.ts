@@ -6,6 +6,7 @@ import { serveStatic } from 'hono/bun';
 import type { Auth } from '@/auth';
 import { calendarApi } from '@/calendar';
 import { connectionsApi, type SyncSettings } from '@/connections';
+import { demoGuard } from '@/demo';
 import { importExportApi } from '@/import-export';
 import { instanceApi } from '@/instance';
 import { channelsApi, type NotifySettings, type PushSettings, remindersApi } from '@/reminders';
@@ -18,9 +19,16 @@ import { readyApi } from './ready';
 
 /**
  * `sync` is the connected-calendar settings, `push` web push and `notify` the notification channels;
- * without them those routes answer 503.
+ * without them those routes answer 503. `demo` turns on demo mode's guard (HOMA_DEMO).
  */
-export type AppDeps = { db: Db; auth: Auth; sync?: SyncSettings; push?: PushSettings; notify?: NotifySettings };
+export type AppDeps = {
+  db: Db;
+  auth: Auth;
+  sync?: SyncSettings;
+  push?: PushSettings;
+  notify?: NotifySettings;
+  demo?: boolean;
+};
 
 /** The /api routes. Without `deps` (tests, the OpenAPI dump) routes that need a user answer 401. */
 export function createApi(deps?: AppDeps): OpenAPIHono {
@@ -48,6 +56,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
 export function createApp(deps?: AppDeps, webDir?: string): OpenAPIHono {
   const app = newApi();
   const auth = deps?.auth;
+  if (deps?.demo) app.use('/api/*', demoGuard());
   if (auth) app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw));
   app.route('/api', createApi(deps));
   app.all('/api/*', notFound);
