@@ -2,7 +2,7 @@
 
 A Docker Compose file for TrueNAS Community Edition 24.10 (Electric Eel) and later, which run apps on Docker: [`deploy/templates/truenas/docker-compose.yml`](../../deploy/templates/truenas/docker-compose.yml). It runs Homa (web app and background jobs in one container) and Postgres 18.
 
-> Untested on real TrueNAS hardware. The same Compose file was started with Docker Compose on a Mac, the admin created, and the data survived a restart. If you try it on TrueNAS, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues?q=is%3Aissue+label%3Aqa+TrueNAS).
+> Untested on real TrueNAS hardware. The same Compose file was started with Docker Compose on a Mac, the admin created, and the data survived a restart. If you try it on TrueNAS, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues/89).
 
 ## Install
 

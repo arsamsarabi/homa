@@ -2,7 +2,7 @@
 
 A YunoHost package skeleton (packaging format 2): [`deploy/templates/yunohost/`](../../deploy/templates/yunohost/). YunoHost installs apps natively rather than in Docker, so the package downloads the release source and a pinned Bun, builds the web app, uses YunoHost's PostgreSQL, and runs Homa as a systemd service behind YunoHost's NGINX on its own domain.
 
-> A skeleton, untested on a real YunoHost server: expect to fix things on the first install. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues?q=is%3Aissue+label%3Aqa+YunoHost).
+> A skeleton, untested on a real YunoHost server: expect to fix things on the first install. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues/92).
 
 ## Try it
 

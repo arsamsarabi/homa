@@ -2,7 +2,7 @@
 
 A CasaOS app (Docker Compose with an `x-casaos` block): [`deploy/templates/casaos/docker-compose.yml`](../../deploy/templates/casaos/docker-compose.yml). It runs Homa (web app and background jobs in one container) and Postgres 18, with the database in `/DATA/AppData/homa/postgres`.
 
-> Untested on real CasaOS hardware. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues?q=is%3Aissue+label%3Aqa+CasaOS).
+> Untested on real CasaOS hardware. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues/90).
 
 ## Install
 

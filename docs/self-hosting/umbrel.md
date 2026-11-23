@@ -2,7 +2,7 @@
 
 An umbrelOS app package: [`deploy/templates/umbrel/homa/`](../../deploy/templates/umbrel/homa/) (`umbrel-app.yml`, `docker-compose.yml`, `exports.sh`). It runs Homa (web app and background jobs in one container) and Postgres 18, with images pinned by digest, data under `${APP_DATA_DIR}/data/postgres`, and secrets derived per install with `derive_entropy`. It opens on port 3880, behind the Umbrel login.
 
-> Untested on a real Umbrel. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues?q=is%3Aissue+label%3Aqa+Umbrel).
+> Untested on a real Umbrel. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues/91).
 
 ## Install from a community app store
 

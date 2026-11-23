@@ -2,7 +2,7 @@
 
 A Community Applications template for Homa: [`deploy/templates/unraid/homa.xml`](../../deploy/templates/unraid/homa.xml).
 
-> Untested on real Unraid hardware. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues?q=is%3Aissue+label%3Aqa+Unraid).
+> Untested on real Unraid hardware. If you try it, please report back on the [QA issue](https://github.com/arsamsarabi/homa/issues/88).
 
 Unraid templates run one container, so Postgres is a separate container. Homa runs its web app and background jobs together in this one container (`HOMA_ROLE=all`).
 
