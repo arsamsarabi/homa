@@ -10,6 +10,7 @@ import { CalendarsSection } from '@/pages/settings/calendars';
 import { ConnectedCalendarsSection } from '@/pages/settings/connections';
 import { ImportExportSection, TodoistImportSection } from '@/pages/settings/import-export';
 import { ChannelsSection, NotificationsSection } from '@/pages/settings/notifications';
+import { PeopleSection } from '@/pages/settings/people';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
 import classes from './SettingsPage.module.css';
@@ -58,6 +59,7 @@ export function SettingsPage(): JSX.Element {
             </Text>
           </Stack>
         )}
+        <PeopleSection />
         <NotificationsSection />
         <ChannelsSection />
         <CalendarsSection />

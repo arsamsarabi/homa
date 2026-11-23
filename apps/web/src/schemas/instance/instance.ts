@@ -5,6 +5,8 @@ import { SECONDARY_CALENDARS } from '@/schemas/settings';
 export const SIGN_UPS = ['open', 'closed'] as const;
 export type SignUps = (typeof SIGN_UPS)[number];
 export const LANGUAGES = ['en', 'fa'] as const;
+export const WHO_CAN_INVITE = ['admins', 'everyone'] as const;
+export type WhoCanInvite = (typeof WHO_CAN_INVITE)[number];
 
 export const PublicInstanceSchema = z.object({
   name: z.string(),
@@ -18,6 +20,8 @@ export const PublicInstanceSchema = z.object({
   microsoftCalendar: z.boolean(),
   /** Whether this server can email password reset links (it has email set up). */
   passwordReset: z.boolean(),
+  /** Whether everyone, not only admins, can create invite links. */
+  anyoneCanInvite: z.boolean(),
   /** A demo instance's shared sign-in; null on every other instance. */
   demo: z.object({ email: z.string(), password: z.string() }).nullable(),
 });
@@ -26,6 +30,7 @@ export type PublicInstance = z.infer<typeof PublicInstanceSchema>;
 export const InstanceSettingsSchema = z.object({
   name: z.string(),
   signUps: z.enum(SIGN_UPS),
+  invites: z.enum(WHO_CAN_INVITE),
   defaultLanguage: z.enum(LANGUAGES),
   /** null: each person's browser zone. */
   defaultHomeTz: z.string().nullable(),

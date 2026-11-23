@@ -78,7 +78,8 @@ All rows carry `owner_user_id` unless noted. Times are stored as `timestamptz` (
 | `notifications`, `notification_deliveries` | A fired reminder occurrence (`dedupe_key` unique, `read_at`, `snoozed_until`, `done_at`), and its send on each channel (`status`, `attempts`, `next_attempt_at`, `last_error`) |
 | `push_subscriptions` | A browser's web push subscription (`endpoint` unique, `p256dh`, `auth`) |
 | `notification_channels` | A user's email, ntfy, Gotify or webhook channel: `kind`, `name`, `enabled`, `reminder_kinds`, `config` (AES-256-GCM ciphertext: server, topic, URL, tokens, webhook secret; null for email), `consecutive_failures`, `last_error`, `last_sent_at` |
-| `circles`, `circle_members` | Named groups of users and email-only contacts |
+| `invites` | Single-use invite links: `token_hash` (SHA-256 of the token, which is never stored), optional `email`, `created_by`, `expires_at`, `emailed`, `used_at`, `used_by`. See `docs/design/phase-6-sharing.md` |
+| `circles`, `circle_members` | A user's private, named groups of other users on the instance (email-only contacts come with polls) |
 | `calendar_grants` | Calendar → user or circle, level `freebusy`, `read`, `edit` |
 | `polls`, `poll_options`, `poll_participants`, `poll_votes` | Mode (`slots`, `ranges`, `window`), constraints JSON, deadline, quorum, required flags, guest tokens (stored hashed) |
 | `booking_pages` | Slug, durations, rules, target calendar |

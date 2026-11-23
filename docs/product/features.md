@@ -42,7 +42,8 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 
 ## Instance and self-hosting
 
-- **Instance admin:** the first account becomes the admin, protected by a one-time setup code from the server log. The admin sets the instance name, open or closed sign-ups, the default language and the defaults for new accounts.
+- **Instance admin:** the first account becomes the admin, protected by a one-time setup code from the server log. The admin sets the instance name, open or invite-only sign-ups, who can invite people, the default language and the defaults for new accounts.
+- **People:** invite links (single use, 7 days, optionally for one address and emailed when email is set up) let someone make an account even when sign-ups are closed. Everyone can see who else is on the instance and group people into private circles under Settings → People.
 - **Self-hosting:** one image in two roles (API and worker) plus Postgres, with Docker Compose. Migrations run on start. See the [quick start](../self-hosting/quick-start.md).
 - **API:** a REST API with a generated OpenAPI document at `/api/openapi.json`, and a typed client generated from it.
 - **Security:** connected calendars' credentials are encrypted at rest, every record is scoped to its owner, sign-ins are rate limited, and feed and CalDAV URLs on private networks are refused unless allowed.

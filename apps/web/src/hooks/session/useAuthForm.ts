@@ -10,6 +10,8 @@ import { sessionQuery } from './session-query';
 
 /** Must match the server's header for the first-run setup code. */
 export const SETUP_CODE_HEADER = 'x-homa-setup-code';
+/** Must match the server's header for an invite token (INVITE_HEADER). */
+export const INVITE_HEADER = 'x-homa-invite';
 /** The page confirmation links land on (the server's VERIFY_EMAIL_PATH). */
 export const VERIFY_EMAIL_PATH = '/verify-email';
 
@@ -24,8 +26,11 @@ export type AuthForm = {
   submit: (e: FormEvent<HTMLFormElement>) => void;
 };
 
-/** With `onDone`, calls it after signing in or up instead of moving on to the next page. */
-export function useAuthForm(mode: AuthMode, onDone?: () => void): AuthForm {
+/**
+ * With `onDone`, calls it after signing in or up instead of moving on to the next page. `invite` is
+ * the token from an invite link, sent with the sign-up.
+ */
+export function useAuthForm(mode: AuthMode, onDone?: () => void, invite?: string): AuthForm {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
@@ -45,10 +50,13 @@ export function useAuthForm(mode: AuthMode, onDone?: () => void): AuthForm {
             email,
             password,
             name: String(form.get('name')),
-            // The first account (the admin) needs the setup code from the server log.
-            ...(form.has('setupCode') && {
-              fetchOptions: { headers: { [SETUP_CODE_HEADER]: String(form.get('setupCode')).trim() } },
-            }),
+            fetchOptions: {
+              headers: {
+                // The first account (the admin) needs the setup code from the server log.
+                ...(form.has('setupCode') && { [SETUP_CODE_HEADER]: String(form.get('setupCode')).trim() }),
+                ...(invite && { [INVITE_HEADER]: invite }),
+              },
+            },
           })
         : await signIn();
     if (res.error) {

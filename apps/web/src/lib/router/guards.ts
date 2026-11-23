@@ -24,9 +24,10 @@ export async function requireSignedOut({ context }: GuardArgs): Promise<void> {
   if ((await context.queryClient.ensureQueryData(instanceQuery)).needsSetup) throw redirect({ to: '/setup' });
 }
 
-/** The sign-up page, when the admin left sign-ups open. */
-export async function requireSignUpsOpen(args: GuardArgs): Promise<void> {
+/** The sign-up page, when the admin left sign-ups open or the link carries an invite. */
+export async function requireSignUpsOpen(args: GuardArgs & { search?: { invite?: string } }): Promise<void> {
   await requireSignedOut(args);
+  if (args.search?.invite) return; // the server checks the invite at sign-up
   if (!(await args.context.queryClient.ensureQueryData(instanceQuery)).signUpsOpen) throw redirect({ to: '/sign-in' });
 }
 

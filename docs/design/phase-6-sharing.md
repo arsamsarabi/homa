@@ -1,6 +1,6 @@
 # Phase 6: sharing and people
 
-Status: design, 2026-11-23. Nothing built yet.
+Status: design, 2026-11-23. 6a (invites, the directory, circles) built in the `phase-6a-people` PR, 2026-11-23.
 
 ## Scope
 
@@ -49,7 +49,7 @@ Each of these is a call made without Arsam; any can be overturned.
 
 ## Data model
 
-Migrations `0015` (6a), `0016` (6b), `0017` (6d). Phase 6 adds no new columns to `events` or `event_instances`: both already carry `owner_user_id` and `calendar_id`, which is all a grant check needs.
+Migrations `0015_people` (6a), then one each for 6b and 6d. Phase 6 adds no new columns to `events` or `event_instances`: both already carry `owner_user_id` and `calendar_id`, which is all a grant check needs.
 
 | Table | Columns | Notes |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ Migrations `0015` (6a), `0016` (6b), `0017` (6d). Phase 6 adds no new columns to
 ## Invite flow (6a)
 
 1. An admin (or anyone, if `invites` is `everyone`) opens Settings → People and creates an invite, optionally naming an email. `POST /api/invites { email? }` answers with the invite and its link `${HOMA_URL}/sign-up?invite=<token>`, once. If email is set up and an address is named, Homa emails the link (English or Farsi, the inviter's language) and says so.
-2. The invitee opens the link. `GET /api/invites/lookup?token=` (no session) answers with the instance name, the inviter's name and the named email, or 404 for an unknown, used or expired token. The sign-up page shows "Ada invited you to Homa" and fills and locks the email.
+2. The invitee opens the link. `GET /api/invite-lookup?token=` (no session) answers with the instance name, the inviter's name and the named email, or 404 for an unknown, used or expired token. The sign-up page shows "Ada invited you to Homa" and fills and locks the email.
 3. Sign-up sends the token in the `x-homa-invite` header. Better Auth's user `create.before` hook claims the invite in one `UPDATE … WHERE used_at IS NULL AND expires_at > now() AND token_hash = $1 RETURNING` (so two sign-ups can't share one), checks the email matches when the invite names one, and admits the account even when sign-ups are closed. An emailed invite to the same address marks the account confirmed.
 4. The inviter sees the invite as used, by whom. Pending invites can be revoked (`DELETE /api/invites/{id}`); used ones stay as a record until their inviter is deleted.
 

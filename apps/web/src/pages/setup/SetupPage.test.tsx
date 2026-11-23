@@ -5,6 +5,7 @@ import { json, renderApp, sessionBody, setUpInstance } from '@/testing/renderApp
 const defaults = {
   name: 'Homa',
   signUps: 'open',
+  invites: 'admins',
   defaultLanguage: 'en',
   defaultHomeTz: null,
   defaultSecondaryCalendar: 'none',
@@ -64,7 +65,7 @@ describe('setup journey', () => {
     const name = await screen.findByRole('textbox', { name: /Instance name/ });
     expect((name as HTMLInputElement).value).toBe('Homa');
     fireEvent.change(name, { target: { value: 'Family' } });
-    fireEvent.click(screen.getByLabelText('Nobody new'));
+    fireEvent.click(screen.getByLabelText('Only people with an invite'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await screen.findByText(/Now your own settings/);

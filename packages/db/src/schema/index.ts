@@ -4,5 +4,6 @@ export * from './channels';
 export * from './connections';
 export * from './instance';
 export * from './outbox';
+export * from './people';
 export * from './reminders';
 export * from './tasks';

@@ -15,6 +15,7 @@ import { createCalendar } from '@/calendar/calendars-service';
 import { admitNewUser, applyNewUserDefaults, getInstanceSettings } from '@/instance/instance-service';
 import { SETUP_CODE_HEADER, type SetupGate } from '@/instance/setup-code';
 import { log } from '@/log';
+import { claimInviteForSignUp, INVITE_HEADER, recordInviteUse } from '@/people/invites-service';
 import type { Mail } from '@/reminders';
 import { type AccountEmail, accountEmail, emailLanguage } from './emails';
 
@@ -102,11 +103,23 @@ function authConfig(db: Db, opts: AuthOptions) {
             user: U,
             ctx: { path: string; headers?: Headers } | null,
           ): Promise<{ data: U & { role: string } }> => {
-            // Closed sign-ups turn away people signing themselves up, not accounts an admin creates.
-            const role = await admitNewUser(db, ctx !== null && ctx.path !== '/admin/create-user');
+            // Closed sign-ups turn away people signing themselves up, not accounts an admin creates
+            // or people with an invite.
+            const selfSignUp = ctx !== null && ctx.path !== '/admin/create-user';
+            const inviteToken = selfSignUp ? ctx.headers?.get(INVITE_HEADER) : null;
+            const role = await admitNewUser(db, selfSignUp && !inviteToken);
             // Not FORBIDDEN: with email confirmation on, Better Auth turns a 403 from here into its
             // "check your email" reply for an address that's taken, and the message would be lost.
             if (!role) throw new APIError('BAD_REQUEST', { message: SIGN_UPS_CLOSED });
+            if (inviteToken && role === 'user') {
+              const email = 'email' in user && typeof user.email === 'string' ? user.email : '';
+              // Claimed before the account exists, so two sign-ups can't share one link.
+              const claim = await claimInviteForSignUp(db, inviteToken, email).catch((err: unknown) => {
+                throw new APIError('BAD_REQUEST', { message: err instanceof Error ? err.message : 'Invalid invite' });
+              });
+              // An invite emailed to this address proves it, so there's nothing left to confirm.
+              if (claim.emailProven) return { data: { ...user, role, emailVerified: true } };
+            }
             if (role === 'admin') {
               if (!opts.setupGate.check(ctx?.headers?.get(SETUP_CODE_HEADER))) {
                 throw new APIError('BAD_REQUEST', { message: WRONG_SETUP_CODE });
@@ -115,7 +128,9 @@ function authConfig(db: Db, opts: AuthOptions) {
             }
             return { data: { ...user, role } };
           },
-          after: async (user: { id: string }): Promise<void> => {
+          after: async (user: { id: string }, ctx: { headers?: Headers } | null): Promise<void> => {
+            const inviteToken = ctx?.headers?.get(INVITE_HEADER);
+            if (inviteToken) await recordInviteUse(db, inviteToken, user.id);
             await applyNewUserDefaults(db, user.id);
             await createCalendar(db, user.id, { name: 'Personal' });
           },

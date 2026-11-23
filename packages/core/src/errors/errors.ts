@@ -25,3 +25,8 @@ export class ReadOnlyError extends Error {
 export class UnavailableError extends Error {
   override name = 'UnavailableError';
 }
+
+/** The caller is signed in but may not do this (only admins invite, on this instance). */
+export class ForbiddenError extends Error {
+  override name = 'ForbiddenError';
+}

@@ -1,6 +1,7 @@
 // Request and response shapes for the instance's settings.
 import { isTimeZone } from '@homa/core';
 import { z } from '@hono/zod-openapi';
+import { WHO_CAN_INVITE } from '@/people/schemas';
 import { SECONDARY_CALENDARS } from '@/settings/schemas';
 
 export const SIGN_UPS = ['open', 'closed'] as const;
@@ -23,6 +24,7 @@ export const PublicInstance = z
     passwordReset: z
       .boolean()
       .openapi({ description: 'Whether this server can email password reset links (it has email set up)' }),
+    anyoneCanInvite: z.boolean().openapi({ description: 'Whether everyone, not only admins, can create invite links' }),
     demo: z
       .object({ email: z.string(), password: z.string() })
       .nullable()
@@ -33,7 +35,10 @@ export const PublicInstance = z
 export const InstanceSettings = z
   .object({
     name: Name,
-    signUps: z.enum(SIGN_UPS).openapi({ description: 'Closed: only existing accounts can sign in' }),
+    signUps: z
+      .enum(SIGN_UPS)
+      .openapi({ description: 'Closed: only existing accounts can sign in, and people with an invite can sign up' }),
+    invites: z.enum(WHO_CAN_INVITE).openapi({ description: 'Who can create invite links' }),
     defaultLanguage: Language,
     defaultHomeTz: z
       .string()

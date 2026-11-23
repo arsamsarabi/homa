@@ -9,6 +9,7 @@ import { connectionsApi, type SyncSettings } from '@/connections';
 import { demoGuard } from '@/demo';
 import { importExportApi } from '@/import-export';
 import { instanceApi } from '@/instance';
+import { peopleApi } from '@/people';
 import { channelsApi, type NotifySettings, type PushSettings, remindersApi } from '@/reminders';
 import { settingsApi } from '@/settings';
 import { tasksApi } from '@/tasks';
@@ -43,6 +44,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   api.route('/', remindersApi(deps));
   api.route('/', channelsApi(deps));
   api.route('/', tasksApi(deps));
+  api.route('/', peopleApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;

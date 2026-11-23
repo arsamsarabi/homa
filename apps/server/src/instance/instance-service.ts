@@ -5,6 +5,7 @@ import { DEMO_ACCOUNT } from '@/demo/account';
 export type InstanceSettings = {
   name: string;
   signUps: string;
+  invites: string;
   defaultLanguage: string;
   defaultHomeTz: string | null;
   defaultSecondaryCalendar: string;
@@ -18,6 +19,7 @@ export type PublicInstance = {
   googleCalendar: boolean;
   microsoftCalendar: boolean;
   passwordReset: boolean;
+  anyoneCanInvite: boolean;
   /** On a demo instance, the shared account's sign-in. */
   demo: { email: string; password: string } | null;
 };
@@ -55,6 +57,7 @@ export async function getPublicInstance(
     googleCalendar,
     microsoftCalendar,
     passwordReset,
+    anyoneCanInvite: s.invites === 'everyone',
     demo: demo ? { email: DEMO_ACCOUNT.email, password: DEMO_ACCOUNT.password } : null,
   };
 }
