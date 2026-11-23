@@ -83,6 +83,8 @@ Status: done. 5a (#51), 5b (#52), 5c (#53).
 
 ## Phase 6: sharing and people
 
+Status: designed in [phase-6-sharing.md](../design/phase-6-sharing.md); 6a to 6d to build.
+
 - Multi-user on one instance, invites, circles.
 - Calendar grants and default sharing preset at onboarding.
 - Availability engine with permission-aware free/busy.
