@@ -18,6 +18,8 @@ export const PublicInstanceSchema = z.object({
   microsoftCalendar: z.boolean(),
   /** Whether this server can email password reset links (it has email set up). */
   passwordReset: z.boolean(),
+  /** A demo instance's shared sign-in; null on every other instance. */
+  demo: z.object({ email: z.string(), password: z.string() }).nullable(),
 });
 export type PublicInstance = z.infer<typeof PublicInstanceSchema>;
 

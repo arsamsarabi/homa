@@ -23,6 +23,10 @@ export const PublicInstance = z
     passwordReset: z
       .boolean()
       .openapi({ description: 'Whether this server can email password reset links (it has email set up)' }),
+    demo: z
+      .object({ email: z.string(), password: z.string() })
+      .nullable()
+      .openapi({ description: "A demo instance's shared sign-in; null on every other instance" }),
   })
   .openapi('PublicInstance');
 

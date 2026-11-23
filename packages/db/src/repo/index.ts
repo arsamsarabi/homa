@@ -46,6 +46,7 @@ export {
   setConnectionNotice,
   updateConnectionCredentials,
 } from './connections';
+export { wipeAllAccounts } from './demo';
 export { type CachedOccurrence, deleteInstances, listCachedOccurrences, replaceInstances } from './event-instances';
 export {
   deleteOverrides,

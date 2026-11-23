@@ -97,6 +97,12 @@ const Env = z
       .enum(['true', 'false'])
       .default('true')
       .transform((v) => v === 'true'),
+    // A public demo: everyone shares one seeded account, and nothing leaves the server (no email,
+    // channels, push or connected calendars). Wipes nothing by itself; see docs/self-hosting/demo.md.
+    HOMA_DEMO: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
   })
   .refine((env) => !env.HOMA_GOOGLE_CLIENT_ID === !env.HOMA_GOOGLE_CLIENT_SECRET, {
     message: 'set both HOMA_GOOGLE_CLIENT_ID and HOMA_GOOGLE_CLIENT_SECRET, or neither',
@@ -119,6 +125,13 @@ const Env = z
       'HOMA_REQUIRE_EMAIL_VERIFICATION=true needs email: set HOMA_SMTP_URL and HOMA_MAIL_FROM, or leave it unset',
     path: ['HOMA_REQUIRE_EMAIL_VERIFICATION'],
   })
+  .refine(
+    (env) => !(env.HOMA_DEMO && (env.HOMA_SMTP_URL || env.HOMA_GOOGLE_CLIENT_ID || env.HOMA_MICROSOFT_CLIENT_ID)),
+    {
+      message: 'HOMA_DEMO=true sends nothing out: leave HOMA_SMTP_URL, HOMA_GOOGLE_* and HOMA_MICROSOFT_* unset',
+      path: ['HOMA_DEMO'],
+    },
+  )
   .transform((env) => ({
     ...env,
     HOMA_REQUIRE_EMAIL_VERIFICATION: env.HOMA_REQUIRE_EMAIL_VERIFICATION ?? Boolean(env.HOMA_SMTP_URL),

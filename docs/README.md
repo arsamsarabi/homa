@@ -8,6 +8,7 @@ The docs in this repository, for people running Homa and people working on it. U
 - [Environment variables](./self-hosting/environment.md): every setting, its default, and which ones are required.
 - [Operations](./self-hosting/operations.md): reverse proxy, upgrades, verifying the image, backup and restore, roles and health checks.
 - [Releasing](./self-hosting/releasing.md): maintainer steps to cut a release.
+- [Demo mode](./self-hosting/demo.md): running a public demo with made-up data that resets every night.
 - [Google Calendar](./self-hosting/google.md): creating the Google OAuth client for Google connections.
 - [Microsoft](./self-hosting/microsoft.md): creating the Entra ID app for Outlook.com and Microsoft 365.
 

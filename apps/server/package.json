@@ -6,7 +6,8 @@
     "dev": "bun --env-file=../../.env.local --watch src/index.ts",
     "start": "bun src/index.ts",
     "typecheck": "tsc -p .",
-    "test": "bun test"
+    "test": "bun test",
+    "demo:reset": "bun src/demo-reset.ts"
   },
   "dependencies": {
     "@homa/core": "workspace:*",
