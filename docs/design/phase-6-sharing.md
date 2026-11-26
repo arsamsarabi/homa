@@ -1,6 +1,6 @@
 # Phase 6: sharing and people
 
-Status: design, 2026-11-23. 6a (invites, the directory, circles) built in the `phase-6a-people` PR, 2026-11-23.
+Status: in progress, 2026-11-26. 6a done (#93). 6b foundation done (#108); grant checks (#109), sharing UI (#110), availability (#111) and OIDC/passkeys (#112) in review.
 
 ## Scope
 

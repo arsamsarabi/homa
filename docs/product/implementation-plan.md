@@ -70,7 +70,7 @@ Comes right after phase 4, before phase 5. Everything that makes Homa easy to in
 - A public demo instance with made-up data that resets every night.
 - A short demo video for the README. Done (#47).
 
-Status: the release workflow, the GHCR image and its signing are built (#50). The first release, v0.1.0, includes phases 1 to 5. One-click templates for Unraid, TrueNAS, CasaOS, Umbrel and YunoHost are in `deploy/templates/` (#87), untested on the real platforms (QA #88 to #92). Demo mode, its seed and nightly reset are built (#86); hosting `demo.homa.day` is planned in the infra repo.
+Status: the release workflow, the GHCR image and its signing are built (#50). Releases v0.1.0 and v0.2.0 are published. One-click templates for Unraid, TrueNAS, CasaOS, Umbrel and YunoHost are in `deploy/templates/` (#87), untested on the real platforms (QA #88 to #92). Demo mode, its seed and nightly reset are built (#86); hosting `demo.homa.day` is configured in the infra repo.
 
 ## Phase 5: tasks
 
@@ -83,12 +83,12 @@ Status: done. 5a (#51), 5b (#52), 5c (#53).
 
 ## Phase 6: sharing and people
 
-Status: designed in [phase-6-sharing.md](../design/phase-6-sharing.md). 6a (invites, directory, circles) in review; 6b to 6d to build.
+Status: in progress. Designed in [phase-6-sharing.md](../design/phase-6-sharing.md).
 
-- Multi-user on one instance, invites, circles.
-- Calendar grants and default sharing preset at onboarding.
-- Availability engine with permission-aware free/busy.
-- OIDC and passkeys.
+- **6a** done (#93): multi-user invites, people directory and circles.
+- **6b** foundation done (#108): `calendar_grants`, defaults and `resolveAccess`. Grant checks on the API (#109), then sharing UI (#110), in review.
+- **6c** availability API (free/busy) in review (#111).
+- **6d** OIDC and passkeys in review (#112).
 
 ## Phase 7: group date-finding
 
@@ -124,4 +124,4 @@ Expo mobile app, task sync (VTODO, Google Tasks, Microsoft To Do, Todoist), host
 
 - Phases 2 and 3 come first because the v1 hero is the calendar and sync.
 - Phase 6 must land before phase 7: polls depend on permission-aware availability.
-- The data model carries multi-user columns (`owner_user_id`, grants) from phase 1 even though sharing UI arrives in phase 6.
+- The data model carried multi-user columns (`owner_user_id`, grants) from phase 1; sharing UI arrives in the rest of phase 6b.
