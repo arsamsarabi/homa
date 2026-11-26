@@ -23,6 +23,7 @@ export type EventFormModel = {
   occurrence: Occurrence | undefined;
   /** The title the form starts with. */
   summary: string;
+  setSummary: (v: string) => void;
   /** The occurrence is in a read-only calendar: show its details, not a form. */
   readOnly: boolean;
   calendarOptions: { value: string; label: string }[];
@@ -183,7 +184,10 @@ export function useEventForm(draft: Draft): EventFormModel {
 
   return {
     occurrence,
-    summary: occurrence?.summary ?? (draft.kind === 'create' ? draft.summary : undefined) ?? '',
+    summary: draft.summary ?? occurrence?.summary ?? '',
+    setSummary: (v: string): void => {
+      editor.setSummary(v);
+    },
     readOnly: occurrence !== undefined && isReadOnly(occurrence.calendarId),
     calendarOptions,
     repeatOptions,

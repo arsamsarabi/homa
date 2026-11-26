@@ -129,7 +129,6 @@
     "timeZone": "Time zone",
     "event": "Event",
     "more": "More actions",
-    "draft": "Draft",
     "readOnly": "This event is from a read-only calendar and can't be changed here."
   },
   "repeat": {

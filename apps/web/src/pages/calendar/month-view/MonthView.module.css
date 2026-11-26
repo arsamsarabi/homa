@@ -17,6 +17,7 @@
 }
 
 .cell {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -36,19 +37,48 @@
   outline-offset: -2px;
 }
 
-.day {
-  align-self: flex-start;
-  min-width: 24px;
-  padding: 0 6px;
-  border-radius: 12px;
-  font-size: 13px;
-  text-align: center;
+.dayRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 4px;
+  border-radius: var(--mantine-radius-sm);
 }
 
-.day[aria-current="date"] {
+.day {
+  flex-shrink: 0;
+  min-width: 24px;
+  padding: 0 2px;
+  font-size: 13px;
+  text-align: start;
+}
+
+.jalali {
+  flex-shrink: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--mantine-color-dimmed);
+  text-align: end;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dayRow[data-today] {
   background: var(--mantine-primary-color-filled);
   color: var(--mantine-primary-color-contrast);
+}
+
+.dayRow[data-today] .day {
   font-weight: 700;
+}
+
+.dayRow[data-today] .jalali {
+  color: inherit;
+  opacity: 0.85;
 }
 
 .day:focus-visible,
@@ -57,10 +87,8 @@
   outline-offset: 1px;
 }
 
-.jalali {
-  padding-inline-start: 6px;
-  font-size: 11px;
-  color: var(--mantine-color-dimmed);
+.dayRow[data-today] .day:focus-visible {
+  outline-color: var(--mantine-primary-color-contrast);
 }
 
 .occasion {
@@ -70,12 +98,21 @@
 }
 
 .draft {
+  /* Out of flow so opening the editor does not grow the week row. */
+  position: absolute;
+  inset-inline: 4px;
+  top: 28px;
+  z-index: 1;
   padding: 1px 6px;
   border: 1px dashed var(--mantine-primary-color-filled);
   border-radius: var(--mantine-radius-sm);
   background: color-mix(in srgb, var(--mantine-primary-color-filled) 25%, transparent);
   font-size: 12px;
   font-weight: 500;
+  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .more {

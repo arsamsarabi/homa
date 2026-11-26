@@ -76,6 +76,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           aria-label={t('editor.title')}
           placeholder={t('editor.titlePlaceholder')}
           defaultValue={f.summary}
+          onChange={(e: ChangeEvent<HTMLInputElement>): void => f.setSummary(e.currentTarget.value)}
           variant="unstyled"
           size="lg"
           classNames={{ input: classes.title }}
