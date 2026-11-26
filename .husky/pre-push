@@ -1,0 +1,3 @@
+# Mirror the fast CI gates before the remote sees the push. Unit/e2e need services; leave those to CI.
+bun run typecheck
+bun run lint

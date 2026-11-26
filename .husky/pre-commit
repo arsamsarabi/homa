@@ -1,0 +1,3 @@
+# Format and lint only what is about to be committed (catches the biome/format misses that fail CI).
+bunx biome check --write --staged --files-ignore-unknown=true --no-errors-on-unmatched
+git update-index --again
