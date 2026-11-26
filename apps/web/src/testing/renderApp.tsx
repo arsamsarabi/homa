@@ -23,6 +23,7 @@ export const setUpInstance = {
   microsoftCalendar: false,
   passwordReset: false,
   anyoneCanInvite: false,
+  oidc: null,
   demo: null,
 };
 

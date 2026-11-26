@@ -21,7 +21,8 @@ export function AccountFields({ signUp, fixedEmail, defaults }: AccountFieldsPro
         type="email"
         label={t('auth.email')}
         required
-        autoComplete="email"
+        // webauthn last so conditional UI can offer a passkey on sign-in.
+        autoComplete={signUp ? 'email' : 'email webauthn'}
         defaultValue={fixedEmail ?? defaults?.email}
         readOnly={fixedEmail !== undefined}
       />
@@ -32,7 +33,7 @@ export function AccountFields({ signUp, fixedEmail, defaults }: AccountFieldsPro
         required
         minLength={8}
         defaultValue={defaults?.password}
-        autoComplete={signUp ? 'new-password' : 'current-password'}
+        autoComplete={signUp ? 'new-password' : 'current-password webauthn'}
       />
     </>
   );

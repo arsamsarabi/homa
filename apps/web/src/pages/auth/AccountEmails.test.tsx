@@ -46,7 +46,7 @@ describe('sign-in', () => {
     await screen.findByRole('heading', { name: 'Sign in' });
     fill(/^Email/, 'bob@example.com');
     fill(/^Password/, 'correct horse battery');
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Sign in$/ }));
     expect((await screen.findByRole('alert')).textContent).toContain('bob@example.com');
   });
 });

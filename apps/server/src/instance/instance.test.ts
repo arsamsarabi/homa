@@ -40,6 +40,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       microsoftCalendar: false,
       passwordReset: false,
       anyoneCanInvite: false,
+      oidc: null,
       demo: null,
     });
   });
@@ -94,6 +95,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       microsoftCalendar: false,
       passwordReset: false,
       anyoneCanInvite: false,
+      oidc: null,
       demo: null,
     });
   });
@@ -133,5 +135,42 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
     expect(res.status).toBe(400);
     expect(((await res.json()) as { message: string }).message).toContain('Sign-ups are closed');
     expect(await t.db.$count(schema.users)).toBe(2);
+  });
+});
+
+describe.skipIf(!testDatabaseUrl)('instance OIDC payload', () => {
+  test('GET /api/instance carries oidc when the server is configured for it', async () => {
+    const t = await freshDb();
+    try {
+      const withOidc = createApp({
+        db: t.db,
+        auth: testAuth(t.db),
+        oidc: {
+          issuer: 'https://idp.example.com',
+          clientId: 'cid',
+          clientSecret: 'sec',
+          name: 'Authentik',
+          redirectUri: 'http://localhost:3000/api/auth/callback/oidc',
+        },
+      });
+      const body = (await (await withOidc.request('/api/instance')).json()) as Record<string, unknown>;
+      expect(body.oidc).toEqual({
+        name: 'Authentik',
+        redirectUri: 'http://localhost:3000/api/auth/callback/oidc',
+      });
+    } finally {
+      await t.drop();
+    }
+  });
+
+  test('GET /api/instance has oidc null when it is not configured', async () => {
+    const t = await freshDb();
+    try {
+      const app = createApp({ db: t.db, auth: testAuth(t.db) });
+      const body = (await (await app.request('/api/instance')).json()) as Record<string, unknown>;
+      expect(body.oidc).toBeNull();
+    } finally {
+      await t.drop();
+    }
   });
 });

@@ -43,6 +43,6 @@ test('signing back in works @smoke', async ({ page }) => {
   await page.goto('/sign-in');
   await page.getByLabel('Email').fill(email);
   await page.locator('input[name=password]').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.locator('[aria-current=date]')).toBeVisible();
 });

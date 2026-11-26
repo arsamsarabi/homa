@@ -20,6 +20,8 @@ export type PublicInstance = {
   microsoftCalendar: boolean;
   passwordReset: boolean;
   anyoneCanInvite: boolean;
+  /** Single sign-on when OIDC is configured; null otherwise. */
+  oidc: { name: string; redirectUri: string } | null;
   /** On a demo instance, the shared account's sign-in. */
   demo: { email: string; password: string } | null;
 };
@@ -44,7 +46,19 @@ export async function updateInstanceSettings(db: Db, patch: Partial<InstanceSett
 /** Which OAuth providers the server is set up for. */
 export async function getPublicInstance(
   db: Db,
-  { googleCalendar = false, microsoftCalendar = false, passwordReset = false, demo = false } = {},
+  {
+    googleCalendar = false,
+    microsoftCalendar = false,
+    passwordReset = false,
+    demo = false,
+    oidc = null,
+  }: {
+    googleCalendar?: boolean;
+    microsoftCalendar?: boolean;
+    passwordReset?: boolean;
+    demo?: boolean;
+    oidc?: { name: string; redirectUri: string } | null;
+  } = {},
 ): Promise<PublicInstance> {
   const [s, users] = await Promise.all([getInstanceSettings(db), repo.countUsers(db)]);
   const needsSetup = users === 0;
@@ -58,6 +72,7 @@ export async function getPublicInstance(
     microsoftCalendar,
     passwordReset,
     anyoneCanInvite: s.invites === 'everyone',
+    oidc,
     demo: demo ? { email: DEMO_ACCOUNT.email, password: DEMO_ACCOUNT.password } : null,
   };
 }

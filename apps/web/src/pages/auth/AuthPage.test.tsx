@@ -83,3 +83,26 @@ describe('sign-in on a demo instance', () => {
     expect(screen.queryByRole('note')).toBeNull();
   });
 });
+
+describe('sign-in with OIDC', () => {
+  test('shows the SSO button only when the instance has oidc', async () => {
+    renderApp('/sign-in', (url: URL): Response => {
+      if (url.pathname === '/api/instance') {
+        return json({
+          ...setUpInstance,
+          name: 'Family',
+          oidc: { name: 'Authentik', redirectUri: 'http://localhost/api/auth/callback/oidc' },
+        });
+      }
+      if (url.pathname === '/api/auth/get-session') return json(null);
+      return json({ error: `unexpected ${url.pathname}` }, 404);
+    });
+    expect(await screen.findByRole('button', { name: /Sign in with.*Authentik/ })).toBeTruthy();
+  });
+
+  test('hides the SSO button when oidc is null', async () => {
+    renderApp('/sign-in', signedOut(true));
+    expect(await screen.findByText('Family')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Sign in with/ })).toBeNull();
+  });
+});

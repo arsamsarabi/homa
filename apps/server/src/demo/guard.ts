@@ -7,7 +7,7 @@ import { createMiddleware } from 'hono/factory';
 export const DEMO_BLOCKED = 'This is turned off in the demo. Install Homa to try it.';
 
 /** The only account changes a visitor makes: signing in and out. */
-const AUTH_WRITES = new Set(['/api/auth/sign-in/email', '/api/auth/sign-out']);
+const AUTH_WRITES = new Set(['/api/auth/sign-in/email', '/api/auth/sign-in/passkey', '/api/auth/sign-out']);
 /** Where every write is turned away. */
 const READ_ONLY = ['/api/connections', '/api/notification-channels', '/api/push/', '/api/admin/'];
 

@@ -11,6 +11,7 @@ The docs in this repository, for people running Homa and people working on it. U
 - [Demo mode](./self-hosting/demo.md): running a public demo with made-up data that resets every night.
 - [Google Calendar](./self-hosting/google.md): creating the Google OAuth client for Google connections.
 - [Microsoft](./self-hosting/microsoft.md): creating the Entra ID app for Outlook.com and Microsoft 365.
+- [Sign-in](./self-hosting/sign-in.md): OIDC single sign-on (Authentik, Keycloak, Google, Microsoft) and passkeys.
 
 One-click templates for home-server platforms (untested on the real platforms so far):
 

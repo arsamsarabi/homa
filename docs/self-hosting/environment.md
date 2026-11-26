@@ -25,6 +25,16 @@ Homa is configured with environment variables only. With Docker Compose, put the
 | `HOMA_REQUIRE_EMAIL_VERIFICATION` | `true` with email, else `false` | New accounts confirm their email address before they can sign in. Defaults to `true` when `HOMA_SMTP_URL` is set. `true` without `HOMA_SMTP_URL` stops the server at startup. See [Accounts and passwords](./operations.md#accounts-and-passwords) |
 | `HOMA_SETUP_CODE` | Random | Pins the 4-digit first-run setup code instead of a random one printed in the log. For automated tests only; leave it unset in production |
 
+
+## Single sign-on (OIDC)
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `HOMA_OIDC_ISSUER`, `HOMA_OIDC_CLIENT_ID`, `HOMA_OIDC_CLIENT_SECRET` | (unset) | One OpenID Connect provider for sign-in. Set all three or none; the server won't start with only some. Issuer is the URL Homa reads `/.well-known/openid-configuration` from. The redirect URI to register is `${HOMA_URL}/api/auth/callback/oidc`, with scopes `openid email profile`. See [Sign-in](./sign-in.md) |
+| `HOMA_OIDC_NAME` | `SSO` | The sign-in button label ("Sign in with …"). Only used when the three secrets above are set |
+
+Passkeys need no variables: they use `HOMA_URL`'s host and origin, and the instance name.
+
 ## Sync and connected calendars
 
 | Variable | Default | Meaning |

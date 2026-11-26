@@ -3,7 +3,7 @@
 // It asks for the new password, saves it the way Better Auth does, and signs the account out
 // everywhere. Reads the same environment as the server (DATABASE_URL, BETTER_AUTH_SECRET).
 import { createDb } from '@homa/db';
-import { loadConfig } from '@/config';
+import { loadConfig, passkeyFrom } from '@/config';
 import { createAuth } from './auth';
 
 const MIN_LENGTH = 8;
@@ -18,11 +18,12 @@ if (!email) fail('Usage: bun apps/server/src/auth/set-password.ts <email>');
 
 const config = loadConfig();
 const { db, pool } = createDb(config.DATABASE_URL);
-// The setup gate never runs here: no account is created.
+// The setup gate never runs here: no account is created. Passkey settings are unused but required.
 const auth = createAuth(db, {
   secret: config.BETTER_AUTH_SECRET,
   baseURL: config.HOMA_URL,
   setupGate: { current: () => '', check: () => false },
+  passkey: passkeyFrom(config, 'Homa'),
 });
 
 try {

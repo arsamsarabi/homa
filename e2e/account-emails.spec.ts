@@ -34,7 +34,7 @@ test('sign up, confirm the address, then reset the password @smoke', async ({ pa
   await page.goto('/sign-in');
   await page.getByLabel('Email').fill(email);
   await page.locator('input[name=password]').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Confirm your email address before you sign in');
 
   // The link from the sign-up email confirms it and signs in.
@@ -61,6 +61,6 @@ test('sign up, confirm the address, then reset the password @smoke', async ({ pa
   await page.getByRole('link', { name: 'Sign in' }).click();
   await page.getByLabel('Email').fill(email);
   await page.locator('input[name=password]').fill(newPassword);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.locator('[aria-current=date]')).toBeVisible();
 });

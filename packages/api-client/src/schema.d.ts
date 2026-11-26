@@ -1338,6 +1338,13 @@ export interface components {
             passwordReset: boolean;
             /** @description Whether everyone, not only admins, can create invite links */
             anyoneCanInvite: boolean;
+            /** @description Single sign-on when OIDC is configured from the environment; null otherwise */
+            oidc: {
+                /** @description The sign-in button label ("Sign in with …") */
+                name: string;
+                /** @description The redirect URI to register with the identity provider */
+                redirectUri: string;
+            } | null;
             /** @description A demo instance's shared sign-in; null on every other instance */
             demo: {
                 email: string;

@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+OIDC single sign-on and passkeys (phase 6d). Set `HOMA_OIDC_ISSUER`, `HOMA_OIDC_CLIENT_ID` and `HOMA_OIDC_CLIENT_SECRET` together (or none) for one OpenID Connect provider; optional `HOMA_OIDC_NAME` labels the sign-in button (default SSO). The redirect URI is `${HOMA_URL}/api/auth/callback/oidc`. `GET /api/instance` includes `oidc: { name, redirectUri } | null`; the admin page shows status and the URI read-only. Passkeys use `@better-auth/passkey` (no new env vars): Settings → Security lists, adds and removes them, and sign-in offers a passkey when WebAuthn is available. Migration `0019_passkeys` adds the `passkeys` table. See `docs/self-hosting/sign-in.md`.
+
 Availability API (phase 6c). `POST /api/availability` returns permission-aware free/busy for up to 50 people over at most 92 days: the caller’s own calendars all count (hidden ones too); for anyone else only calendars at freebusy+ count, with `shared: false` when none do. Busy intervals are clipped, merged and sorted, with no titles or calendar ids; all-day events do not count. Pure helpers live in `@homa/core/availability`. Phase 7 polls will call this; no web UI here.
 
 Sharing UI (phase 6b). The calendar filter groups shared calendars under “Shared by …”; free/busy occurrences show as Busy (striped) with a small read-only card; read opens details with the owner’s name; edit opens the editor. The event form’s calendar picker lists your calendars and those shared at edit, grouped by owner. Settings has a Sharing default (`sharingPreset`), onboarding saves the visibility choice, and each owned calendar’s drawer has a Sharing section for the default and person/circle grants.

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { loadConfig } from './config';
+import { loadConfig, oidcFrom, passkeyFrom } from './config';
 
 const valid = { DATABASE_URL: 'postgres://homa@localhost/homa', BETTER_AUTH_SECRET: 'x'.repeat(32) };
 
@@ -89,4 +89,70 @@ test('demo mode: off by default, and refuses settings that send anything out', (
   expect(() =>
     loadConfig({ ...valid, HOMA_DEMO: 'true', HOMA_GOOGLE_CLIENT_ID: 'id', HOMA_GOOGLE_CLIENT_SECRET: 's' }),
   ).toThrow(/HOMA_DEMO/);
+});
+
+test('OIDC: all three of issuer, id and secret, or none; name defaults to SSO', () => {
+  expect(
+    loadConfig({ ...valid, HOMA_OIDC_ISSUER: '', HOMA_OIDC_CLIENT_ID: '', HOMA_OIDC_CLIENT_SECRET: '' }),
+  ).toMatchObject({
+    HOMA_OIDC_ISSUER: undefined,
+    HOMA_OIDC_CLIENT_ID: undefined,
+    HOMA_OIDC_CLIENT_SECRET: undefined,
+    HOMA_OIDC_NAME: 'SSO',
+  });
+  expect(
+    loadConfig({
+      ...valid,
+      HOMA_OIDC_ISSUER: 'https://idp.example.com',
+      HOMA_OIDC_CLIENT_ID: 'cid',
+      HOMA_OIDC_CLIENT_SECRET: 'sec',
+      HOMA_OIDC_NAME: 'Authentik',
+    }),
+  ).toMatchObject({
+    HOMA_OIDC_ISSUER: 'https://idp.example.com',
+    HOMA_OIDC_CLIENT_ID: 'cid',
+    HOMA_OIDC_CLIENT_SECRET: 'sec',
+    HOMA_OIDC_NAME: 'Authentik',
+  });
+  expect(() => loadConfig({ ...valid, HOMA_OIDC_ISSUER: 'https://idp.example.com' })).toThrow(
+    /HOMA_OIDC_CLIENT_SECRET: set HOMA_OIDC_ISSUER/,
+  );
+  expect(() => loadConfig({ ...valid, HOMA_OIDC_CLIENT_ID: 'cid', HOMA_OIDC_CLIENT_SECRET: 'sec' })).toThrow(
+    /HOMA_OIDC_CLIENT_SECRET: set HOMA_OIDC_ISSUER/,
+  );
+});
+
+test('demo mode refuses OIDC as well as email and calendar OAuth', () => {
+  expect(() =>
+    loadConfig({
+      ...valid,
+      HOMA_DEMO: 'true',
+      HOMA_OIDC_ISSUER: 'https://idp.example.com',
+      HOMA_OIDC_CLIENT_ID: 'cid',
+      HOMA_OIDC_CLIENT_SECRET: 'sec',
+    }),
+  ).toThrow(/HOMA_DEMO/);
+});
+
+test('oidcFrom and passkeyFrom derive redirect URI, rpID and origin from HOMA_URL', () => {
+  const cfg = loadConfig({
+    ...valid,
+    HOMA_URL: 'https://homa.example.com/',
+    HOMA_OIDC_ISSUER: 'https://idp.example.com',
+    HOMA_OIDC_CLIENT_ID: 'cid',
+    HOMA_OIDC_CLIENT_SECRET: 'sec',
+  });
+  expect(oidcFrom(cfg)).toEqual({
+    issuer: 'https://idp.example.com',
+    clientId: 'cid',
+    clientSecret: 'sec',
+    name: 'SSO',
+    redirectUri: 'https://homa.example.com/api/auth/callback/oidc',
+  });
+  expect(oidcFrom(loadConfig(valid))).toBeNull();
+  expect(passkeyFrom(cfg, 'Family')).toEqual({
+    rpID: 'homa.example.com',
+    rpName: 'Family',
+    origin: 'https://homa.example.com',
+  });
 });
