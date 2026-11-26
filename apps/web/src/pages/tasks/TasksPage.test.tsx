@@ -191,7 +191,9 @@ describe('tasks page', () => {
     renderApp('/tasks?list=upcoming', api);
     fireEvent.click(await screen.findByRole('button', { name: /Report/ }));
     const drawer = await screen.findByRole('dialog', { name: 'Edit task' });
-    fireEvent.click(within(drawer).getByRole('checkbox', { name: '1 hour before' }));
+    fireEvent.change(within(drawer).getByLabelText('Amount'), { target: { value: '1' } });
+    fireEvent.change(within(drawer).getByLabelText('Unit'), { target: { value: 'hours' } });
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add' }));
     fireEvent.click(within(drawer).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(sent[0]?.body).toMatchObject({ reminders: [60] }));
 

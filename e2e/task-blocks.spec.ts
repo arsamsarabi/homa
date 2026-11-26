@@ -23,7 +23,10 @@ test('tasks: reminders, and a time block on the calendar that shows done @smoke'
   // A reminder an hour before a 23:30 due.
   const drawer = page.getByRole('dialog', { name: 'Edit task' });
   await drawer.getByLabel('Time', { exact: true }).fill('23:30');
-  await drawer.getByText('1 hour before', { exact: true }).click();
+  await drawer.getByLabel('Amount').fill('1');
+  await drawer.getByLabel('Unit').selectOption('hours');
+  await drawer.getByRole('button', { name: 'Add' }).click();
+  await expect(drawer.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
   await drawer.getByRole('button', { name: 'Save' }).click();
   await expect(drawer).toBeHidden();
   await expect(today.getByLabel('Has reminders')).toBeVisible();
@@ -35,6 +38,10 @@ test('tasks: reminders, and a time block on the calendar that shows done @smoke'
   await drawer.getByRole('button', { name: 'Block time' }).click();
   await expect(drawer.getByRole('button', { name: 'Move the block', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
+  // Block fields are outside the dirty form; if a confirm still appears, discard.
+  const discard = page.getByRole('button', { name: 'Discard' });
+  if (await discard.isVisible().catch(() => false)) await discard.click();
+  await expect(drawer).toBeHidden();
   await expect(today.getByText(/Blocked Today, 06:00/)).toBeVisible();
 
   // It's an event on the calendar, struck through once the task is done.

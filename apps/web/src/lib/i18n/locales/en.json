@@ -104,7 +104,11 @@
     "retry": "Try again",
     "close": "Close",
     "loading": "Loading",
-    "done": "Done"
+    "done": "Done",
+    "unsavedTitle": "Discard changes?",
+    "unsavedBody": "You have unsaved changes. Close without saving?",
+    "keepEditing": "Keep editing",
+    "discard": "Discard"
   },
   "editor": {
     "title": "Title",
@@ -415,6 +419,17 @@
   "reminders": {
     "label": "Reminders",
     "hint": "For every occurrence. Up to 5.",
+    "chosen": "Chosen reminders",
+    "amount": "Amount",
+    "unit": "Unit",
+    "unit_minutes": "minutes",
+    "unit_hours": "hours",
+    "unit_days": "days",
+    "unit_weeks": "weeks",
+    "add": "Add",
+    "addMax": "You can have at most 5 reminders.",
+    "addDuplicate": "That reminder is already added.",
+    "badAmount": "Enter a whole number of 0 or more.",
     "atStart": "At start",
     "minutes_one": "{{count}} minute before",
     "minutes_other": "{{count}} minutes before",

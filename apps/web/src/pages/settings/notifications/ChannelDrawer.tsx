@@ -13,6 +13,8 @@ import {
 import { type ChangeEvent, type FocusEvent, type FormEvent, type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChannelInput, ChannelPatch } from '@/api';
+import { ConfirmCloseModal } from '@/components';
+import { useConfirmClose } from '@/hooks/confirm-close';
 import { useChannelMutations } from '@/hooks/reminders';
 import { type Channel, type ChannelKind, REMINDER_KINDS, type ReminderKind } from '@/schemas';
 import { useAnnouncer } from '@/stores';
@@ -39,17 +41,17 @@ export function ChannelDrawer({ draft, emailAvailable, onClose }: ChannelDrawerP
   const kind = editing?.kind ?? picked ?? kinds[0] ?? 'ntfy';
   const chosenKinds = reminderKinds ?? editing?.reminderKinds ?? [...REMINDER_KINDS];
 
-  const close = (): void => {
+  const guard = useConfirmClose(() => {
     setPicked(undefined);
     setReminderKinds(undefined);
     setError(undefined);
     setSecret(undefined);
     onClose();
-  };
+  });
   const done = (c: Channel): void => {
     announce(t('channels.saved', { name: c.name }));
     if (c.secret) setSecret(c.secret);
-    else close();
+    else guard.forceClose();
   };
   const fail = (err: Error): void => setError(err.message);
 
@@ -83,122 +85,127 @@ export function ChannelDrawer({ draft, emailAvailable, onClose }: ChannelDrawerP
   };
 
   return (
-    <Drawer
-      opened={draft !== undefined}
-      onClose={close}
-      position="right"
-      size="md"
-      padding="lg"
-      title={editing ? t('channels.editTitle') : t('channels.newTitle')}
-    >
-      {draft && secret && (
-        <Stack>
-          <Text size="sm">{t('channels.secretHint')}</Text>
-          <TextInput
-            label={t('channels.secret')}
-            value={secret}
-            readOnly
-            onFocus={(e: FocusEvent<HTMLInputElement>): void => e.currentTarget.select()}
-          />
-          <Group justify="flex-end">
-            <Button onClick={close}>{t('common.done')}</Button>
-          </Group>
-        </Stack>
-      )}
-      {draft && !secret && (
-        <form onSubmit={submit}>
+    <>
+      <Drawer
+        opened={draft !== undefined}
+        onClose={secret ? guard.forceClose : guard.requestClose}
+        position="right"
+        size="md"
+        padding="lg"
+        title={editing ? t('channels.editTitle') : t('channels.newTitle')}
+      >
+        {draft && secret && (
           <Stack>
-            {error && (
-              <Alert color="red" role="alert">
-                {t('channels.saveFailed', { message: error })}
-              </Alert>
-            )}
-            {!editing && (
-              <NativeSelect
-                label={t('channels.kind')}
-                value={kind}
-                data={kinds.map((k) => ({ value: k, label: t(`channels.kinds.${k}`) }))}
-                onChange={(e: ChangeEvent<HTMLSelectElement>): void => setPicked(e.currentTarget.value as ChannelKind)}
-                description={emailAvailable ? undefined : t('channels.noEmail')}
-              />
-            )}
+            <Text size="sm">{t('channels.secretHint')}</Text>
             <TextInput
-              name="name"
-              label={t('channels.name')}
-              defaultValue={editing?.name ?? t(`channels.kinds.${kind}`)}
-              key={`name-${kind}`}
-              maxLength={100}
-              required
-              data-autofocus
+              label={t('channels.secret')}
+              value={secret}
+              readOnly
+              onFocus={(e: FocusEvent<HTMLInputElement>): void => e.currentTarget.select()}
             />
-            {kind === 'email' && <Text size="sm">{t('channels.emailHint')}</Text>}
-            {(kind === 'ntfy' || kind === 'gotify') && (
-              <TextInput
-                name="server"
-                type="url"
-                label={t('channels.server')}
-                defaultValue={editing?.server ?? (kind === 'ntfy' ? 'https://ntfy.sh' : '')}
-                key={`server-${kind}`}
-                required
-              />
-            )}
-            {kind === 'ntfy' && (
-              <TextInput
-                name="topic"
-                label={t('channels.topic')}
-                description={t('channels.topicHint')}
-                defaultValue={editing?.topic ?? ''}
-                required
-              />
-            )}
-            {(kind === 'ntfy' || kind === 'gotify') && (
-              <PasswordInput
-                name="token"
-                label={kind === 'ntfy' ? t('channels.ntfyToken') : t('channels.gotifyToken')}
-                description={editing?.hasToken ? t('channels.tokenKept') : undefined}
-                required={kind === 'gotify' && !editing}
-              />
-            )}
-            {kind === 'webhook' && (
-              <TextInput
-                name="url"
-                type="url"
-                label={t('channels.url')}
-                description={editing?.host ? t('channels.urlKept', { host: editing.host }) : t('channels.urlHint')}
-                required={!editing}
-              />
-            )}
-            <Stack component="fieldset" gap="xs" className={classes.fieldset}>
-              <Text component="legend" size="sm" fw={500}>
-                {t('channels.which')}
-              </Text>
-              {REMINDER_KINDS.map((k) => (
-                <Checkbox
-                  key={k}
-                  label={t(`channels.reminderKinds.${k}`)}
-                  checked={chosenKinds.includes(k)}
-                  onChange={(e: ChangeEvent<HTMLInputElement>): void => {
-                    const on = e.currentTarget.checked;
-                    setReminderKinds(REMINDER_KINDS.filter((x) => (x === k ? on : chosenKinds.includes(x))));
-                  }}
-                />
-              ))}
-            </Stack>
             <Group justify="flex-end">
-              <Button variant="default" onClick={close}>
-                {t('common.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                loading={create.isPending || update.isPending}
-                disabled={create.isPending || update.isPending}
-              >
-                {t('channels.save')}
-              </Button>
+              <Button onClick={guard.forceClose}>{t('common.done')}</Button>
             </Group>
           </Stack>
-        </form>
-      )}
-    </Drawer>
+        )}
+        {draft && !secret && (
+          <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
+            <Stack>
+              {error && (
+                <Alert color="red" role="alert">
+                  {t('channels.saveFailed', { message: error })}
+                </Alert>
+              )}
+              {!editing && (
+                <NativeSelect
+                  label={t('channels.kind')}
+                  value={kind}
+                  data={kinds.map((k) => ({ value: k, label: t(`channels.kinds.${k}`) }))}
+                  onChange={(e: ChangeEvent<HTMLSelectElement>): void =>
+                    setPicked(e.currentTarget.value as ChannelKind)
+                  }
+                  description={emailAvailable ? undefined : t('channels.noEmail')}
+                />
+              )}
+              <TextInput
+                name="name"
+                label={t('channels.name')}
+                defaultValue={editing?.name ?? t(`channels.kinds.${kind}`)}
+                key={`name-${kind}`}
+                maxLength={100}
+                required
+                data-autofocus
+              />
+              {kind === 'email' && <Text size="sm">{t('channels.emailHint')}</Text>}
+              {(kind === 'ntfy' || kind === 'gotify') && (
+                <TextInput
+                  name="server"
+                  type="url"
+                  label={t('channels.server')}
+                  defaultValue={editing?.server ?? (kind === 'ntfy' ? 'https://ntfy.sh' : '')}
+                  key={`server-${kind}`}
+                  required
+                />
+              )}
+              {kind === 'ntfy' && (
+                <TextInput
+                  name="topic"
+                  label={t('channels.topic')}
+                  description={t('channels.topicHint')}
+                  defaultValue={editing?.topic ?? ''}
+                  required
+                />
+              )}
+              {(kind === 'ntfy' || kind === 'gotify') && (
+                <PasswordInput
+                  name="token"
+                  label={kind === 'ntfy' ? t('channels.ntfyToken') : t('channels.gotifyToken')}
+                  description={editing?.hasToken ? t('channels.tokenKept') : undefined}
+                  required={kind === 'gotify' && !editing}
+                />
+              )}
+              {kind === 'webhook' && (
+                <TextInput
+                  name="url"
+                  type="url"
+                  label={t('channels.url')}
+                  description={editing?.host ? t('channels.urlKept', { host: editing.host }) : t('channels.urlHint')}
+                  required={!editing}
+                />
+              )}
+              <Stack component="fieldset" gap="xs" className={classes.fieldset}>
+                <Text component="legend" size="sm" fw={500}>
+                  {t('channels.which')}
+                </Text>
+                {REMINDER_KINDS.map((k) => (
+                  <Checkbox
+                    key={k}
+                    label={t(`channels.reminderKinds.${k}`)}
+                    checked={chosenKinds.includes(k)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>): void => {
+                      const on = e.currentTarget.checked;
+                      setReminderKinds(REMINDER_KINDS.filter((x) => (x === k ? on : chosenKinds.includes(x))));
+                    }}
+                  />
+                ))}
+              </Stack>
+              <Group justify="flex-end">
+                <Button variant="default" onClick={guard.requestClose}>
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  loading={create.isPending || update.isPending}
+                  disabled={create.isPending || update.isPending}
+                >
+                  {t('channels.save')}
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        )}
+      </Drawer>
+      <ConfirmCloseModal opened={guard.asking} onDiscard={guard.discard} onKeep={guard.keepEditing} />
+    </>
   );
 }

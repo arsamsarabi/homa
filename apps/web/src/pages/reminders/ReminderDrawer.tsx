@@ -1,6 +1,8 @@
 import { Alert, Button, Drawer, Group, NativeSelect, Stack, TextInput } from '@mantine/core';
-import { type FormEvent, type JSX, useState } from 'react';
+import { type FormEvent, type JSX, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ConfirmCloseModal } from '@/components';
+import { useConfirmClose } from '@/hooks/confirm-close';
 import { useReminderMutations } from '@/hooks/reminders';
 import type { Reminder } from '@/schemas';
 import { isoLocal, parseIsoLocal } from '@/services/dates';
@@ -26,11 +28,14 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
   // An existing reminder keeps its own zone; a new one is in the home zone.
   const zone = editing?.tz ?? tz;
   const at = draft ? (draft.kind === 'edit' ? new Date(draft.reminder.at) : draft.at) : new Date();
-
-  const close = (): void => {
+  const guard = useConfirmClose(() => {
     setError(undefined);
     onClose();
-  };
+  });
+  const draftKey = draft?.kind === 'edit' ? draft.reminder.id : draft?.kind === 'create' ? 'new' : 'closed';
+  useEffect(() => {
+    guard.resetDirty();
+  }, [draftKey]);
 
   const submit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -49,7 +54,7 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
     };
     const done = (): void => {
       announce(t('reminders.saved'));
-      close();
+      guard.forceClose();
     };
     const fail = (err: Error): void => setError(err.message);
     if (editing) update.mutate({ id: editing.id, ...fields }, { onSuccess: done, onError: fail });
@@ -58,58 +63,61 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
 
   const repeat = repeatOf(editing?.rrule);
   return (
-    <Drawer
-      opened={draft !== undefined}
-      onClose={close}
-      position="right"
-      size="md"
-      padding="lg"
-      title={editing ? t('reminders.editTitle') : t('reminders.newTitle')}
-    >
-      {draft && (
-        <form onSubmit={submit}>
-          <Stack>
-            {error && (
-              <Alert color="red" role="alert">
-                {t('reminders.saveFailed', { message: error })}
-              </Alert>
-            )}
-            <TextInput
-              name="title"
-              label={t('reminders.title')}
-              defaultValue={editing?.title ?? ''}
-              maxLength={200}
-              required
-              data-autofocus
-            />
-            <TextInput
-              name="at"
-              type="datetime-local"
-              label={t('reminders.when')}
-              description={t('reminders.zone', { tz: zone })}
-              defaultValue={isoLocal(wallOf(at, zone))}
-              required
-            />
-            <NativeSelect
-              name="repeat"
-              label={t('editor.repeat')}
-              defaultValue={repeat}
-              data={[...REPEATS, ...(repeat === 'custom' ? (['custom'] as const) : [])].map((r) => ({
-                value: r,
-                label: t(`repeat.${r}`),
-              }))}
-            />
-            <Group justify="flex-end">
-              <Button variant="default" onClick={close}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit" loading={busy}>
-                {t('reminders.save')}
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      )}
-    </Drawer>
+    <>
+      <Drawer
+        opened={draft !== undefined}
+        onClose={guard.requestClose}
+        position="right"
+        size="md"
+        padding="lg"
+        title={editing ? t('reminders.editTitle') : t('reminders.newTitle')}
+      >
+        {draft && (
+          <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
+            <Stack>
+              {error && (
+                <Alert color="red" role="alert">
+                  {t('reminders.saveFailed', { message: error })}
+                </Alert>
+              )}
+              <TextInput
+                name="title"
+                label={t('reminders.title')}
+                defaultValue={editing?.title ?? ''}
+                maxLength={200}
+                required
+                data-autofocus
+              />
+              <TextInput
+                name="at"
+                type="datetime-local"
+                label={t('reminders.when')}
+                description={t('reminders.zone', { tz: zone })}
+                defaultValue={isoLocal(wallOf(at, zone))}
+                required
+              />
+              <NativeSelect
+                name="repeat"
+                label={t('editor.repeat')}
+                defaultValue={repeat}
+                data={[...REPEATS, ...(repeat === 'custom' ? (['custom'] as const) : [])].map((r) => ({
+                  value: r,
+                  label: t(`repeat.${r}`),
+                }))}
+              />
+              <Group justify="flex-end">
+                <Button variant="default" onClick={guard.requestClose}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" loading={busy}>
+                  {t('reminders.save')}
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        )}
+      </Drawer>
+      <ConfirmCloseModal opened={guard.asking} onDiscard={guard.discard} onKeep={guard.keepEditing} />
+    </>
   );
 }
