@@ -46,11 +46,13 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 
 - **Instance admin:** the first account becomes the admin, protected by a one-time setup code from the server log. The admin sets the instance name, open or invite-only sign-ups, who can invite people, the default language and the defaults for new accounts.
 - **People:** invite links (single use, 7 days, optionally for one address and emailed when email is set up) let someone make an account even when sign-ups are closed. Everyone can see who else is on the instance and group people into private circles under Settings → People.
-- **Calendar grants (foundation):** the database holds calendar grants, per-calendar defaults and each person's sharing preset (`private`, free/busy or details). HTTP grant checks and the sharing UI are landing next (phase 6b).
+- **Calendar sharing:** share a calendar with a person or a circle at free/busy, details or edit; set a sharing default at onboarding and per calendar. Shared calendars appear in the filter under “Shared by …”. Free/busy shows as Busy (striped); details open read-only with the owner’s name; edit opens the editor.
+- **Availability:** `POST /api/availability` returns permission-aware free/busy for a set of people over a range (no titles). Phase 7 polls will use it; there is no dedicated UI yet.
+- **Sign-in:** email and password always; optional one OIDC provider from the environment; passkeys from Settings → Security. See [Sign-in](../self-hosting/sign-in.md).
 - **Self-hosting:** one published image (`ghcr.io/arsamsarabi/homa`) in two roles (API and worker) plus Postgres, with Docker Compose. Migrations run on start. See the [quick start](../self-hosting/quick-start.md).
 - **API:** a REST API with a generated OpenAPI document at `/api/openapi.json`, and a typed client generated from it.
 - **Security:** connected calendars' credentials are encrypted at rest, every record is scoped to its owner, sign-ins are rate limited, and feed and CalDAV URLs on private networks are refused unless allowed.
 
 ## What's next
 
-Calendar sharing in the UI (grants and shared calendars in the views), the availability API, OIDC and passkeys, then group date-finding, routines and more. The order and status of each phase are in the [implementation plan](./implementation-plan.md).
+Group date-finding (polls on the availability API), routines and planning, then platform work (CalDAV server, booking pages, API keys, search). The order and status of each phase are in the [implementation plan](./implementation-plan.md).

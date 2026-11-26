@@ -1,6 +1,6 @@
 # Phase 6: sharing and people
 
-Status: in progress, 2026-11-26. 6a done (#93). 6b foundation done (#108); grant checks (#109), sharing UI (#110), availability (#111) and OIDC/passkeys (#112) in review.
+Status: done, 2026-11-26. 6a (#93), 6b (#108–#110), 6c (#111), 6d (#112).
 
 ## Scope
 
