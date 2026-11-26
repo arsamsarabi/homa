@@ -198,4 +198,19 @@ describe('calendar page', () => {
     fireEvent.keyDown(document.documentElement, { key: 'm', code: 'KeyM' });
     expect(await screen.findByRole('region', { name: 'Month' })).toBeTruthy();
   });
+
+  test('previous and next sit around the date title and step the week', async () => {
+    renderApp(
+      '/?view=week&date=2026-11-19',
+      api(() => json([])),
+    );
+    const week = await screen.findByRole('region', { name: /^Week$/ });
+    await waitFor(() => expect(week.textContent).toMatch(/Mon 16/));
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    await waitFor(() => expect(week.textContent).toMatch(/Mon 9/));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    await waitFor(() => expect(week.textContent).toMatch(/Mon 16/));
+  });
 });

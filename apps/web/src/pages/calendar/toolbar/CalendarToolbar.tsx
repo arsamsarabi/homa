@@ -1,9 +1,9 @@
-import { ActionIcon, Button, Group, SegmentedControl, Select, Stack, Text, Title } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight, IconPlus, IconWorld } from '@tabler/icons-react';
+import { Button, Group, SegmentedControl, Select } from '@mantine/core';
+import { IconPlus, IconWorld } from '@tabler/icons-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarFilter } from './CalendarFilter';
-import classes from './CalendarToolbar.module.css';
+import { DateNav } from './DateNav';
 import { useCalendarShortcuts } from './useCalendarShortcuts';
 import { useCalendarToolbar } from './useCalendarToolbar';
 
@@ -18,22 +18,14 @@ export function CalendarToolbar(): JSX.Element {
         <Button variant="default" onClick={bar.today}>
           {t('calendar.today')}
         </Button>
-        <ActionIcon variant="subtle" size="lg" onClick={bar.previous} aria-label={t('calendar.previous')}>
-          <IconChevronLeft size={18} className={classes.chevron} aria-hidden />
-        </ActionIcon>
-        <ActionIcon variant="subtle" size="lg" onClick={bar.next} aria-label={t('calendar.next')}>
-          <IconChevronRight size={18} className={classes.chevron} aria-hidden />
-        </ActionIcon>
-        <Stack gap={0}>
-          <Title order={2} size="h3" aria-live="polite">
-            {bar.title}
-          </Title>
-          {bar.jalaliTitle && (
-            <Text size="sm" c="dimmed">
-              {bar.jalaliTitle}
-            </Text>
-          )}
-        </Stack>
+        <DateNav
+          title={bar.title}
+          secondaryTitle={bar.jalaliTitle}
+          previousLabel={t('calendar.previous')}
+          nextLabel={t('calendar.next')}
+          onPrevious={bar.previous}
+          onNext={bar.next}
+        />
       </Group>
       <Group gap="xs">
         <CalendarFilter />

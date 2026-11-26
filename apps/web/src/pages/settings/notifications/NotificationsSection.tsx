@@ -26,6 +26,7 @@ export function NotificationsSection(): JSX.Element {
             size="xs"
             variant={push.state === 'on' ? 'default' : 'filled'}
             loading={push.busy || push.state === 'loading'}
+            disabled={push.busy || push.state === 'loading'}
             onClick={(): void => void (push.state === 'on' ? push.disable() : push.enable())}
           >
             {push.state === 'on' ? t('push.disable') : t('push.enable')}

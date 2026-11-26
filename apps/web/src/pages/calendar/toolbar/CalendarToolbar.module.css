@@ -1,4 +1,0 @@
-/* Chevrons point the way time moves: flipped in right-to-left layouts. */
-:global([dir="rtl"]) .chevron {
-  transform: scaleX(-1);
-}

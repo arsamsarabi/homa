@@ -1,0 +1,24 @@
+/* Match Today / Calendars bordered control height and border. */
+.root {
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-default);
+  background: var(--mantine-color-body);
+  min-height: 36px;
+  padding-inline: 2px;
+}
+
+.titles {
+  min-width: 7.5rem;
+  padding-inline: 4px;
+  text-align: center;
+}
+
+.title,
+.secondary {
+  white-space: nowrap;
+}
+
+/* Chevrons point the way time moves: flipped in right-to-left layouts. */
+:global([dir="rtl"]) .chevron {
+  transform: scaleX(-1);
+}
