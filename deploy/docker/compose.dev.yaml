@@ -1,0 +1,76 @@
+# Full local stack: Postgres, Mailpit, API, and Vite.
+#   bun run dev              # foreground logs
+#   bun run dev:deps         # Postgres + Mailpit only (run the app on the host with bun run dev:app)
+#
+# App reaches Postgres/Mailpit on the Compose network; browser uses:
+#   web  http://localhost:5180
+#   API  http://localhost:3000  (also proxied via Vite at /api)
+#   Mailpit UI http://127.0.0.1:8025
+#
+# Needs a root .env.local (copy from .env.example). Compose overrides DATABASE_URL and
+# HOMA_SMTP_* so the containers talk to postgres/mailpit by service name.
+name: homa-dev
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: homa-dev-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homa
+      POSTGRES_PASSWORD: homa
+      POSTGRES_DB: homa
+    ports:
+      - "127.0.0.1:55434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U homa -d homa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.31.0
+    container_name: homa-dev-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+  app:
+    image: oven/bun:1.4.3-alpine
+    container_name: homa-dev-app
+    working_dir: /app
+    entrypoint: ["/app/deploy/docker/dev-entrypoint.sh"]
+    command: ["bun", "--filter", "@homa/server", "--filter", "@homa/web", "dev"]
+    env_file:
+      - path: ../../.env.local
+        required: true
+    environment:
+      # In-network addresses (override host .env.local values).
+      DATABASE_URL: postgres://homa:homa@postgres:5432/homa
+      HOMA_SMTP_URL: smtp://mailpit:1025
+      HOMA_MAIL_FROM: Homa <homa@localhost>
+      HOMA_URL: http://localhost:5180
+      HOMA_API_ORIGIN: http://127.0.0.1:3000
+      PORT: "3000"
+      # Docker Desktop file watching
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ../..:/app
+      # Keep Linux node_modules off the macOS/Windows bind mount.
+      - bun_node_modules:/app/node_modules
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:5180:5180"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+volumes:
+  pgdata:
+    name: homa-dev-pgdata
+  bun_node_modules:

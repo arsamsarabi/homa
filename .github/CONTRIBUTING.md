@@ -12,15 +12,15 @@ Homa is source-available under the [PolyForm Noncommercial License 1.0.0](../LIC
 
 ## Setup
 
-You need [Bun](https://bun.sh) 1.4 and Postgres 18.
+You need [Bun](https://bun.sh) 1.4 and Docker.
 
 ```sh
 bun install
-cp .env.example .env.local   # set DATABASE_URL and BETTER_AUTH_SECRET (openssl rand -base64 32)
-bun run dev            # web app on http://localhost:5173; API and worker on :3000
+cp .env.example .env.local   # set BETTER_AUTH_SECRET (openssl rand -base64 32)
+bun run dev                  # Postgres, Mailpit, API, and Vite (web http://localhost:5180)
 ```
 
-The server applies migrations when it starts. On a new database, the first account becomes the admin; the setup code is in the server log.
+To run the API and web on the host: `bun run dev:deps` then `bun run dev:app` (uncomment `HOMA_SMTP_*` in `.env.local` for Mailpit). The server applies migrations when it starts. On a new database, the first account becomes the admin; the setup code is in the server log. Invite and account emails show at <http://127.0.0.1:8025>.
 
 ## Before you open a pull request
 

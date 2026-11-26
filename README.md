@@ -123,18 +123,23 @@ Every variable, including sync, Google, Microsoft, web push and the Compose-only
 
 ## Development
 
-You need [Bun](https://bun.sh) 1.4 and a Postgres 18 database.
+You need [Bun](https://bun.sh) 1.4 and Docker. `bun run dev` brings up Postgres, [Mailpit](https://mailpit.axllent.org), the API, and Vite in one Compose stack.
 
 ```sh
 bun install
-cp .env.example .env.local   # set DATABASE_URL and BETTER_AUTH_SECRET
-bun run dev            # web app on http://localhost:5173; API and worker on :3000
+cp .env.example .env.local   # set BETTER_AUTH_SECRET
+bun run dev                  # web http://localhost:5180 · API :3000 · Mailpit UI :8025
 ```
 
-The server applies pending migrations when it starts. The API answers on `/api/health`, and its OpenAPI document is at `/api/openapi.json`.
+To run the API and web on the host instead (deps only in Docker): `bun run dev:deps` then `bun run dev:app` (uncomment `HOMA_SMTP_*` in `.env.local` for Mailpit).
+
+The server applies pending migrations when it starts. The API answers on `/api/health`, and its OpenAPI document is at `/api/openapi.json`. Invite and account emails land in the Mailpit UI at <http://127.0.0.1:8025>.
 
 | Command | What it does |
 | --- | --- |
+| `bun run dev` | Compose: Postgres, Mailpit, API, and Vite |
+| `bun run dev:deps` | Compose: Postgres and Mailpit only |
+| `bun run dev:app` | API and Vite on the host (needs `dev:deps`) |
 | `bun run test` | Unit and integration tests in every package. Set `TEST_DATABASE_URL` to a Postgres server to include the database tests, and `TEST_CALDAV_URL` to a Radicale server for the CalDAV tests |
 | `bun run typecheck` | TypeScript in every package |
 | `bun run lint` | Biome lint and format check (`bun run format` fixes) |
