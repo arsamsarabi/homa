@@ -749,5 +749,15 @@
   "demo": {
     "banner": "This is the Homa demo. Everyone shares this account, and it resets every night.",
     "signIn": "This is the Homa demo. Sign in with the shared account ({{email}}): it's filled in for you."
+  },
+  "errors": {
+    "runtimeTitle": "Something went wrong",
+    "runtimeBody": "Homa hit an unexpected problem. Your data should be fine — try again, or go back to the calendar.",
+    "tryAgain": "Try again",
+    "goCalendar": "Go to calendar",
+    "details": "Technical details",
+    "notFoundCode": "404",
+    "notFoundTitle": "This page isn’t here",
+    "notFoundBody": "That link doesn’t match anything in Homa. Head back to the calendar and keep going."
   }
 }

@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ErrorBoundary } from '@/components';
 import { createAppRouter } from '@/lib/router';
 import { cssVariablesResolver, theme } from '@/styles';
 
@@ -25,9 +26,11 @@ createRoot(root).render(
     <DirectionProvider detectDirection>
       <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="auto">
         <Notifications position="bottom-right" zIndex={400} />
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </ErrorBoundary>
       </MantineProvider>
     </DirectionProvider>
   </StrictMode>,
