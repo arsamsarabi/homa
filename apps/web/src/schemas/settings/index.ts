@@ -4,4 +4,6 @@ export {
   type SecondaryCalendar,
   type Settings,
   SettingsSchema,
+  SHARING_PRESETS,
+  type SharingPreset,
 } from './settings';

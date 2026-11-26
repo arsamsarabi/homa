@@ -4,6 +4,10 @@ import { isTimeZone, parseRrule, REMINDER_LIMITS } from '@homa/core';
 import { z } from '@hono/zod-openapi';
 
 const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #7d7fa3');
+export const AccessLevel = z.enum(['owner', 'freebusy', 'read', 'edit']).openapi({
+  description: 'Effective access on this calendar for the caller',
+});
+export const CalendarOwner = z.object({ id: z.string().min(1), name: z.string() }).openapi('CalendarOwner');
 export const Calendar = z
   .object({
     id: z.uuid(),
@@ -11,10 +15,14 @@ export const Calendar = z
     color: Color,
     connectionId: z.uuid().nullable().openapi({ description: 'The connection it syncs with; null for your own' }),
     readOnly: z.boolean().openapi({ description: 'Events here cannot be created, changed or deleted (subscriptions)' }),
-    hidden: z.boolean().openapi({ description: 'Left out of the calendar views; its events still sync' }),
+    hidden: z.boolean().openapi({
+      description: 'Left out of the calendar views; for a shared calendar this is your own choice',
+    }),
     remoteMissing: z.boolean().openapi({
       description: 'Deleted at the source, or no longer shared with the account; it can be deleted here',
     }),
+    access: AccessLevel,
+    owner: CalendarOwner,
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -26,6 +34,25 @@ export const CalendarPatch = CalendarInput.partial()
   .extend({ hidden: z.boolean().optional() })
   .refine((v) => Object.values(v).some((x) => x !== undefined), 'nothing to change')
   .openapi('CalendarPatch');
+
+export const GRANT_LIMITS = { grantsPerCalendar: 200 } as const;
+export const GrantLevel = z.enum(['none', 'freebusy', 'read', 'edit']);
+export const CalendarDefault = z.enum(['none', 'freebusy', 'read']).nullable();
+export const GrantTarget = z
+  .object({
+    userId: z.string().min(1).optional(),
+    circleId: z.uuid().optional(),
+    level: GrantLevel,
+  })
+  .refine((g) => Boolean(g.userId) !== Boolean(g.circleId), 'set userId or circleId, not both')
+  .openapi('GrantTarget');
+export const CalendarGrants = z
+  .object({
+    defaultAccess: CalendarDefault,
+    grants: z.array(GrantTarget).max(GRANT_LIMITS.grantsPerCalendar),
+  })
+  .openapi('CalendarGrants');
+export const CalendarGrantsPut = CalendarGrants.openapi('CalendarGrantsPut');
 
 const Tz = z.string().refine(isTimeZone, 'an IANA time zone like Europe/London').openapi({ example: 'Europe/London' });
 const isRrule = (v: string): boolean => {
@@ -135,5 +162,34 @@ export const OccurrenceQuery = z
     message: `the range can be at most ${MAX_RANGE_DAYS} days`,
     path: ['to'],
   });
+
+export const AVAILABILITY_LIMITS = { maxPeople: 50, maxRangeDays: 92 } as const;
+export const BusyInterval = z.object({ start: z.iso.datetime(), end: z.iso.datetime() }).openapi('BusyInterval');
+export const PersonAvailability = z
+  .object({
+    userId: z.string().min(1),
+    shared: z.boolean().openapi({ description: 'False when the caller sees none of this person’s calendars' }),
+    busy: z.array(BusyInterval),
+  })
+  .openapi('PersonAvailability');
+export const Availability = z
+  .object({
+    from: z.iso.datetime(),
+    to: z.iso.datetime(),
+    people: z.array(PersonAvailability),
+  })
+  .openapi('Availability');
+export const AvailabilityInput = z
+  .object({
+    from: When,
+    to: When,
+    userIds: z.array(z.string().min(1)).max(AVAILABILITY_LIMITS.maxPeople),
+  })
+  .refine((q) => q.to > q.from, { message: 'to must be after from', path: ['to'] })
+  .refine((q) => q.to.getTime() - q.from.getTime() <= AVAILABILITY_LIMITS.maxRangeDays * 86_400_000, {
+    message: `the range can be at most ${AVAILABILITY_LIMITS.maxRangeDays} days`,
+    path: ['to'],
+  })
+  .openapi('AvailabilityInput');
 
 export const Id = z.object({ id: z.uuid() });

@@ -7,12 +7,13 @@ import { useUpdateSettings } from './useUpdateSettings';
 export type SettingsDraft = {
   value: Settings;
   change: (patch: Partial<Settings>) => void;
-  save: () => Promise<void>;
+  /** Saves pending edits, optionally merged with a last-moment patch (e.g. onboarding visibility). */
+  save: (extra?: Partial<Settings>) => Promise<void>;
   busy: boolean;
   error: string | undefined;
 };
 
-const DEFAULTS: Settings = { homeTz: null, secondaryCalendar: 'none', weekStart: null };
+const DEFAULTS: Settings = { homeTz: null, secondaryCalendar: 'none', weekStart: null, sharingPreset: 'private' };
 
 export function useSettingsDraft(): SettingsDraft {
   const saved = useSettings().data ?? DEFAULTS;
@@ -21,8 +22,9 @@ export function useSettingsDraft(): SettingsDraft {
   return {
     value: { ...saved, ...edits },
     change: (patch: Partial<Settings>): void => setEdits((e) => ({ ...e, ...patch })),
-    save: async (): Promise<void> => {
-      await update.mutateAsync(edits);
+    save: async (extra?: Partial<Settings>): Promise<void> => {
+      const body = { ...edits, ...extra };
+      await update.mutateAsync(body);
       setEdits({});
     },
     busy: update.isPending,

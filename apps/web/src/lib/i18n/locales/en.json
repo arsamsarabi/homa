@@ -67,7 +67,6 @@
     "visibilityPrivate": "Only me",
     "visibilityFreeBusy": "People I share with see free or busy",
     "visibilityDetails": "People I share with see event details",
-    "comingSoon": "Saving this choice arrives with sharing; for now it's only a preview.",
     "continue": "Go to my calendar"
   },
   "calendar": {
@@ -98,7 +97,8 @@
       "moved": "Event moved",
       "deleted": "Event deleted"
     },
-    "taskDone": "Task done"
+    "taskDone": "Task done",
+    "busy": "Busy"
   },
   "common": {
     "cancel": "Cancel",
@@ -129,7 +129,9 @@
     "timeZone": "Time zone",
     "event": "Event",
     "more": "More actions",
-    "readOnly": "This event is from a read-only calendar and can't be changed here."
+    "readOnly": "This event is from a read-only calendar and can't be changed here.",
+    "sharedBy": "Shared by {{name}}",
+    "readOnlyShared": "This event is shared with you and can't be changed here."
   },
   "repeat": {
     "none": "Does not repeat",
@@ -385,7 +387,8 @@
       "microsoft": "Outlook",
       "ics": "Subscriptions",
       "feeds": "Subscriptions"
-    }
+    },
+    "sharedBy": "Shared by {{name}}"
   },
   "google": {
     "add": "Connect Google",
@@ -758,5 +761,38 @@
     "notFoundCode": "404",
     "notFoundTitle": "This page isn’t here",
     "notFoundBody": "That link doesn’t match anything in Homa. Head back to the calendar and keep going."
+  },
+  "sharing": {
+    "preset": "Sharing default",
+    "presetHint": "When a calendar has no default of its own, people you share with see this much.",
+    "presetOption": {
+      "private": "Only me (private)",
+      "freebusy": "Free or busy",
+      "read": "Event details"
+    },
+    "calendarTitle": "Sharing",
+    "calendarHint": "Who can see this calendar, and how much. Edit only comes from a person or circle grant.",
+    "loading": "Loading sharing",
+    "loadFailed": "Couldn't load sharing",
+    "defaultAccess": "Default for people without a grant",
+    "defaultAccessHint": "Null follows your sharing default in Settings. Defaults never grant edit.",
+    "defaultFollowPreset": "Follow my sharing default",
+    "peopleAndCircles": "People and circles",
+    "targetKind": "Grant type",
+    "person": "Person",
+    "circle": "Circle",
+    "target": "Who",
+    "chooseTarget": "Choose…",
+    "levelLabel": "Access",
+    "level": {
+      "none": "None",
+      "freebusy": "Free/busy",
+      "read": "Details",
+      "edit": "Edit"
+    },
+    "addGrant": "Add person or circle",
+    "removeGrant": "Remove grant",
+    "save": "Save sharing",
+    "saveFailed": "Couldn't save sharing: {{message}}"
   }
 }
