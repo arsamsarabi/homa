@@ -2,17 +2,12 @@
 // needs document.fonts (Mantine's Textarea), which happy-dom lacks: e2e/reminders.spec.ts covers it.
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { ownCalendar } from '@/testing/calendars';
 import { json, renderApp, signedIn } from '@/testing/renderApp';
 
 const calendars = [
-  {
-    id: 'c1',
-    name: 'Personal',
-    color: '#4a4e69',
-    createdAt: '2026-11-01T00:00:00Z',
-    updatedAt: '2026-11-01T00:00:00Z',
-  },
-  {
+  ownCalendar({ id: 'c1', name: 'Personal', color: '#4a4e69' }),
+  ownCalendar({
     id: 'c2',
     name: 'UK holidays',
     color: '#336699',
@@ -20,7 +15,7 @@ const calendars = [
     readOnly: true,
     createdAt: '2026-11-02T00:00:00Z',
     updatedAt: '2026-11-02T00:00:00Z',
-  },
+  }),
 ];
 const today = new Date();
 const at = (h: number): string => new Date(today.getFullYear(), today.getMonth(), today.getDate(), h).toISOString();

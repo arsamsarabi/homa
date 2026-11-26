@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+Sharing UI (phase 6b). The calendar filter groups shared calendars under “Shared by …”; free/busy occurrences show as Busy (striped) with a small read-only card; read opens details with the owner’s name; edit opens the editor. The event form’s calendar picker lists your calendars and those shared at edit, grouped by owner. Settings has a Sharing default (`sharingPreset`), onboarding saves the visibility choice, and each owned calendar’s drawer has a Sharing section for the default and person/circle grants.
+
 Calendar grant checks on the API (phase 6b). `accessibleCalendars` / `calendarAccess` resolve effective access; `GET /api/calendars` returns own then shared calendars with `access` and `owner`, and a shared calendar's `hidden` is the viewer's pref. Occurrences include shared calendars at freebusy+ (titles stripped at freebusy); event read needs read+, writes need edit (same owner when moving); reminders and import stay owner-only; export stays own rows. `GET|PUT /api/calendars/{id}/grants` replaces the grant set and `defaultAccess` (owner only). Settings expose `sharingPreset`. Sharing UI comes next.
 
 Calendar grants foundation (phase 6b). Migration `0018_calendar_grants` adds `calendar_grants`, `shared_calendar_prefs`, `calendars.default_access` and `users.sharing_preset` (existing accounts stay `private`). Grant resolution (`resolveAccess` in `@homa/core`) follows owner → person grant → highest circle grant → calendar default → owner preset.

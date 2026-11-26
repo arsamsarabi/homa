@@ -6,6 +6,7 @@ import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventChip } from '@/components';
 import { useCalendarPageModel } from '@/pages/calendar/model';
+import { occurrenceTitle } from '@/services/calendar-sharing';
 import { sameDay } from '@/services/dates';
 import { draftLabel } from '@/services/event-form';
 import { HOUR_PX } from '@/services/time-grid';
@@ -17,9 +18,10 @@ const HOURS = Array.from({ length: 23 }, (_, i) => i + 1);
 
 export function TimeGrid(): JSX.Element {
   const { t } = useTranslation();
-  const { view, formats, colors, secondary, editor } = useCalendarPageModel();
+  const { view, formats, colors, secondary, editor, accessOf } = useCalendarPageModel();
   const grid = useTimeGrid();
   const draftTitle = editor.draft ? draftLabel(editor.draft, t('calendar.untitled')) : t('calendar.untitled');
+  const labels = { busy: t('calendar.busy'), untitled: t('calendar.untitled') };
 
   return (
     <section
@@ -59,15 +61,19 @@ export function TimeGrid(): JSX.Element {
                 {draftTitle}
               </div>
             )}
-            {grid.allDay[i]?.map((o) => (
-              <EventChip
-                key={`${o.eventId}${o.recurrenceId}`}
-                variant="chip"
-                title={o.summary || t('calendar.untitled')}
-                color={colors[o.calendarId]}
-                onClick={() => grid.open(o)}
-              />
-            ))}
+            {grid.allDay[i]?.map((o) => {
+              const access = accessOf(o.calendarId);
+              return (
+                <EventChip
+                  key={`${o.eventId}${o.recurrenceId}`}
+                  variant="chip"
+                  title={occurrenceTitle(o.summary, access, labels)}
+                  color={colors[o.calendarId]}
+                  freeBusy={access === 'freebusy'}
+                  onClick={() => grid.open(o)}
+                />
+              );
+            })}
           </div>
         ))}
       </div>

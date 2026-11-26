@@ -12,6 +12,16 @@
   outline: 2px solid var(--mantine-primary-color-filled);
 }
 
+.row[data-freebusy] {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 18%, transparent),
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 18%, transparent) 4px,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 6%, transparent) 4px,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 6%, transparent) 8px
+  );
+}
+
 .time,
 .location {
   font-size: 14px;

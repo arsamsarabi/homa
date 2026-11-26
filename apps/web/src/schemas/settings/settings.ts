@@ -7,6 +7,9 @@ export type SecondaryCalendar = (typeof SECONDARY_CALENDARS)[number];
 /** Monday–Friday when the user has not chosen work-week days. */
 export const DEFAULT_WORK_WEEK_DAYS = [1, 2, 3, 4, 5] as const;
 
+export const SHARING_PRESETS = ['private', 'freebusy', 'read'] as const;
+export type SharingPreset = (typeof SHARING_PRESETS)[number];
+
 export const SettingsSchema = z.object({
   /** null: use the browser's zone. */
   homeTz: z.string().nullable(),
@@ -20,5 +23,7 @@ export const SettingsSchema = z.object({
   workWeekDays: z.array(z.number().int().min(0).max(6)).min(1).max(7).nullable().optional(),
   /** The reminder new timed events start with, in minutes before; null for none; absent is 10. */
   defaultReminderMinutes: z.number().int().min(0).nullable().optional(),
+  /** Default for calendars with no per-calendar default; absent parses as private. */
+  sharingPreset: z.enum(SHARING_PRESETS).default('private'),
 });
 export type Settings = z.infer<typeof SettingsSchema>;

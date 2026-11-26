@@ -4,6 +4,7 @@ import type { CSSProperties, JSX, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventChip } from '@/components';
 import { useCalendarPageModel } from '@/pages/calendar/model';
+import { occurrenceTitle } from '@/services/calendar-sharing';
 import { isoDate, sameDay } from '@/services/dates';
 import { draftLabel } from '@/services/event-form';
 import classes from './MonthView.module.css';
@@ -11,9 +12,10 @@ import { SHOWN_PER_DAY, useMonthView } from './useMonthView';
 
 export function MonthView(): JSX.Element {
   const { t } = useTranslation();
-  const { formats, colors, secondary, today, editor } = useCalendarPageModel();
+  const { formats, colors, secondary, today, editor, accessOf } = useCalendarPageModel();
   const m = useMonthView();
   const draftTitle = editor.draft ? draftLabel(editor.draft, t('calendar.untitled')) : t('calendar.untitled');
+  const labels = { busy: t('calendar.busy'), untitled: t('calendar.untitled') };
 
   return (
     <section
@@ -68,21 +70,25 @@ export function MonthView(): JSX.Element {
                 {draftTitle}
               </div>
             )}
-            {items.slice(0, SHOWN_PER_DAY).map((o) => (
-              <EventChip
-                key={`${o.eventId}${o.recurrenceId}`}
-                variant={o.allDay ? 'chip' : 'line'}
-                title={o.summary || t('calendar.untitled')}
-                color={colors[o.calendarId]}
-                time={o.allDay ? undefined : formats.time.format(m.span(o).start)}
-                done={o.taskDone ? t('calendar.taskDone') : undefined}
-                onPointerDown={(e: PointerEvent<HTMLButtonElement>): void => m.beginDrag(e, o, d)}
-                onClick={(e: MouseEvent<HTMLButtonElement>): void => {
-                  // Mouse clicks open through the drag handler; touch taps and the keyboard open here.
-                  if ((e.nativeEvent as globalThis.PointerEvent).pointerType === 'touch' || e.detail === 0) m.open(o);
-                }}
-              />
-            ))}
+            {items.slice(0, SHOWN_PER_DAY).map((o) => {
+              const access = accessOf(o.calendarId);
+              return (
+                <EventChip
+                  key={`${o.eventId}${o.recurrenceId}`}
+                  variant={o.allDay ? 'chip' : 'line'}
+                  title={occurrenceTitle(o.summary, access, labels)}
+                  color={colors[o.calendarId]}
+                  freeBusy={access === 'freebusy'}
+                  time={o.allDay ? undefined : formats.time.format(m.span(o).start)}
+                  done={o.taskDone ? t('calendar.taskDone') : undefined}
+                  onPointerDown={(e: PointerEvent<HTMLButtonElement>): void => m.beginDrag(e, o, d)}
+                  onClick={(e: MouseEvent<HTMLButtonElement>): void => {
+                    // Mouse clicks open through the drag handler; touch taps and the keyboard open here.
+                    if ((e.nativeEvent as globalThis.PointerEvent).pointerType === 'touch' || e.detail === 0) m.open(o);
+                  }}
+                />
+              );
+            })}
             {items.length > SHOWN_PER_DAY && (
               <UnstyledButton className={classes.more} onClick={() => m.pickDay(d)}>
                 {t('calendar.more', { count: items.length - SHOWN_PER_DAY })}

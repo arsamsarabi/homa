@@ -4,6 +4,12 @@ import { z } from 'zod';
 
 const isoDateTime = z.iso.datetime({ offset: true });
 
+export const AccessLevelSchema = z.enum(['owner', 'freebusy', 'read', 'edit']);
+export type AccessLevel = z.infer<typeof AccessLevelSchema>;
+
+export const CalendarOwnerSchema = z.object({ id: z.string(), name: z.string() });
+export type CalendarOwner = z.infer<typeof CalendarOwnerSchema>;
+
 export const CalendarSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -12,14 +18,39 @@ export const CalendarSchema = z.object({
   connectionId: z.string().nullable().default(null),
   /** Subscriptions: events can't be created, changed or deleted. */
   readOnly: z.boolean().default(false),
+  /** Left out of the views; for a shared calendar this is the viewer's own choice. */
   hidden: z.boolean().default(false),
   /** Deleted at the source, or no longer shared with the account: the user can remove it. */
   remoteMissing: z.boolean().default(false),
+  /** Effective access for the caller. */
+  access: AccessLevelSchema,
+  owner: CalendarOwnerSchema,
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });
 export type Calendar = z.infer<typeof CalendarSchema>;
 export const CalendarListSchema = z.array(CalendarSchema);
+
+export const GrantLevelSchema = z.enum(['none', 'freebusy', 'read', 'edit']);
+export type GrantLevel = z.infer<typeof GrantLevelSchema>;
+
+export const GrantTargetSchema = z
+  .object({
+    userId: z.string().min(1).optional(),
+    circleId: z.string().optional(),
+    level: GrantLevelSchema,
+  })
+  .refine((g) => Boolean(g.userId) !== Boolean(g.circleId), 'set userId or circleId, not both');
+export type GrantTarget = z.infer<typeof GrantTargetSchema>;
+
+export const CalendarDefaultAccessSchema = z.enum(['none', 'freebusy', 'read']).nullable();
+export type CalendarDefaultAccess = z.infer<typeof CalendarDefaultAccessSchema>;
+
+export const CalendarGrantsSchema = z.object({
+  defaultAccess: CalendarDefaultAccessSchema,
+  grants: z.array(GrantTargetSchema),
+});
+export type CalendarGrants = z.infer<typeof CalendarGrantsSchema>;
 
 export const OccurrenceSchema = z.object({
   eventId: z.string(),
