@@ -1,5 +1,12 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 import { pushRegistration } from './usePush';
+
+const original = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker');
+
+afterEach(() => {
+  if (original) Object.defineProperty(navigator, 'serviceWorker', original);
+  else Reflect.deleteProperty(navigator, 'serviceWorker');
+});
 
 describe('pushRegistration', () => {
   test('resolves an existing active registration without waiting on ready', async () => {
