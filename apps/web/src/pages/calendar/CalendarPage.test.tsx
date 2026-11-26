@@ -124,6 +124,12 @@ describe('calendar page', () => {
     expect(await screen.findByText("Couldn't load your events")).toBeTruthy();
   });
 
+  test('the toolbar has no time zone control', async () => {
+    renderApp('/', signedInWith({ homeTz: 'Europe/London', secondaryCalendar: 'none' }));
+    await screen.findByRole('button', { name: 'Today' });
+    expect(screen.queryByLabelText(/time zone/i)).toBeNull();
+  });
+
   test('shows times in the home zone, or the zone in the URL', async () => {
     // 10:00 UTC on 19 November 2026: 13:30 in Tehran, 05:00 in New York.
     const meeting = {
