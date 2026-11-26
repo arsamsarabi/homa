@@ -1,7 +1,9 @@
 import { VisuallyHidden } from '@mantine/core';
 import type { CSSProperties, JSX, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Placed, TimedItem } from '@/services/calendar-layout';
+import { occurrenceTitle } from '@/services/calendar-sharing';
 import { minutesFrom, sameDay } from '@/services/dates';
 import { blockBox, type Ghost, HOUR_PX, TWO_LINE_PX } from '@/services/time-grid';
 import classes from './TimeGrid.module.css';
@@ -23,12 +25,16 @@ type Props = {
 /** One day of the time grid: its events, the drag preview and the now line. */
 export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, colors, time }: Props): JSX.Element {
   const { t } = useTranslation();
+  const { accessOf, isReadOnly } = useCalendarPageModel();
   const drag = grid.drag;
+  const labels = { busy: t('calendar.busy'), untitled: t('calendar.untitled') };
   return (
     <div className={classes.col} onPointerDown={(e: PointerEvent<HTMLDivElement>): void => grid.beginCreate(e, index)}>
       {items.map((p) => {
         const box = blockBox(minutesFrom(day, p.start), minutesFrom(day, p.end));
         const dragging = drag !== undefined && drag.kind !== 'create' && drag.moved && drag.o === p.o;
+        const access = accessOf(p.o.calendarId);
+        const readOnly = isReadOnly(p.o.calendarId);
         const style = {
           '--c': colors[p.o.calendarId],
           top: box.top,
@@ -43,6 +49,8 @@ export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, c
             className={classes.block}
             data-dragging={dragging || undefined}
             data-compact={box.height < TWO_LINE_PX || undefined}
+            data-freebusy={access === 'freebusy' || undefined}
+            data-readonly={readOnly || undefined}
             style={style}
             onPointerDown={(e: PointerEvent<HTMLButtonElement>): void => grid.beginMove(e, p.o)}
             onClick={(e: MouseEvent<HTMLButtonElement>): void => {
@@ -51,18 +59,24 @@ export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, c
             }}
           >
             <b>
-              {p.o.taskDone ? <s>{p.o.summary || t('calendar.untitled')}</s> : p.o.summary || t('calendar.untitled')}
+              {p.o.taskDone ? (
+                <s>{occurrenceTitle(p.o.summary, access, labels)}</s>
+              ) : (
+                occurrenceTitle(p.o.summary, access, labels)
+              )}
               {p.o.taskDone && <VisuallyHidden>{t('calendar.taskDone')}</VisuallyHidden>}
             </b>
             <span>
               {time.format(p.start)}
               <span className={classes.end}> – {time.format(p.end)}</span>
             </span>
-            <span
-              aria-hidden="true"
-              className={classes.resize}
-              onPointerDown={(e: PointerEvent<HTMLSpanElement>): void => grid.beginResize(e, p.o)}
-            />
+            {!readOnly && (
+              <span
+                aria-hidden="true"
+                className={classes.resize}
+                onPointerDown={(e: PointerEvent<HTMLSpanElement>): void => grid.beginResize(e, p.o)}
+              />
+            )}
           </button>
         );
       })}

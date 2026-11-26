@@ -1,18 +1,13 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useLastCalendar } from '@/stores';
+import { ownCalendar } from '@/testing/calendars';
 import { json, renderApp, signedInWith } from '@/testing/renderApp';
 
 const calendars = [
-  {
-    id: 'c1',
-    name: 'Personal',
-    color: '#4a4e69',
-    createdAt: '2026-11-01T00:00:00Z',
-    updatedAt: '2026-11-01T00:00:00Z',
-  },
-  { id: 'c3', name: 'Work', color: '#22577a', createdAt: '2026-11-01T00:00:00Z', updatedAt: '2026-11-01T00:00:00Z' },
-  {
+  ownCalendar({ id: 'c1', name: 'Personal', color: '#4a4e69' }),
+  ownCalendar({ id: 'c3', name: 'Work', color: '#22577a' }),
+  ownCalendar({
     id: 'c2',
     name: 'UK holidays',
     color: '#336699',
@@ -20,7 +15,7 @@ const calendars = [
     readOnly: true,
     createdAt: '2026-11-02T00:00:00Z',
     updatedAt: '2026-11-02T00:00:00Z',
-  },
+  }),
 ];
 
 type Posted = Record<string, unknown>;
