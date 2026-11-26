@@ -7,6 +7,7 @@ import { useSetEventReminders } from '@/hooks/reminders';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { wallOf } from '@/services/zones';
+import { useAnnouncer } from '@/stores';
 import classes from './EventEditor.module.css';
 
 export type ReadOnlyDetailsProps = { occurrence: Occurrence; onClose: () => void };
@@ -16,6 +17,7 @@ export function ReadOnlyDetails({ occurrence: o, onClose }: ReadOnlyDetailsProps
   const { t } = useTranslation();
   const event = useSeries(o.eventId);
   const setReminders = useSetEventReminders();
+  const announce = useAnnouncer((s) => s.announce);
   const { calendars, colors, formats, tz } = useCalendarPageModel();
   const calendar = calendars.find((c) => c.id === o.calendarId);
   // All-day events are stored at UTC midnights, which are already wall dates; the end is exclusive.
@@ -50,7 +52,9 @@ export function ReadOnlyDetails({ occurrence: o, onClose }: ReadOnlyDetailsProps
       )}
       <ReminderChips
         value={event.data?.reminders ?? []}
-        onChange={(reminders: number[]): void => setReminders.mutate({ id: o.eventId, reminders })}
+        onChange={(reminders: number[]): void =>
+          setReminders.mutate({ id: o.eventId, reminders }, { onSuccess: () => announce(t('reminders.saved')) })
+        }
         disabled={event.isPending || setReminders.isPending}
       />
       {setReminders.error && (

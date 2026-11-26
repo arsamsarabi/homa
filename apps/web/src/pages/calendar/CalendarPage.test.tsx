@@ -75,6 +75,30 @@ describe('calendar page', () => {
     expect(screen.getByText('High Street')).toBeTruthy();
   });
 
+  test('hiding a calendar from the filter announces success', async () => {
+    const stamp = '2026-11-01T00:00:00Z';
+    const [mine, holidays] = calendars;
+    expect(mine).toBeDefined();
+    expect(holidays).toBeDefined();
+    const personal = { ...mine, hidden: false, updatedAt: stamp };
+    renderApp('/?view=agenda', async (url, req) => {
+      if (url.pathname === '/api/calendars' && req.method === 'GET') return json([personal, holidays]);
+      if (url.pathname === '/api/calendars/c1' && req.method === 'PATCH') {
+        const body = (await req.json()) as { hidden?: boolean };
+        return json({ ...personal, ...body, updatedAt: stamp });
+      }
+      if (url.pathname === '/api/occurrences') return json([]);
+      if (url.pathname === '/api/connections') return json([]);
+      return signedIn(url, req);
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Calendars' }));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Personal' }));
+    await waitFor(() => {
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts.some((el) => el.textContent?.includes('Personal hidden'))).toBe(true);
+    });
+  });
+
   test('the calendar filter names CalDAV accounts after their service', async () => {
     const hosts = [
       { id: 'k3', label: 'ada on dav.mailbox.org', service: 'mailbox.org' },

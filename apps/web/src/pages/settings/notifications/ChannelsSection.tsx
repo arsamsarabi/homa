@@ -79,9 +79,16 @@ export function ChannelsSection(): JSX.Element {
               </Stack>
               <Switch
                 checked={c.enabled}
-                onChange={(e: ChangeEvent<HTMLInputElement>): void =>
-                  update.mutate({ id: c.id, enabled: e.currentTarget.checked })
-                }
+                onChange={(e: ChangeEvent<HTMLInputElement>): void => {
+                  const enabled = e.currentTarget.checked;
+                  update.mutate(
+                    { id: c.id, enabled },
+                    {
+                      onSuccess: () =>
+                        announce(t(enabled ? 'channels.enabledDone' : 'channels.disabledDone', { name: c.name })),
+                    },
+                  );
+                }}
                 aria-label={t('channels.enabledLabel', { name: c.name })}
               />
             </Group>
