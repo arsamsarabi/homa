@@ -82,7 +82,7 @@ export function useTasksPage(): TasksPageModel {
   const title =
     view.kind === 'project' ? (project?.name ?? '') : view.kind === 'tag' ? `#${view.name}` : t(`tasks.${view.kind}`);
 
-  const fail = (err: Error): void => announce(t('tasks.actionFailed', { message: err.message }));
+  const fail = (err: Error): void => announce(t('tasks.actionFailed', { message: err.message }), { kind: 'error' });
   const toggle = (task: Task): void => {
     if (task.completedAt) {
       reopen.mutate(task.id, { onSuccess: () => announce(t('tasks.reopened', { title: task.title })), onError: fail });

@@ -17,12 +17,14 @@
     "openapi": "bun --filter @homa/api-client generate",
     "build": "bun --filter @homa/web build",
     "e2e": "playwright test",
-    "e2e:smoke": "playwright test --grep @smoke"
+    "e2e:smoke": "playwright test --grep @smoke",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
     "@playwright/test": "1.65.1",
     "@types/bun": "1.4.4",
+    "husky": "9.1.7",
     "typescript": "6.0.3"
   }
 }

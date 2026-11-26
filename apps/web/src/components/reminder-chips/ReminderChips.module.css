@@ -1,0 +1,61 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-block: 2px;
+  padding-inline: 8px 6px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xl);
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pill:hover:not(:disabled),
+.pill:focus-visible:not(:disabled) {
+  border-color: var(--mantine-color-red-filled);
+  background: var(--mantine-color-red-light);
+  color: var(--mantine-color-red-light-color);
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.check {
+  display: inline-flex;
+}
+
+.remove {
+  display: none;
+}
+
+.pill:hover:not(:disabled) .check,
+.pill:focus-visible:not(:disabled) .check {
+  display: none;
+}
+
+.pill:hover:not(:disabled) .remove,
+.pill:focus-visible:not(:disabled) .remove {
+  display: inline-flex;
+}

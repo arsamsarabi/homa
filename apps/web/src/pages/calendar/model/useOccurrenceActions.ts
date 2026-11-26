@@ -64,7 +64,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
       announce(t('calendar.announce.saved'));
     } catch (err: unknown) {
       // Toast always; rethrow so quick-add can keep the line and callers can react.
-      announce(t('calendar.saveFailed', { message: messageOf(err) }));
+      announce(t('calendar.saveFailed', { message: messageOf(err) }), { kind: 'error' });
       throw err;
     }
   }
@@ -86,7 +86,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
       });
       announce(t('calendar.announce.deleted'));
     } catch (err: unknown) {
-      announce(t('calendar.deleteFailed', { message: messageOf(err) }));
+      announce(t('calendar.deleteFailed', { message: messageOf(err) }), { kind: 'error' });
       throw err;
     }
   }
@@ -100,7 +100,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
       .catch((err: unknown) => {
         const message = messageOf(err);
         setError(message);
-        announce(t('calendar.moveFailed', { message }));
+        announce(t('calendar.moveFailed', { message }), { kind: 'error' });
       });
   }
 

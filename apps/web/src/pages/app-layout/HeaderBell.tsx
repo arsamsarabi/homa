@@ -16,7 +16,8 @@ export function HeaderBell(): JSX.Element {
   const actions = useNotificationActions();
   const announce = useAnnouncer((s) => s.announce);
   const [opened, drawer] = useDisclosure(false);
-  const fail = (err: unknown): void => announce(t('notifications.actionFailed', { message: String(err) }));
+  const fail = (err: unknown): void =>
+    announce(t('notifications.actionFailed', { message: String(err) }), { kind: 'error' });
 
   return (
     <NotificationBell

@@ -21,11 +21,11 @@ test('event reminders, standalone reminders and the bell @smoke', async ({ page 
   await page.getByLabel('Starts').fill(`${today}T10:00`);
   await page.getByLabel('Ends').fill(`${today}T11:00`);
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('checkbox', { name: '10 minutes before' })).toBeChecked();
+  await expect(dialog.getByRole('button', { name: 'Remove 10 minutes before' })).toBeVisible();
   await dialog.getByLabel('Amount').fill('1');
   await dialog.getByLabel('Unit').selectOption('hours');
   await dialog.getByRole('button', { name: 'Add' }).click();
-  await expect(dialog.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
+  await expect(dialog.getByRole('button', { name: 'Remove 1 hour before' })).toBeVisible();
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
 
@@ -35,15 +35,14 @@ test('event reminders, standalone reminders and the bell @smoke', async ({ page 
     .getByRole('button')
     .filter({ hasText: 'Dentist' });
   await block.click();
-  await expect(dialog.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
-  await expect(dialog.getByRole('checkbox', { name: '10 minutes before' })).toBeChecked();
-  // Chip inputs are visually hidden; click the label text to toggle off.
-  await dialog.getByText('10 minutes before', { exact: true }).click();
+  await expect(dialog.getByRole('button', { name: 'Remove 1 hour before' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Remove 10 minutes before' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Remove 10 minutes before' }).click();
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
   await block.click();
-  await expect(dialog.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
-  await expect(dialog.getByText('10 minutes before', { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Remove 1 hour before' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Remove 10 minutes before' })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 
