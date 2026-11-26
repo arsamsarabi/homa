@@ -2,7 +2,7 @@ import { Accordion, Button, Stack, Text } from '@mantine/core';
 import { useNavigate } from '@tanstack/react-router';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StatusCard } from '@/components';
+import { StatusCard } from '@/components/status-card';
 
 export type RuntimeErrorPageProps = {
   error: unknown;

@@ -2,7 +2,7 @@ import { Button, Text, Title } from '@mantine/core';
 import { useNavigate } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StatusCard } from '@/components';
+import { StatusCard } from '@/components/status-card';
 
 /** Full-page 404: decorative code, short copy, single path back to the calendar. */
 export function NotFoundPage(): JSX.Element {
