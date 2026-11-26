@@ -3,6 +3,7 @@ export * from './app-header';
 export * from './command-palette';
 export * from './confirm-close';
 export * from './demo-banner';
+export * from './error-boundary';
 export * from './event-chip';
 export * from './instance-fields';
 export * from './live-region';

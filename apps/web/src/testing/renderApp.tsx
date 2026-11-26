@@ -18,7 +18,7 @@ export const setUpInstance = {
   name: 'Homa',
   signUpsOpen: true,
   needsSetup: false,
-  defaultLanguage: 'en',
+  defaultLanguage: 'en' as const,
   googleCalendar: false,
   microsoftCalendar: false,
   passwordReset: false,
