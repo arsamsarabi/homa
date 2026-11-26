@@ -98,9 +98,25 @@ export function blockBox(from: number, to: number): { top: number; height: numbe
   return { top: (a / 60) * HOUR_PX, height: Math.max(((b - a) / 60) * HOUR_PX, 18) };
 }
 
-/** Where the grid starts scrolled: an hour before now (a wall time) when today is shown, else 07:00. */
-export function initialScrollHour(days: readonly Date[], now: Date): number {
-  return days.some((d) => sameDay(d, now)) ? Math.max(0, now.getUTCHours() - 1) : 7;
+/** Scroll top so `nowOffsetPx` sits in the vertical middle of the viewport, clamped to `[0, maxScroll]`. */
+export function scrollTopForNow(opts: { nowOffsetPx: number; viewportHeight: number; maxScroll: number }): number {
+  return clamp(opts.nowOffsetPx - opts.viewportHeight / 2, 0, Math.max(0, opts.maxScroll));
+}
+
+/**
+ * Where the timed grid starts scrolled: now centered in the viewport when today is shown
+ * (minutes included), else 07:00 at the top. `scrollHeight` is the scroll container's content height.
+ */
+export function initialScrollTop(
+  days: readonly Date[],
+  now: Date,
+  viewportHeight: number,
+  scrollHeight: number,
+): number {
+  const maxScroll = Math.max(0, scrollHeight - viewportHeight);
+  if (!days.some((d) => sameDay(d, now))) return clamp(7 * HOUR_PX, 0, maxScroll);
+  const nowOffsetPx = ((now.getUTCHours() * 60 + now.getUTCMinutes()) / 60) * HOUR_PX;
+  return scrollTopForNow({ nowOffsetPx, viewportHeight, maxScroll });
 }
 
 /** Where a new event that is being created shows its placeholder: its first day in view, cut at midnight. */
