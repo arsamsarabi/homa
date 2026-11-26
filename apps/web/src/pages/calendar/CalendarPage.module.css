@@ -1,4 +1,4 @@
-/* Day/week: page fills the shell so only the time-grid body scrolls (no second page bar). */
+/* Day/week/month: page fills the shell so the view uses the remaining height (no empty gap). */
 .fill {
   height: calc(100dvh - 60px - 2 * var(--mantine-spacing-md));
   max-height: calc(100dvh - 60px - 2 * var(--mantine-spacing-md));
