@@ -39,5 +39,3 @@ export default defineConfig({
     ...(process.env.CHOKIDAR_USEPOLLING === 'true' && { watch: { usePolling: true } }),
   },
 });
-
-
