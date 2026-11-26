@@ -40,6 +40,7 @@ export const DataExport = z
       weekStart: z.number().int().min(0).max(6).nullable(),
       workWeekDays: z.array(z.number().int().min(0).max(6)).nullable(),
       defaultReminderMinutes: z.number().int().nullable(),
+      sharingPreset: z.enum(['private', 'freebusy', 'read']),
     }),
     calendars: z.array(Calendar),
     events: z.array(Event.extend({ overrides: z.array(ExportOverride) })),

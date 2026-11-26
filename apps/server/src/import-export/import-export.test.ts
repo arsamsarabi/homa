@@ -191,6 +191,7 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
       weekStart: null,
       workWeekDays: null,
       defaultReminderMinutes: 10,
+      sharingPreset: 'private',
     });
     expect(doc.calendars.map((c) => c.id)).toEqual([adaCalendar]);
     expect(doc.events.map((e) => e.summary).sort()).toEqual(['Daily', 'Dentist']);

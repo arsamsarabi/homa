@@ -39,6 +39,10 @@ export const WorkWeekDays = z
     description: 'Days in the work-week view: 0 = Sunday … 6 = Saturday; 1–7 unique days; null is Monday–Friday',
   });
 
+export const SharingPreset = z.enum(['private', 'freebusy', 'read']).openapi({
+  description: 'Default for calendars with no per-calendar default: private shares nothing',
+});
+
 export const Settings = z
   .object({
     homeTz: HomeTz,
@@ -46,6 +50,7 @@ export const Settings = z
     weekStart: WeekStart,
     workWeekDays: WorkWeekDays,
     defaultReminderMinutes: DefaultReminderMinutes,
+    sharingPreset: SharingPreset,
   })
   .openapi('Settings');
 

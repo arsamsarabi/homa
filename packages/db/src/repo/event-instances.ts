@@ -55,3 +55,27 @@ export const listCachedOccurrences = (
         calendarIds?.length ? inArray(eventInstances.calendarId, [...calendarIds]) : undefined,
       ),
     );
+
+/** Cached occurrences for these calendars (any owner; callers have checked access) overlapping [from, to). */
+export const listCachedOccurrencesForCalendars = (
+  db: Executor,
+  calendarIds: readonly string[],
+  from: Date,
+  to: Date,
+): Promise<CachedOccurrence[]> =>
+  calendarIds.length
+    ? db
+        .select({
+          eventId: eventInstances.eventId,
+          recurrenceId: eventInstances.recurrenceId,
+          start: sql<Date>`lower(${eventInstances.during})`.mapWith((v: string) => new Date(v)),
+          end: sql<Date>`upper(${eventInstances.during})`.mapWith((v: string) => new Date(v)),
+        })
+        .from(eventInstances)
+        .where(
+          and(
+            inArray(eventInstances.calendarId, [...calendarIds]),
+            sql`${eventInstances.during} && ${range(from, to)}::tstzrange`,
+          ),
+        )
+    : Promise.resolve([]);

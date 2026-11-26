@@ -9,7 +9,7 @@ import { projectOut, tagOut, taskOut, withReminders } from '@/tasks';
 import { DataExport, EXPORT_VERSION } from './schemas';
 
 export async function exportData(db: Db, userId: string, now = new Date()): Promise<z.infer<typeof DataExport>> {
-  const [settings, calendars, events, overrides, standalone, projects, tags, tasks] = await Promise.all([
+  const [settings, calendars, events, overrides, standalone, projects, tags, tasks, names] = await Promise.all([
     repo.findSettings(db, userId),
     repo.listCalendars(db, userId),
     repo.listOwnerEvents(db, userId),
@@ -18,19 +18,28 @@ export async function exportData(db: Db, userId: string, now = new Date()): Prom
     repo.listProjects(db, userId),
     repo.listTags(db, userId),
     repo.listOwnerTasks(db, userId),
+    repo.userNames(db, [userId]),
   ]);
   const alarms = await repo.listEventReminders(
     db,
     events.map((e) => e.id),
   );
   if (!settings) throw new NotFoundError();
+  const ownerName = names.get(userId) ?? '';
 
   const byEvent = Map.groupBy(overrides, (o) => o.eventId);
   return DataExport.parse({
     version: EXPORT_VERSION,
     exportedAt: now.toISOString(),
     settings,
-    calendars: calendars.map(calendarOut),
+    calendars: calendars.map((c) =>
+      calendarOut({
+        calendar: c,
+        access: 'owner',
+        owner: { id: userId, name: ownerName },
+        hidden: c.hidden,
+      }),
+    ),
     events: events.map((e) => ({
       ...eventOut({ ...e, reminders: (alarms.get(e.id) ?? []).map((r) => r.minutes) }),
       overrides: (byEvent.get(e.id) ?? []).map((o) => ({

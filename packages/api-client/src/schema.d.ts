@@ -45,7 +45,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Your calendars */
+        /** Your calendars, then ones shared with you */
         get: operations["listCalendars"];
         put?: never;
         /** Create a calendar */
@@ -73,8 +73,26 @@ export interface paths {
         delete: operations["deleteCalendar"];
         options?: never;
         head?: never;
-        /** Rename, recolor, hide or show a calendar */
+        /** Rename, recolor, hide or show a calendar (shared: hide only) */
         patch: operations["updateCalendar"];
+        trace?: never;
+    };
+    "/calendars/{id}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who can see this calendar (owner only) */
+        get: operations["getCalendarGrants"];
+        /** Replace who can see this calendar (owner only) */
+        put: operations["putCalendarGrants"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/events": {
@@ -126,7 +144,7 @@ export interface paths {
         get?: never;
         /**
          * Replace an event's reminders
-         * @description They apply to every occurrence. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.
+         * @description They apply to every occurrence. Owner only. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.
          */
         put: operations["setEventReminders"];
         post?: never;
@@ -145,7 +163,7 @@ export interface paths {
         };
         /**
          * Every event occurrence in a time range
-         * @description Overlapping [from, to), sorted by start. The range can be at most 400 days.
+         * @description Overlapping [from, to), sorted by start. The range can be at most 400 days. Shared calendars at freebusy show as busy blocks only.
          */
         get: operations["listOccurrences"];
         put?: never;
@@ -1019,14 +1037,24 @@ export interface components {
             connectionId: string | null;
             /** @description Events here cannot be created, changed or deleted (subscriptions) */
             readOnly: boolean;
-            /** @description Left out of the calendar views; its events still sync */
+            /** @description Left out of the calendar views; for a shared calendar this is your own choice */
             hidden: boolean;
             /** @description Deleted at the source, or no longer shared with the account; it can be deleted here */
             remoteMissing: boolean;
+            /**
+             * @description Effective access on this calendar for the caller
+             * @enum {string}
+             */
+            access: "owner" | "freebusy" | "read" | "edit";
+            owner: components["schemas"]["CalendarOwner"];
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        CalendarOwner: {
+            id: string;
+            name: string;
         };
         Error: {
             error: string;
@@ -1039,6 +1067,23 @@ export interface components {
             name?: string;
             color?: string;
             hidden?: boolean;
+        };
+        CalendarGrants: {
+            /** @enum {string|null} */
+            defaultAccess: "none" | "freebusy" | "read" | null;
+            grants: components["schemas"]["GrantTarget"][];
+        };
+        GrantTarget: {
+            userId?: string;
+            /** Format: uuid */
+            circleId?: string;
+            /** @enum {string} */
+            level: "none" | "freebusy" | "read" | "edit";
+        };
+        CalendarGrantsPut: {
+            /** @enum {string|null} */
+            defaultAccess: "none" | "freebusy" | "read" | null;
+            grants: components["schemas"]["GrantTarget"][];
         };
         Event: {
             /** Format: uuid */
@@ -1180,6 +1225,11 @@ export interface components {
              * @example 10
              */
             defaultReminderMinutes: number | null;
+            /**
+             * @description Default for calendars with no per-calendar default: private shares nothing
+             * @enum {string}
+             */
+            sharingPreset: "private" | "freebusy" | "read";
         };
         SettingsPatch: {
             /**
@@ -1213,6 +1263,11 @@ export interface components {
              * @example 10
              */
             defaultReminderMinutes?: number | null;
+            /**
+             * @description Default for calendars with no per-calendar default: private shares nothing
+             * @enum {string}
+             */
+            sharingPreset?: "private" | "freebusy" | "read";
         };
         PublicInstance: {
             /**
@@ -1328,6 +1383,8 @@ export interface components {
                 weekStart: number | null;
                 workWeekDays: number[] | null;
                 defaultReminderMinutes: number | null;
+                /** @enum {string} */
+                sharingPreset: "private" | "freebusy" | "read";
             };
             calendars: components["schemas"]["Calendar"][];
             events: (components["schemas"]["Event"] & {
@@ -1883,7 +1940,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Calendars, oldest first */
+            /** @description Calendars, own first */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2036,6 +2093,99 @@ export interface operations {
             };
             /** @description Not allowed (or a read-only calendar) */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getCalendarGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default and grants */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarGrants"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    putCalendarGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarGrantsPut"];
+            };
+        };
+        responses: {
+            /** @description Default and grants after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarGrants"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
