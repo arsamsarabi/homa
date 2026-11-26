@@ -38,6 +38,7 @@ test('tasks: reminders, and a time block on the calendar that shows done @smoke'
   await drawer.getByRole('button', { name: 'Block time' }).click();
   await expect(drawer.getByRole('button', { name: 'Move the block', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
   await expect(today.getByText(/Blocked Today, 06:00/)).toBeVisible();
 
   // It's an event on the calendar, struck through once the task is done.
