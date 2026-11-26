@@ -37,12 +37,13 @@ test('event reminders, standalone reminders and the bell @smoke', async ({ page 
   await block.click();
   await expect(dialog.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
   await expect(dialog.getByRole('checkbox', { name: '10 minutes before' })).toBeChecked();
-  await dialog.getByRole('checkbox', { name: '10 minutes before' }).click();
+  // Chip inputs are visually hidden; click the label text to toggle off.
+  await dialog.getByText('10 minutes before', { exact: true }).click();
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
   await block.click();
   await expect(dialog.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
-  await expect(dialog.getByRole('checkbox', { name: '10 minutes before' })).toHaveCount(0);
+  await expect(dialog.getByText('10 minutes before', { exact: true })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 
