@@ -31,6 +31,11 @@ export const calendars = pgTable(
     readOnly: boolean('read_only').notNull().default(false),
     /** Left out of the calendar views (the user's filter); its events still sync. */
     hidden: boolean('hidden').notNull().default(false),
+    /**
+     * Default access for people without a person or circle grant: `none`, `freebusy`, `read`,
+     * or null to follow the owner's `sharing_preset`. Never `edit` (decision 10).
+     */
+    defaultAccess: text('default_access', { enum: ['none', 'freebusy', 'read'] }),
     /** The last pull found the calendar gone at the source (deleted, or no longer shared). */
     remoteMissing: boolean('remote_missing').notNull().default(false),
     /** The provider's id for this calendar (a CalDAV href, a Google calendar id); null for native and ICS. */
