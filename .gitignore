@@ -10,3 +10,5 @@ graphify-out/
 test-results/
 playwright-report/
 deploy/docker/.env
+.superpowers/
+.worktrees/
