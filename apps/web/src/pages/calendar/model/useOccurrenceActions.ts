@@ -1,5 +1,6 @@
 // Saving, moving and deleting from the calendar. Recurring events ask for the scope first; a time
-// change to the whole series is re-based on the series' own start.
+// change to the whole series is re-based on the series' own start. The editor closes as soon as the
+// write is accepted into the cache so the form and draft ghost do not linger.
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { EventPatch } from '@/api';
@@ -19,6 +20,8 @@ export type OccurrenceActions = {
   error: string | undefined;
   clearError: () => void;
 };
+
+const messageOf = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () => void): OccurrenceActions {
   const { t } = useTranslation();
@@ -46,17 +49,23 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
   }
 
   async function save(r: EditorResult): Promise<void> {
-    if (r.kind === 'create') {
-      await create.mutateAsync(r.body);
-      rememberCalendar(r.body.calendarId);
-    } else {
-      const changed = await change(r.occurrence, r.patch, r.seriesChanged);
-      if (!changed) return;
-      // Reminders belong to the series: "this and following" changes the new series' ones.
-      if (r.reminders) await setReminders.mutateAsync({ id: changed.id, reminders: r.reminders });
+    try {
+      if (r.kind === 'create') {
+        closeEditor();
+        await create.mutateAsync(r.body);
+        rememberCalendar(r.body.calendarId);
+      } else {
+        const changed = await change(r.occurrence, r.patch, r.seriesChanged);
+        if (!changed) return;
+        closeEditor();
+        // Reminders belong to the series: "this and following" changes the new series' ones.
+        if (r.reminders) await setReminders.mutateAsync({ id: changed.id, reminders: r.reminders });
+      }
+      announce(t('calendar.announce.saved'));
+    } catch (err: unknown) {
+      // The editor may already be closed; toast is the failure feedback.
+      announce(t('calendar.saveFailed', { message: messageOf(err) }));
     }
-    closeEditor();
-    announce(t('calendar.announce.saved'));
   }
 
   async function remove(o: Occurrence): Promise<void> {
@@ -66,9 +75,18 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
       if (!picked) return;
       scope = picked;
     }
-    await removeEvent.mutateAsync({ id: o.eventId, scope, recurrenceId: o.recurring ? o.recurrenceId : undefined });
+    // Close before the network round-trip so the form and Draft ghost clear at once.
     closeEditor();
-    announce(t('calendar.announce.deleted'));
+    try {
+      await removeEvent.mutateAsync({
+        id: o.eventId,
+        scope,
+        recurrenceId: o.recurring ? o.recurrenceId : undefined,
+      });
+      announce(t('calendar.announce.deleted'));
+    } catch (err: unknown) {
+      announce(t('calendar.deleteFailed', { message: messageOf(err) }));
+    }
   }
 
   function move(o: Occurrence, start: Date, end: Date): void {
@@ -78,7 +96,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
         if (done) announce(t('calendar.announce.moved'));
       })
       .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : String(err);
+        const message = messageOf(err);
         setError(message);
         announce(t('calendar.moveFailed', { message }));
       });
