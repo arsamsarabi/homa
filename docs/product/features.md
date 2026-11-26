@@ -4,19 +4,20 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 
 ## Calendar
 
-- **Views:** day, week, month, year and agenda, with drag to create, move and resize events.
+- **Views:** day, week, work week (Mon–Fri), month, year and agenda, with drag to create, move and resize events. The view picker is a dropdown in the toolbar; day and week views scroll so the current time sits mid-viewport on load.
 - **Recurrence:** repeating events with per-occurrence changes, and "this / this and following / all" edits.
-- **Time zones:** a home zone for all views, viewing in any other zone, and a time zone per event.
+- **Time zones:** a home zone under Settings for all views, and a time zone per event. The calendar always uses that home zone (there is no separate “viewing zone” in the toolbar).
 - **Jalali calendar:** optional Solar Hijri dates beside the Gregorian ones, with Persian occasions (Nowruz, Sizdah Bedar, Chaharshanbe Suri, Yalda).
 - **Week start:** choose the first day of the week, or follow the language (Monday, or Saturday in Farsi).
 - **Calendar filter and colors:** show or hide each calendar in the views, and pick a color per calendar from swatches that stay readable in both themes.
 - **Quick add:** type one line such as "Dentist tue 3pm 45m", "Holiday 3-7 Dec", "Team sync every Monday 10am" or "جلسه فردا ساعت ۳ عصر" in the field under the calendar toolbar (Q focuses it). A preview shows the date, time, length, repeat and calendar; Enter creates the event, and Shift+Enter or "More options" opens the full editor filled in. Works in English and Farsi, including Persian digits and Jalali dates.
+- **Editing UX:** the draft ghost on the calendar shows the title as you type; Esc, overlay click or Close asks before discarding unsaved changes; saves and deletes update the calendar immediately and toast on success or failure.
 
 ## Reminders
 
-- **Event reminders:** up to five per event ("10 minutes before", "1 day before"), for every occurrence of a recurring event. New timed events start with a default reminder, changeable in Settings.
+- **Event reminders:** up to five per event, for every occurrence of a recurring event. Add them as chips or with an amount and unit (for example 2 weeks). New timed events start with a default reminder, changeable in Settings.
 - **Standalone reminders:** a title and a time, optionally repeating, on the Reminders page.
-- **Delivery:** due reminders appear in the bell in the header, with snooze (5, 10 or 30 minutes, 1 hour, tomorrow) and done, and as web push notifications in browsers that turn push on. Other channels (email, ntfy, Gotify, webhooks) are not built yet.
+- **Delivery:** due reminders appear in the bell in the header, with snooze (5, 10 or 30 minutes, 1 hour, tomorrow) and done, and as web push when the browser turns push on. People can also add channels under Settings → Notification channels: email, ntfy, Gotify or a signed webhook.
 - **Sync:** reminders sync as `VALARM`s with CalDAV and `.ics` files, with Google's reminders, and with Outlook (which keeps only one). Reminders on read-only calendars stay in Homa.
 
 ## Tasks
@@ -39,15 +40,17 @@ What Homa does today, on `main`. Everything here is built and released to `main`
 - **Languages:** English and Farsi, with the whole interface mirrored right to left in Farsi.
 - **Themes:** light and dark, following the system setting or switched by hand.
 - **Installable:** a progressive web app, including on iPhone and iPad from the Home Screen.
+- **Errors:** a friendly page for unexpected failures, and a 404 for unknown routes, with a way back to the calendar.
 
 ## Instance and self-hosting
 
 - **Instance admin:** the first account becomes the admin, protected by a one-time setup code from the server log. The admin sets the instance name, open or invite-only sign-ups, who can invite people, the default language and the defaults for new accounts.
 - **People:** invite links (single use, 7 days, optionally for one address and emailed when email is set up) let someone make an account even when sign-ups are closed. Everyone can see who else is on the instance and group people into private circles under Settings → People.
-- **Self-hosting:** one image in two roles (API and worker) plus Postgres, with Docker Compose. Migrations run on start. See the [quick start](../self-hosting/quick-start.md).
+- **Calendar grants (foundation):** the database holds calendar grants, per-calendar defaults and each person's sharing preset (`private`, free/busy or details). HTTP grant checks and the sharing UI are landing next (phase 6b).
+- **Self-hosting:** one published image (`ghcr.io/arsamsarabi/homa`) in two roles (API and worker) plus Postgres, with Docker Compose. Migrations run on start. See the [quick start](../self-hosting/quick-start.md).
 - **API:** a REST API with a generated OpenAPI document at `/api/openapi.json`, and a typed client generated from it.
 - **Security:** connected calendars' credentials are encrypted at rest, every record is scoped to its owner, sign-ins are rate limited, and feed and CalDAV URLs on private networks are refused unless allowed.
 
 ## What's next
 
-Reminders on tasks, time-blocking, the Todoist import, sharing, group date-finding, routines and more are planned, not built. The order and status of each phase are in the [implementation plan](./implementation-plan.md).
+Calendar sharing in the UI (grants and shared calendars in the views), the availability API, OIDC and passkeys, then group date-finding, routines and more. The order and status of each phase are in the [implementation plan](./implementation-plan.md).
