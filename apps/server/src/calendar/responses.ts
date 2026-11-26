@@ -2,8 +2,9 @@
 import type { repo } from '@homa/db';
 import type { z } from '@hono/zod-openapi';
 import type { AccessibleCalendar } from './access';
+import type { AvailabilityOut } from './availability-service';
 import type { OccurrenceView } from './occurrences-service';
-import type { Calendar, CalendarGrants, Event, Occurrence } from './schemas';
+import type { Availability, Calendar, CalendarGrants, Event, Occurrence } from './schemas';
 
 export const calendarOut = (c: AccessibleCalendar): z.infer<typeof Calendar> => ({
   id: c.calendar.id,
@@ -78,4 +79,14 @@ export const grantsOut = (
   grants: grants.map((g) =>
     g.granteeUserId ? { userId: g.granteeUserId, level: g.level } : { circleId: g.circleId as string, level: g.level },
   ),
+});
+
+export const availabilityOut = (a: AvailabilityOut): z.infer<typeof Availability> => ({
+  from: a.from.toISOString(),
+  to: a.to.toISOString(),
+  people: a.people.map((p) => ({
+    userId: p.userId,
+    shared: p.shared,
+    busy: p.busy.map((b) => ({ start: b.start.toISOString(), end: b.end.toISOString() })),
+  })),
 });

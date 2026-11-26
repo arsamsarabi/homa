@@ -604,6 +604,97 @@
           "taskDone"
         ]
       },
+      "Availability": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonAvailability"
+            }
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "people"
+        ]
+      },
+      "PersonAvailability": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "shared": {
+            "type": "boolean",
+            "description": "False when the caller sees none of this person’s calendars"
+          },
+          "busy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BusyInterval"
+            }
+          }
+        },
+        "required": [
+          "userId",
+          "shared",
+          "busy"
+        ]
+      },
+      "BusyInterval": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ]
+      },
+      "AvailabilityInput": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "userIds"
+        ]
+      },
       "Settings": {
         "type": "object",
         "properties": {
@@ -3659,6 +3750,58 @@
                   "items": {
                     "$ref": "#/components/schemas/Occurrence"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/availability": {
+      "post": {
+        "operationId": "getAvailability",
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Free/busy for a set of people",
+        "description": "Busy intervals the caller is allowed to see. At most 50 people and 92 days. All-day events do not count. Unknown user ids are a 400.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvailabilityInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Busy intervals per person",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Availability"
                 }
               }
             }

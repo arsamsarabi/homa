@@ -4,12 +4,16 @@ import type { Db } from '@homa/db';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
+import { getAvailability } from './availability-service';
 import * as calendars from './calendars-service';
 import * as events from './events-service';
 import * as grants from './grants-service';
 import { listOccurrences } from './occurrences-service';
-import { calendarOut, eventOut, freebusyOccurrenceOut, grantsOut, occurrenceOut } from './responses';
+import { availabilityOut, calendarOut, eventOut, freebusyOccurrenceOut, grantsOut, occurrenceOut } from './responses';
 import {
+  AVAILABILITY_LIMITS,
+  Availability,
+  AvailabilityInput,
   Calendar,
   CalendarGrants,
   CalendarGrantsPut,
@@ -26,7 +30,7 @@ import {
   ScopeQuery,
 } from './schemas';
 
-const tags = { calendars: ['Calendars'], events: ['Events'] };
+const tags = { calendars: ['Calendars'], events: ['Events'], availability: ['Availability'] };
 const r = {
   listCalendars: createRoute({
     method: 'get',
@@ -151,9 +155,23 @@ const r = {
     request: { query: OccurrenceQuery },
     responses: { 200: jsonContent(z.array(Occurrence), 'Occurrences'), 400: errors[400], 401: errors[401] },
   }),
+  getAvailability: createRoute({
+    method: 'post',
+    path: '/availability',
+    operationId: 'getAvailability',
+    tags: tags.availability,
+    summary: 'Free/busy for a set of people',
+    description: `Busy intervals the caller is allowed to see. At most ${AVAILABILITY_LIMITS.maxPeople} people and ${AVAILABILITY_LIMITS.maxRangeDays} days. All-day events do not count. Unknown user ids are a 400.`,
+    request: jsonBody(AvailabilityInput),
+    responses: {
+      200: jsonContent(Availability, 'Busy intervals per person'),
+      400: errors[400],
+      401: errors[401],
+    },
+  }),
 };
 
-const PATHS = ['/calendars', '/calendars/*', '/events', '/events/*', '/occurrences'];
+const PATHS = ['/calendars', '/calendars/*', '/events', '/events/*', '/occurrences', '/availability'];
 
 /** Calendar routes. Without `deps` (the OpenAPI dump) they're described but answer 401. */
 export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars> {
@@ -240,5 +258,10 @@ export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars
         rows.map((o) => (o.access === 'freebusy' ? freebusyOccurrenceOut(o) : occurrenceOut(o))),
         200,
       );
+    })
+    .openapi(r.getAvailability, async (c) => {
+      const body = c.req.valid('json');
+      const result = await getAvailability(db(), c.var.userId, body);
+      return c.json(availabilityOut(result), 200);
     });
 }
