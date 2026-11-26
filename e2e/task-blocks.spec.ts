@@ -26,7 +26,7 @@ test('tasks: reminders, and a time block on the calendar that shows done @smoke'
   await drawer.getByLabel('Amount').fill('1');
   await drawer.getByLabel('Unit').selectOption('hours');
   await drawer.getByRole('button', { name: 'Add' }).click();
-  await expect(drawer.getByRole('checkbox', { name: '1 hour before' })).toBeChecked();
+  await expect(drawer.getByRole('button', { name: 'Remove 1 hour before' })).toBeVisible();
   await drawer.getByRole('button', { name: 'Save' }).click();
   await expect(drawer).toBeHidden();
   await expect(today.getByLabel('Has reminders')).toBeVisible();

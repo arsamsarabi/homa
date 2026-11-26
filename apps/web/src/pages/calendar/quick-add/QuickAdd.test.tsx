@@ -151,7 +151,8 @@ describe('quick add', () => {
     fireEvent.change(box, { target: { value: 'Dentist tomorrow 3pm' } });
     await waitFor(() => expect(preview().textContent).toContain('Personal'));
     fireEvent.keyDown(box, { key: 'Enter' });
-    expect(await screen.findByText(/Calendar is full/)).toBeTruthy();
+    expect(await screen.findByText('Calendar is full')).toBeTruthy();
+
     expect(box.value).toBe('Dentist tomorrow 3pm');
   });
 

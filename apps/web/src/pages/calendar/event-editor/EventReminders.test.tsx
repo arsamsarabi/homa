@@ -79,7 +79,7 @@ describe('event reminders', () => {
     fireEvent.change(within(details).getByLabelText('Unit'), { target: { value: 'days' } });
     fireEvent.click(add());
     await waitFor(() => expect(sent).toEqual([{ reminders: [1440] }]));
-    const dayBefore = within(details).getByRole('checkbox', { name: '1 day before' }) as HTMLInputElement;
-    await waitFor(() => expect(dayBefore.checked).toBe(true));
+    expect(within(details).getByRole('button', { name: 'Remove 1 day before' })).toBeTruthy();
   });
 });
+
