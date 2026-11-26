@@ -37,6 +37,7 @@ test('quick add creates an event and opens the editor prefilled @smoke', async (
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
   // The next Monday may be in the next week; the agenda shows the coming 30 days.
-  await page.locator('.mantine-SegmentedControl-root').getByText('Agenda', { exact: true }).click();
+  await page.getByRole('combobox', { name: 'View' }).click();
+  await page.getByRole('option', { name: 'Agenda', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Agenda', exact: true }).getByText('Team sync').first()).toBeVisible();
 });

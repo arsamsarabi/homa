@@ -5,9 +5,11 @@ const email = `calendar-${Date.now()}@example.com`;
 const pad = (n: number) => String(n).padStart(2, '0');
 const localDay = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-/** The view switcher's radios are visually hidden; click their labels. */
-const pickView = (page: Page, name: string) =>
-  page.locator('.mantine-SegmentedControl-root').getByText(name, { exact: true }).click();
+/** The calendar view dropdown (Day, Week, Work week, Month, Year, Agenda). */
+const pickView = async (page: Page, name: string): Promise<void> => {
+  await page.getByRole('combobox', { name: 'View' }).click();
+  await page.getByRole('option', { name, exact: true }).click();
+};
 
 /** Event buttons inside one view, found by its accessible name (Day, Week, Month, Agenda, Year). */
 const eventsIn = (page: Page, view: string, text: string) =>

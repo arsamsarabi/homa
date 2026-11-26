@@ -15,7 +15,13 @@ export function EventEditor(): JSX.Element | null {
   const { draft, anchor, close } = useCalendarPageModel().editor;
   const phone = useMediaQuery('(max-width: 48em)');
   const label = t(draft?.kind === 'edit' ? 'editor.editTitle' : 'editor.newTitle');
-  const key = JSON.stringify(draft);
+  // Remount when opening a different draft — not when live preview times change (that wiped the form).
+  const key =
+    draft?.kind === 'edit'
+      ? `edit:${draft.occurrence.eventId}:${draft.occurrence.recurrenceId}`
+      : draft?.kind === 'create'
+        ? 'create'
+        : 'closed';
 
   if (phone) {
     return (
