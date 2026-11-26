@@ -58,7 +58,10 @@
     "verifyInvalid": "This confirmation link isn't valid, perhaps because it was cut short. Enter your email address to get a new one.",
     "continue": "Continue",
     "invitedBy": "{{name}} invited you to {{instance}}. Make your account below.",
-    "inviteUnusable": "This invite link has expired or has already been used. Ask for a new one."
+    "inviteUnusable": "This invite link has expired or has already been used. Ask for a new one.",
+    "or": "or",
+    "signInWith": "Sign in with {{name}}",
+    "signInPasskey": "Sign in with a passkey"
   },
   "onboarding": {
     "title": "Welcome to Homa, {{name}}",
@@ -246,7 +249,13 @@
     "invitesOption": {
       "admins": "Only admins",
       "everyone": "Everyone with an account"
-    }
+    },
+    "oidcTitle": "Single sign-on",
+    "oidcHint": "Configured from the environment only (HOMA_OIDC_*). See the self-hosting sign-in guide.",
+    "oidcOn": "On — people can sign in with {{name}}.",
+    "oidcOff": "Off — set HOMA_OIDC_ISSUER, HOMA_OIDC_CLIENT_ID and HOMA_OIDC_CLIENT_SECRET to turn it on.",
+    "oidcRedirect": "Redirect URI",
+    "oidcRedirectHint": "Register this exact URI with your identity provider."
   },
   "importExport": {
     "title": "Import and export",
@@ -758,5 +767,18 @@
     "notFoundCode": "404",
     "notFoundTitle": "This page isn’t here",
     "notFoundBody": "That link doesn’t match anything in Homa. Head back to the calendar and keep going."
+  },
+  "security": {
+    "title": "Security",
+    "hint": "Passkeys sign you in with this device or a security key, without typing your password.",
+    "unsupported": "This browser does not support passkeys.",
+    "empty": "No passkeys yet.",
+    "unnamed": "Passkey",
+    "added": "Added {{date}}",
+    "name": "Name",
+    "nameHint": "Optional label, such as “Laptop” or “Phone”.",
+    "add": "Add a passkey",
+    "remove": "Remove",
+    "failed": "Couldn't update passkeys: {{message}}"
   }
 }

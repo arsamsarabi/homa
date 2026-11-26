@@ -6,12 +6,17 @@
 // confirm their address before they can sign in. The admin's account is marked confirmed when it's
 // made: the setup code already proves they run the server, and a mail server that isn't working
 // yet mustn't lock them out of their own instance.
+//
+// Optional OIDC (one provider from the environment) and passkeys (always available) use Better
+// Auth's genericOAuth and @better-auth/passkey plugins. See docs/design/phase-6-sharing.md §6d.
+import { passkey } from '@better-auth/passkey';
 import { type Db, schema } from '@homa/db';
 import { type BetterAuthOptions, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { APIError } from 'better-auth/api';
-import { admin } from 'better-auth/plugins';
+import { admin, genericOAuth } from 'better-auth/plugins';
 import { createCalendar } from '@/calendar/calendars-service';
+import type { OidcSettings, PasskeySettings } from '@/config';
 import { admitNewUser, applyNewUserDefaults, getInstanceSettings } from '@/instance/instance-service';
 import { SETUP_CODE_HEADER, type SetupGate } from '@/instance/setup-code';
 import { log } from '@/log';
@@ -21,6 +26,9 @@ import { type AccountEmail, accountEmail, emailLanguage } from './emails';
 
 export const SIGN_UPS_CLOSED = 'Sign-ups are closed on this Homa. Ask its admin for an account.';
 export const WRONG_SETUP_CODE = "That setup code isn't right. Find the current one in the server log.";
+
+/** Better Auth's provider id for the single OIDC client. */
+export const OIDC_PROVIDER_ID = 'oidc';
 
 type AuthOptions = {
   secret: string;
@@ -33,6 +41,10 @@ type AuthOptions = {
   sendMail?: (m: Mail) => Promise<void>;
   /** New accounts must confirm their address before signing in. Needs `sendMail`. */
   requireEmailVerification?: boolean;
+  /** Passkeys: rpID from HOMA_URL's host, rpName the instance name, origin HOMA_URL. */
+  passkey: PasskeySettings;
+  /** One OIDC provider, or null/undefined when unset. */
+  oidc?: OidcSettings | null;
 };
 
 /** Where the links in account emails land in the web app. */
@@ -69,8 +81,37 @@ function emailSender(
   };
 }
 
+function discoveryUrl(issuer: string): string {
+  return `${issuer.replace(/\/$/, '')}/.well-known/openid-configuration`;
+}
+
 // biome-ignore lint/nursery/useExplicitType: the inferred options type carries the plugin types that Auth is built from.
 function authConfig(db: Db, opts: AuthOptions) {
+  // Always register genericOAuth (empty config when OIDC is off) so the plugin tuple keeps
+  // admin()'s session fields (role) under TypeScript.
+  const plugins = [
+    admin(),
+    passkey({
+      rpID: opts.passkey.rpID,
+      rpName: opts.passkey.rpName,
+      origin: opts.passkey.origin,
+    }),
+    genericOAuth({
+      config: opts.oidc
+        ? [
+            {
+              providerId: OIDC_PROVIDER_ID,
+              clientId: opts.oidc.clientId,
+              clientSecret: opts.oidc.clientSecret,
+              discoveryUrl: discoveryUrl(opts.oidc.issuer),
+              scopes: ['openid', 'email', 'profile'],
+              redirectURI: opts.oidc.redirectUri,
+            },
+          ]
+        : [],
+    }),
+  ];
+
   return {
     secret: opts.secret,
     baseURL: opts.baseURL,
@@ -94,7 +135,7 @@ function authConfig(db: Db, opts: AuthOptions) {
         expiresIn: 60 * 60,
       },
     }),
-    plugins: [admin()],
+    plugins,
     databaseHooks: {
       user: {
         create: {
@@ -105,7 +146,7 @@ function authConfig(db: Db, opts: AuthOptions) {
             ctx: { path: string; headers?: Headers } | null,
           ): Promise<{ data: U & { role: string } }> => {
             // Closed sign-ups turn away people signing themselves up, not accounts an admin creates
-            // or people with an invite.
+            // or people with an invite. OIDC first sign-ins also hit this hook.
             const selfSignUp = ctx !== null && ctx.path !== '/admin/create-user';
             const inviteToken = selfSignUp ? ctx.headers?.get(INVITE_HEADER) : null;
             const role = await admitNewUser(db, selfSignUp && !inviteToken);

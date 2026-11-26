@@ -2,6 +2,7 @@
 import type { Db } from '@homa/db';
 import { createRoute, type OpenAPIHono, type z } from '@hono/zod-openapi';
 import { type Auth, requireAdmin, type UserVars } from '@/auth';
+import type { OidcSettings } from '@/config';
 import type { SyncSettings } from '@/connections';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
 import type { NotifySettings } from '@/reminders';
@@ -51,6 +52,7 @@ export function instanceApi(deps?: {
   sync?: SyncSettings;
   notify?: NotifySettings;
   demo?: boolean;
+  oidc?: OidcSettings | null;
 }): OpenAPIHono<UserVars> {
   const app = newApi<UserVars>();
   app.use('/admin/instance', requireAdmin(deps?.auth));
@@ -71,6 +73,7 @@ export function instanceApi(deps?: {
             microsoftCalendar: Boolean(deps?.sync?.microsoft && deps.sync.key),
             passwordReset: Boolean(deps?.notify?.sendMail),
             demo: Boolean(deps?.demo),
+            oidc: deps?.oidc ? { name: deps.oidc.name, redirectUri: deps.oidc.redirectUri } : null,
           }),
         ),
         200,

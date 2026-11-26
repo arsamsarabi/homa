@@ -14,4 +14,11 @@ export const testAuth = (
   db: Db,
   setupGate: SetupGate = OPEN_SETUP_GATE,
   email: { sendMail?: (m: Mail) => Promise<void>; requireEmailVerification?: boolean } = {},
-): Auth => createAuth(db, { secret: 'x'.repeat(32), baseURL: 'http://localhost:3000', setupGate, ...email });
+): Auth =>
+  createAuth(db, {
+    secret: 'x'.repeat(32),
+    baseURL: 'http://localhost:3000',
+    setupGate,
+    passkey: { rpID: 'localhost', rpName: 'Homa', origin: 'http://localhost:3000' },
+    ...email,
+  });

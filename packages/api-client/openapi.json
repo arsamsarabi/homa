@@ -665,6 +665,27 @@
             "type": "boolean",
             "description": "Whether everyone, not only admins, can create invite links"
           },
+          "oidc": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The sign-in button label (\"Sign in with …\")"
+              },
+              "redirectUri": {
+                "type": "string",
+                "description": "The redirect URI to register with the identity provider"
+              }
+            },
+            "required": [
+              "name",
+              "redirectUri"
+            ],
+            "description": "Single sign-on when OIDC is configured from the environment; null otherwise"
+          },
           "demo": {
             "type": [
               "object",
@@ -694,6 +715,7 @@
           "microsoftCalendar",
           "passwordReset",
           "anyoneCanInvite",
+          "oidc",
           "demo"
         ]
       },

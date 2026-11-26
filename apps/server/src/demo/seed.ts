@@ -24,7 +24,11 @@ const ymd = (d: Date): string => d.toISOString().slice(0, 10);
  * or `resetDemo` makes sure). Returns the account's user id.
  */
 export async function seedDemo(db: Db, opts: SeedAuth, now = new Date()): Promise<string> {
-  const auth = createAuth(db, { ...opts, setupGate: { current: (): string => '', check: (): boolean => true } });
+  const auth = createAuth(db, {
+    ...opts,
+    setupGate: { current: (): string => '', check: (): boolean => true },
+    passkey: { rpID: 'localhost', rpName: 'Homa', origin: opts.baseURL },
+  });
   const { user } = await auth.api.signUpEmail({ body: { ...DEMO_ACCOUNT } });
   const uid = user.id;
   await updateSettings(db, uid, { homeTz: DEMO_TZ, secondaryCalendar: 'jalali' });

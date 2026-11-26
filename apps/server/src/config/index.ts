@@ -1,1 +1,8 @@
-export { type Config, loadConfig } from './config';
+export {
+  type Config,
+  loadConfig,
+  type OidcSettings,
+  oidcFrom,
+  type PasskeySettings,
+  passkeyFrom,
+} from './config';

@@ -11,6 +11,7 @@ import { resetDemo, seedDemo } from './seed';
 test('the guard lets visitors sign in and use the app, and nothing else', () => {
   const allowed = [
     ['POST', '/api/auth/sign-in/email'],
+    ['POST', '/api/auth/sign-in/passkey'],
     ['POST', '/api/auth/sign-out'],
     ['GET', '/api/auth/get-session'],
     ['POST', '/api/events'],
@@ -29,6 +30,7 @@ test('the guard lets visitors sign in and use the app, and nothing else', () => 
     ['POST', '/api/auth/request-password-reset'],
     ['POST', '/api/auth/admin/create-user'],
     ['POST', '/api/auth/sign-in/email/'],
+    ['POST', '/api/auth/passkey/add-passkey'],
     ['POST', '/api/connections/ics'],
     ['POST', '/api/connections/caldav'],
     ['POST', '/api/connections/x/sync'],

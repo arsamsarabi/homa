@@ -5,6 +5,7 @@ import type { Context } from 'hono';
 import { serveStatic } from 'hono/bun';
 import type { Auth } from '@/auth';
 import { calendarApi } from '@/calendar';
+import type { OidcSettings } from '@/config';
 import { connectionsApi, type SyncSettings } from '@/connections';
 import { demoGuard } from '@/demo';
 import { importExportApi } from '@/import-export';
@@ -21,6 +22,7 @@ import { readyApi } from './ready';
 /**
  * `sync` is the connected-calendar settings, `push` web push and `notify` the notification channels;
  * without them those routes answer 503. `demo` turns on demo mode's guard (HOMA_DEMO).
+ * `oidc` is the single sign-on provider when configured from the environment.
  */
 export type AppDeps = {
   db: Db;
@@ -29,6 +31,7 @@ export type AppDeps = {
   push?: PushSettings;
   notify?: NotifySettings;
   demo?: boolean;
+  oidc?: OidcSettings | null;
 };
 
 /** The /api routes. Without `deps` (tests, the OpenAPI dump) routes that need a user answer 401. */

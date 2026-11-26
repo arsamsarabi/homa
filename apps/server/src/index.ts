@@ -2,11 +2,12 @@
 import { createDb, repo, runMigrations } from '@homa/db';
 import type { PgBoss } from 'pg-boss';
 import { createAuth } from './auth';
-import { type Config, loadConfig } from './config';
+import { type Config, loadConfig, oidcFrom, passkeyFrom } from './config';
 import { syncSettingsFrom } from './connections';
 import { seedDemo } from './demo';
 import { createApp } from './http';
 import { createSetupGate } from './instance';
+import { getInstanceSettings } from './instance/instance-service';
 import { startWorker } from './jobs';
 import { log } from './log';
 import { notifySettingsFrom, pushSettingsFrom } from './reminders';
@@ -17,6 +18,7 @@ const role: Config['HOMA_ROLE'] = config.HOMA_ROLE;
 const sync = syncSettingsFrom(config);
 const push = pushSettingsFrom(db, config);
 const notify = notifySettingsFrom(config);
+const oidc = oidcFrom(config);
 
 // Only the API applies migrations, so a separate worker never races it.
 if (role !== 'worker') {
@@ -61,11 +63,15 @@ const server =
               rateLimit: config.HOMA_AUTH_RATE_LIMIT,
               sendMail: notify.sendMail,
               requireEmailVerification: config.HOMA_REQUIRE_EMAIL_VERIFICATION,
+              // rpName is the instance name at start; renaming needs a restart for the WebAuthn prompt.
+              passkey: passkeyFrom(config, (await getInstanceSettings(db)).name),
+              oidc,
             }),
             sync,
             push,
             notify,
             demo: config.HOMA_DEMO,
+            oidc,
           },
           config.HOMA_WEB_DIR,
         ).fetch,

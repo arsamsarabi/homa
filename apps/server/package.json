@@ -10,6 +10,7 @@
     "demo:reset": "bun src/demo-reset.ts"
   },
   "dependencies": {
+    "@better-auth/passkey": "1.7.22",
     "@homa/core": "workspace:*",
     "@homa/db": "workspace:*",
     "@homa/sync": "workspace:*",

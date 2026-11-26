@@ -84,3 +84,25 @@ export const verifications = pgTable(
   },
   (t) => [index('verifications_identifier_idx').on(t.identifier)],
 );
+
+/** Passkeys (@better-auth/passkey). Schema key is plural for `usePlural: true`. */
+export const passkeys = pgTable(
+  'passkeys',
+  {
+    id: text('id').primaryKey(),
+    name: text('name'),
+    publicKey: text('public_key').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // Better Auth's field is credentialID (capital ID); keep the JS key matching.
+    credentialID: text('credential_id').notNull(),
+    counter: integer('counter').notNull(),
+    deviceType: text('device_type').notNull(),
+    backedUp: boolean('backed_up').notNull(),
+    transports: text('transports'),
+    createdAt: timestamp('created_at', { withTimezone: true }),
+    aaguid: text('aaguid'),
+  },
+  (t) => [index('passkeys_user_id_idx').on(t.userId), index('passkeys_credential_id_idx').on(t.credentialID)],
+);
