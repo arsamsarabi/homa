@@ -11,3 +11,4 @@ export * from './query-error-alert';
 export * from './reminder-chips';
 export * from './settings-fields';
 export * from './shortcuts-help';
+export * from './status-card';
