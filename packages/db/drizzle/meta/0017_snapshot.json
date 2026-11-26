@@ -111,12 +111,8 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -225,12 +221,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -240,9 +232,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -364,9 +354,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -579,12 +567,8 @@
           "name": "calendars_owner_user_id_users_id_fk",
           "tableFrom": "calendars",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -592,12 +576,8 @@
           "name": "calendars_connection_id_connections_id_fk",
           "tableFrom": "calendars",
           "tableTo": "connections",
-          "columnsFrom": [
-            "connection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["connection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -680,12 +660,8 @@
           "name": "event_instances_event_id_events_id_fk",
           "tableFrom": "event_instances",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -693,10 +669,7 @@
       "compositePrimaryKeys": {
         "event_instances_event_id_recurrence_id_pk": {
           "name": "event_instances_event_id_recurrence_id_pk",
-          "columns": [
-            "event_id",
-            "recurrence_id"
-          ]
+          "columns": ["event_id", "recurrence_id"]
         }
       },
       "uniqueConstraints": {},
@@ -778,12 +751,8 @@
           "name": "event_overrides_event_id_events_id_fk",
           "tableFrom": "event_overrides",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -793,10 +762,7 @@
         "event_overrides_event_recurrence_key": {
           "name": "event_overrides_event_recurrence_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "event_id",
-            "recurrence_id"
-          ]
+          "columns": ["event_id", "recurrence_id"]
         }
       },
       "policies": {},
@@ -996,12 +962,8 @@
           "name": "events_calendar_id_calendars_id_fk",
           "tableFrom": "events",
           "tableTo": "calendars",
-          "columnsFrom": [
-            "calendar_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["calendar_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1009,12 +971,8 @@
           "name": "events_owner_user_id_users_id_fk",
           "tableFrom": "events",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1024,10 +982,7 @@
         "events_calendar_uid_key": {
           "name": "events_calendar_uid_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "calendar_id",
-            "uid"
-          ]
+          "columns": ["calendar_id", "uid"]
         }
       },
       "policies": {},
@@ -1145,12 +1100,8 @@
           "name": "notification_channels_owner_user_id_users_id_fk",
           "tableFrom": "notification_channels",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1285,12 +1236,8 @@
           "name": "connections_owner_user_id_users_id_fk",
           "tableFrom": "connections",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1502,12 +1449,8 @@
           "name": "outbox_connection_id_connections_id_fk",
           "tableFrom": "outbox",
           "tableTo": "connections",
-          "columnsFrom": [
-            "connection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["connection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1515,12 +1458,8 @@
           "name": "outbox_calendar_id_calendars_id_fk",
           "tableFrom": "outbox",
           "tableTo": "calendars",
-          "columnsFrom": [
-            "calendar_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["calendar_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1530,10 +1469,7 @@
         "outbox_calendar_uid_key": {
           "name": "outbox_calendar_uid_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "calendar_id",
-            "uid"
-          ]
+          "columns": ["calendar_id", "uid"]
         }
       },
       "policies": {},
@@ -1579,12 +1515,8 @@
           "name": "circle_members_circle_id_circles_id_fk",
           "tableFrom": "circle_members",
           "tableTo": "circles",
-          "columnsFrom": [
-            "circle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["circle_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1592,12 +1524,8 @@
           "name": "circle_members_user_id_users_id_fk",
           "tableFrom": "circle_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1605,10 +1533,7 @@
       "compositePrimaryKeys": {
         "circle_members_circle_id_user_id_pk": {
           "name": "circle_members_circle_id_user_id_pk",
-          "columns": [
-            "circle_id",
-            "user_id"
-          ]
+          "columns": ["circle_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1701,12 +1626,8 @@
           "name": "circles_owner_user_id_users_id_fk",
           "tableFrom": "circles",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1801,12 +1722,8 @@
           "name": "invites_created_by_users_id_fk",
           "tableFrom": "invites",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1814,12 +1731,8 @@
           "name": "invites_used_by_users_id_fk",
           "tableFrom": "invites",
           "tableTo": "users",
-          "columnsFrom": [
-            "used_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["used_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1829,9 +1742,7 @@
         "invites_token_hash_unique": {
           "name": "invites_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -1912,12 +1823,8 @@
           "name": "notification_deliveries_notification_id_notifications_id_fk",
           "tableFrom": "notification_deliveries",
           "tableTo": "notifications",
-          "columnsFrom": [
-            "notification_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["notification_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1927,10 +1834,7 @@
         "notification_deliveries_key": {
           "name": "notification_deliveries_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "notification_id",
-            "channel"
-          ]
+          "columns": ["notification_id", "channel"]
         }
       },
       "policies": {},
@@ -2079,12 +1983,8 @@
           "name": "notifications_owner_user_id_users_id_fk",
           "tableFrom": "notifications",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2092,12 +1992,8 @@
           "name": "notifications_reminder_id_reminders_id_fk",
           "tableFrom": "notifications",
           "tableTo": "reminders",
-          "columnsFrom": [
-            "reminder_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reminder_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2105,12 +2001,8 @@
           "name": "notifications_event_id_events_id_fk",
           "tableFrom": "notifications",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2118,12 +2010,8 @@
           "name": "notifications_task_id_tasks_id_fk",
           "tableFrom": "notifications",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2133,9 +2021,7 @@
         "notifications_dedupe_key_unique": {
           "name": "notifications_dedupe_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "dedupe_key"
-          ]
+          "columns": ["dedupe_key"]
         }
       },
       "policies": {},
@@ -2207,12 +2093,8 @@
           "name": "push_subscriptions_owner_user_id_users_id_fk",
           "tableFrom": "push_subscriptions",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2222,9 +2104,7 @@
         "push_subscriptions_endpoint_unique": {
           "name": "push_subscriptions_endpoint_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "endpoint"
-          ]
+          "columns": ["endpoint"]
         }
       },
       "policies": {},
@@ -2392,12 +2272,8 @@
           "name": "reminders_owner_user_id_users_id_fk",
           "tableFrom": "reminders",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2405,12 +2281,8 @@
           "name": "reminders_event_id_events_id_fk",
           "tableFrom": "reminders",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2418,12 +2290,8 @@
           "name": "reminders_task_id_tasks_id_fk",
           "tableFrom": "reminders",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2511,12 +2379,8 @@
           "name": "projects_owner_user_id_users_id_fk",
           "tableFrom": "projects",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2586,12 +2450,8 @@
           "name": "tags_owner_user_id_users_id_fk",
           "tableFrom": "tags",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2641,12 +2501,8 @@
           "name": "task_tags_task_id_tasks_id_fk",
           "tableFrom": "task_tags",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2654,12 +2510,8 @@
           "name": "task_tags_tag_id_tags_id_fk",
           "tableFrom": "task_tags",
           "tableTo": "tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2667,10 +2519,7 @@
       "compositePrimaryKeys": {
         "task_tags_task_id_tag_id_pk": {
           "name": "task_tags_task_id_tag_id_pk",
-          "columns": [
-            "task_id",
-            "tag_id"
-          ]
+          "columns": ["task_id", "tag_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2874,12 +2723,8 @@
           "name": "tasks_owner_user_id_users_id_fk",
           "tableFrom": "tasks",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2887,12 +2732,8 @@
           "name": "tasks_project_id_projects_id_fk",
           "tableFrom": "tasks",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2900,12 +2741,8 @@
           "name": "tasks_parent_id_tasks_id_fk",
           "tableFrom": "tasks",
           "tableTo": "tasks",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2913,12 +2750,8 @@
           "name": "tasks_scheduled_event_id_events_id_fk",
           "tableFrom": "tasks",
           "tableTo": "events",
-          "columnsFrom": [
-            "scheduled_event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scheduled_event_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2928,10 +2761,7 @@
         "tasks_owner_uid_key": {
           "name": "tasks_owner_uid_key",
           "nullsNotDistinct": false,
-          "columns": [
-            "owner_user_id",
-            "uid"
-          ]
+          "columns": ["owner_user_id", "uid"]
         }
       },
       "policies": {},
