@@ -49,6 +49,13 @@ describe('withPatched', () => {
     const list = [occ({ eventId: 'e1', recurrenceId: 'a', summary: 'Old' })];
     expect(withPatched(list, 'e1', { summary: 'New' }, 'all', undefined)[0]?.summary).toBe('New');
   });
+
+  test('a move updates recurrenceId on a non-recurring event', () => {
+    const list = [occ({ eventId: 'e1', recurrenceId: '2026-01-01T10:00:00Z', recurring: false })];
+    const next = withPatched(list, 'e1', { start: '2026-01-01T12:00:00Z', end: '2026-01-01T13:00:00Z' }, 'all', undefined);
+    expect(next[0]?.start).toBe('2026-01-01T12:00:00Z');
+    expect(next[0]?.recurrenceId).toBe('2026-01-01T12:00:00Z');
+  });
 });
 
 describe('temp create', () => {

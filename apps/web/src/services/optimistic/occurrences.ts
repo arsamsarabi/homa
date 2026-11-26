@@ -33,7 +33,11 @@ export function withPatched(
       ...(patch.summary !== undefined && { summary: patch.summary }),
       ...(patch.description !== undefined && { description: patch.description }),
       ...(patch.location !== undefined && { location: patch.location }),
-      ...(patch.start !== undefined && { start: patch.start }),
+      // Non-recurring occurrences use start as recurrenceId; keep the React key stable across a move.
+      ...(patch.start !== undefined && {
+        start: patch.start,
+        ...(!o.recurring ? { recurrenceId: patch.start } : {}),
+      }),
       ...(patch.end !== undefined && { end: patch.end }),
       ...(patch.allDay !== undefined && { allDay: patch.allDay }),
       ...(patch.tz !== undefined && { tz: patch.tz }),
