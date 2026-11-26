@@ -26,7 +26,15 @@ export function LiveRegion({ message, id, toast }: LiveRegionProps): JSX.Element
         <span key={id}>{message}</span>
       </VisuallyHidden>
       {visible && message && (
-        <Paper className={classes.toast} shadow="sm" withBorder px="md" py="sm" data-testid="announcer-toast" aria-hidden>
+        <Paper
+          className={classes.toast}
+          shadow="sm"
+          withBorder
+          px="md"
+          py="sm"
+          data-testid="announcer-toast"
+          aria-hidden
+        >
           <Text size="sm">{message}</Text>
         </Paper>
       )}
