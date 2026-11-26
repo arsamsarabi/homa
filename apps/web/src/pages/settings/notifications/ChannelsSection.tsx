@@ -27,7 +27,7 @@ export function ChannelsSection(): JSX.Element {
       onSuccess: (r: ChannelTest): void => {
         const msg = r.ok ? t('channels.testSent') : t('channels.testFailed', { message: r.error });
         setResults((s) => ({ ...s, [c.id]: msg }));
-        announce(msg);
+        announce(msg, { kind: r.ok ? 'success' : 'error' });
       },
       onError: (err: Error) =>
         setResults((s) => ({ ...s, [c.id]: t('channels.testFailed', { message: err.message }) })),

@@ -1,4 +1,5 @@
-import { Button, Chip, Group, Input, NativeSelect, NumberInput, Stack, Text } from '@mantine/core';
+import { Button, Group, Input, NativeSelect, NumberInput, Stack, Text } from '@mantine/core';
+import { IconCheck, IconX } from '@tabler/icons-react';
 import { type ChangeEvent, type JSX, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,6 +11,7 @@ import {
   type ReminderUnit,
   removeReminder,
 } from '@/services/reminders';
+import classes from './ReminderChips.module.css';
 
 export type ReminderChipsProps = {
   /** Minutes before the start. */
@@ -22,7 +24,7 @@ export type ReminderChipsProps = {
   atStartLabel?: string;
 };
 
-/** Chosen reminders as removable chips, plus a number + unit row to add more. */
+/** Chosen reminders as removable pills (check → X on hover), plus a number + unit row to add more. */
 export function ReminderChips({
   value,
   onChange,
@@ -67,18 +69,31 @@ export function ReminderChips({
     <Input.Wrapper label={t('reminders.label')} description={description ?? t('reminders.hint')} size="xs" id={id}>
       <Stack gap={6} mt={4}>
         {value.length > 0 && (
-          <Group gap={6} role="list" aria-label={t('reminders.chosen')}>
-            {value.map((m) => (
-              <Chip
-                key={m}
-                size="xs"
-                checked
-                disabled={disabled}
-                onChange={(): void => onChange(removeReminder(value, m))}
-              >
-                {labelFor(m)}
-              </Chip>
-            ))}
+          <Group gap={6} component="ul" aria-label={t('reminders.chosen')} className={classes.list}>
+            {value.map((m) => {
+              const label = labelFor(m);
+              return (
+                <li key={m} className={classes.item}>
+                  <button
+                    type="button"
+                    className={classes.pill}
+                    disabled={disabled}
+                    aria-label={t('reminders.remove', { label })}
+                    onClick={(): void => onChange(removeReminder(value, m))}
+                  >
+                    <span>{label}</span>
+                    <span className={classes.icon} aria-hidden>
+                      <span className={classes.check}>
+                        <IconCheck size={14} stroke={1.75} />
+                      </span>
+                      <span className={classes.remove}>
+                        <IconX size={14} stroke={1.75} />
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </Group>
         )}
         <Group gap={6} align="flex-end" wrap="nowrap">

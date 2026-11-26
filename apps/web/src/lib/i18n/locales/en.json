@@ -429,6 +429,7 @@
     "unit_days": "days",
     "unit_weeks": "weeks",
     "add": "Add",
+    "remove": "Remove {{label}}",
     "addMax": "You can have at most 5 reminders.",
     "addDuplicate": "That reminder is already added.",
     "badAmount": "Enter a whole number of 0 or more.",

@@ -48,7 +48,10 @@ describe('admin page', () => {
     expect(save.getAttribute('data-loading')).toBe('true');
     releaseSave();
     await waitFor(() => expect(sent).toEqual([{ signUps: 'closed' }]));
-    expect((await screen.findByTestId('announcer-toast')).textContent).toBe('Instance settings saved');
+    await waitFor(() => {
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts.some((el) => el.textContent?.includes('Instance settings saved'))).toBe(true);
+    });
   });
 
   test('a failed load shows why and can retry', async () => {

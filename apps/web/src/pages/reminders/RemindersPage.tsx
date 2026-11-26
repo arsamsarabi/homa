@@ -29,7 +29,7 @@ export function RemindersPage(): JSX.Element {
   const onDelete = (r: Reminder): void =>
     remove.mutate(r.id, {
       onSuccess: () => announce(t('reminders.deleted', { title: r.title })),
-      onError: (err: Error) => announce(t('reminders.deleteFailed', { message: err.message })),
+      onError: (err: Error) => announce(t('reminders.deleteFailed', { message: err.message }), { kind: 'error' }),
     });
 
   return (

@@ -1,43 +1,19 @@
-import { Paper, Text, VisuallyHidden } from '@mantine/core';
-import { type JSX, useEffect, useState } from 'react';
-import classes from './LiveRegion.module.css';
+import { VisuallyHidden } from '@mantine/core';
+import { type JSX, useEffect } from 'react';
+import { type NotifyKind, notify } from '@/lib/notify';
 
-export type LiveRegionProps = { message: string; id: number; toast: boolean };
+export type LiveRegionProps = { message: string; id: number; toast: boolean; kind?: NotifyKind };
 
-const TOAST_MS = 4000;
-
-/** Reads `message` to screen readers; when `toast`, also shows it briefly on screen. A new `id` repeats. */
-export function LiveRegion({ message, id, toast }: LiveRegionProps): JSX.Element {
-  const [visible, setVisible] = useState(false);
-
+/** Reads `message` to screen readers; when `toast`, also shows a typed Mantine notification. A new `id` repeats. */
+export function LiveRegion({ message, id, toast, kind = 'success' }: LiveRegionProps): JSX.Element {
   useEffect(() => {
-    if (!message || !toast) {
-      setVisible(false);
-      return;
-    }
-    setVisible(true);
-    const timer = window.setTimeout(() => setVisible(false), TOAST_MS);
-    return (): void => window.clearTimeout(timer);
-  }, [id, message, toast]);
+    if (!message || !toast) return;
+    notify(kind, message, { id: `announce-${id}` });
+  }, [id, message, toast, kind]);
 
   return (
-    <>
-      <VisuallyHidden aria-live="polite" aria-atomic="true">
-        <span key={id}>{message}</span>
-      </VisuallyHidden>
-      {visible && message && (
-        <Paper
-          className={classes.toast}
-          shadow="sm"
-          withBorder
-          px="md"
-          py="sm"
-          data-testid="announcer-toast"
-          aria-hidden
-        >
-          <Text size="sm">{message}</Text>
-        </Paper>
-      )}
-    </>
+    <VisuallyHidden aria-live="polite" aria-atomic="true">
+      <span key={id}>{message}</span>
+    </VisuallyHidden>
   );
 }

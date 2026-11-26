@@ -56,7 +56,10 @@ export function ConnectedCalendarsSection(): JSX.Element {
 
   const sync = (id: string): void =>
     syncNow.mutate(id, {
-      onSuccess: (c: Connection) => announce(t(c.status === 'ok' ? 'connections.synced' : 'connections.syncFailed')),
+      onSuccess: (c: Connection) =>
+        announce(t(c.status === 'ok' ? 'connections.synced' : 'connections.syncFailed'), {
+          kind: c.status === 'ok' ? 'success' : 'error',
+        }),
     });
   const confirmRemove = (): void => {
     if (!removing) return;

@@ -29,7 +29,7 @@ export function TaskQuickAdd(): JSX.Element {
         announce(t('tasks.added', { title: body.title }));
         setText('');
       },
-      onError: (err: Error) => announce(t('tasks.addFailed', { message: err.message })),
+      onError: (err: Error) => announce(t('tasks.addFailed', { message: err.message }), { kind: 'error' }),
     });
   };
 

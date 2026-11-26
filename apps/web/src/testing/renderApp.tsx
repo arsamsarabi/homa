@@ -1,5 +1,6 @@
 // Renders the whole app at a URL with the API faked at the fetch boundary.
 import { MantineProvider } from '@mantine/core';
+import { Notifications, notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import { type RenderResult, render } from '@testing-library/react';
@@ -67,6 +68,7 @@ export const signedInWith =
 export const signedIn: FakeApi = signedInWith({ homeTz: null, secondaryCalendar: 'none' });
 
 export function renderApp(path: string, api: FakeApi): RenderResult {
+  notifications.clean();
   const fake = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const req = new Request(input instanceof URL ? input.href : input, init);
     return api(new URL(req.url, 'http://localhost:3000'), req);
@@ -76,6 +78,7 @@ export function renderApp(path: string, api: FakeApi): RenderResult {
   const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }));
   return render(
     <MantineProvider theme={theme}>
+      <Notifications position="bottom-right" />
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

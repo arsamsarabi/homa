@@ -49,7 +49,7 @@ function TaskForm({
   const repeat = repeatOf(task.rrule);
   const fail = (err: Error): void => {
     setError(err.message);
-    announce(t('tasks.saveFailed', { message: err.message }));
+    announce(t('tasks.saveFailed', { message: err.message }), { kind: 'error' });
   };
 
   const submit = (e: FormEvent<HTMLFormElement>): void => {
@@ -85,7 +85,7 @@ function TaskForm({
     onSaved();
     remove.mutate(task.id, {
       onSuccess: () => announce(t('tasks.deleted', { title })),
-      onError: (err: Error): void => announce(t('tasks.deleteFailed', { message: err.message })),
+      onError: (err: Error): void => announce(t('tasks.deleteFailed', { message: err.message }), { kind: 'error' }),
     });
   };
 
