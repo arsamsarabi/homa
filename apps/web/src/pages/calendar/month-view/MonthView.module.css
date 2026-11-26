@@ -48,36 +48,12 @@
   border-radius: var(--mantine-radius-sm);
 }
 
-.dayRow[data-today] {
-  background: var(--mantine-primary-color-filled);
-  color: var(--mantine-primary-color-contrast);
-}
-
-.dayRow[data-today] .jalali {
-  color: inherit;
-  opacity: 0.85;
-}
-
 .day {
   flex-shrink: 0;
   min-width: 24px;
   padding: 0 2px;
   font-size: 13px;
   text-align: start;
-}
-
-.dayRow[data-today] .day {
-  font-weight: 700;
-}
-
-.day:focus-visible,
-.more:focus-visible {
-  outline: 2px solid var(--mantine-primary-color-filled);
-  outline-offset: 1px;
-}
-
-.dayRow[data-today] .day:focus-visible {
-  outline-color: var(--mantine-primary-color-contrast);
 }
 
 .jalali {
@@ -89,6 +65,30 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dayRow[data-today] {
+  background: var(--mantine-primary-color-filled);
+  color: var(--mantine-primary-color-contrast);
+}
+
+.dayRow[data-today] .day {
+  font-weight: 700;
+}
+
+.dayRow[data-today] .jalali {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.day:focus-visible,
+.more:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.dayRow[data-today] .day:focus-visible {
+  outline-color: var(--mantine-primary-color-contrast);
 }
 
 .occasion {
