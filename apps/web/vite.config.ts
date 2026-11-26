@@ -30,5 +30,14 @@ export default defineConfig({
       workbox: { navigateFallbackDenylist: [/^\/api\//], importScripts: ['/push-sw.js'] },
     }),
   ],
-  server: { proxy: { '/api': 'http://localhost:3000' } },
+  server: {
+    host: true,
+    port: 5180,
+    strictPort: true,
+    // Override when PORT≠3000 (e.g. HOMA_API_ORIGIN=http://localhost:3001).
+    proxy: { '/api': process.env.HOMA_API_ORIGIN ?? 'http://localhost:3000' },
+    ...(process.env.CHOKIDAR_USEPOLLING === 'true' && { watch: { usePolling: true } }),
+  },
 });
+
+
