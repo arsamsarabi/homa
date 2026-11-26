@@ -1,5 +1,4 @@
 import { Accordion, Button, Stack, Text } from '@mantine/core';
-import { useNavigate } from '@tanstack/react-router';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StatusCard } from '@/components/status-card';
@@ -12,7 +11,6 @@ export type RuntimeErrorPageProps = {
 /** Full-page runtime error: retry, go home, and collapsed technical details. */
 export function RuntimeErrorPage({ error, onRetry }: RuntimeErrorPageProps): JSX.Element {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [details, setDetails] = useState<string | null>(null);
   const message = error instanceof Error ? error.message : String(error ?? '');
   return (
@@ -22,7 +20,7 @@ export function RuntimeErrorPage({ error, onRetry }: RuntimeErrorPageProps): JSX
       </Text>
       <Stack gap="xs">
         <Button onClick={onRetry}>{t('errors.tryAgain')}</Button>
-        <Button variant="default" onClick={(): void => void navigate({ to: '/' })}>
+        <Button variant="default" onClick={(): void => window.location.assign('/')}>
           {t('errors.goCalendar')}
         </Button>
       </Stack>

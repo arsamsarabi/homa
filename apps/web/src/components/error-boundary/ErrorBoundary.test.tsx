@@ -1,15 +1,10 @@
-import { afterEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 import { MantineProvider } from '@mantine/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen } from '@testing-library/react';
 import type { JSX, ReactNode } from 'react';
 import '@/lib/i18n';
-
-mock.module('@tanstack/react-router', () => ({
-  useNavigate: () => mock(() => {}),
-}));
-
-const { ErrorBoundary } = await import('./ErrorBoundary');
+import { ErrorBoundary } from './ErrorBoundary';
 
 const wrap = (ui: ReactNode): JSX.Element => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, enabled: false } } });

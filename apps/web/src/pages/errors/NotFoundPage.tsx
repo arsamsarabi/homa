@@ -1,5 +1,4 @@
 import { Button, Text, Title } from '@mantine/core';
-import { useNavigate } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StatusCard } from '@/components/status-card';
@@ -7,7 +6,6 @@ import { StatusCard } from '@/components/status-card';
 /** Full-page 404: decorative code, short copy, single path back to the calendar. */
 export function NotFoundPage(): JSX.Element {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   return (
     <StatusCard
       title={t('errors.notFoundTitle')}
@@ -20,7 +18,7 @@ export function NotFoundPage(): JSX.Element {
       <Text ta="center" size="sm">
         {t('errors.notFoundBody')}
       </Text>
-      <Button onClick={(): void => void navigate({ to: '/' })}>{t('errors.goCalendar')}</Button>
+      <Button onClick={(): void => window.location.assign('/')}>{t('errors.goCalendar')}</Button>
     </StatusCard>
   );
 }
