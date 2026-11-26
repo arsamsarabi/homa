@@ -8,7 +8,8 @@ import {
   dragGhost,
   dragOutcome,
   dragTo,
-  initialScrollHour,
+  initialScrollTop,
+  scrollTopForNow,
   slotAt,
   snap,
 } from './drag';
@@ -96,9 +97,33 @@ test('blocks are at least 18 pixels tall', () => {
   expect(blockBox(60, 65)).toEqual({ top: 48, height: 18 });
 });
 
-test('the grid opens an hour before now on today', () => {
-  expect(initialScrollHour(days, wall(17, 14))).toBe(13);
-  expect(initialScrollHour(days, wall(31))).toBe(7);
+describe('scrollTopForNow', () => {
+  test('centers now in the viewport', () => {
+    // 14:30 → 14.5 * 48 = 696px; viewport 400 → top = 696 - 200 = 496
+    expect(scrollTopForNow({ nowOffsetPx: 14.5 * 48, viewportHeight: 400, maxScroll: 2000 })).toBe(496);
+  });
+  test('clamps to the top of the day', () => {
+    expect(scrollTopForNow({ nowOffsetPx: 30, viewportHeight: 400, maxScroll: 2000 })).toBe(0);
+  });
+  test('clamps to the bottom of the day', () => {
+    expect(scrollTopForNow({ nowOffsetPx: 23 * 48, viewportHeight: 400, maxScroll: 752 })).toBe(752);
+  });
+});
+
+describe('initialScrollTop', () => {
+  const content = 24 * 48;
+  const viewport = 400;
+  test('centers now when today is in view, including minutes', () => {
+    // 14:30 wall → offset 696; centered → 496
+    expect(initialScrollTop(days, wall(17, 14, 30), viewport, content)).toBe(496);
+  });
+  test('defaults to 07:00 at the top when today is not in view', () => {
+    expect(initialScrollTop(days, wall(31, 14), viewport, content)).toBe(7 * 48);
+  });
+  test('clamps when now is near midnight', () => {
+    const maxScroll = content - viewport;
+    expect(initialScrollTop(days, wall(17, 23, 45), viewport, content)).toBe(maxScroll);
+  });
 });
 
 describe('draftGhost', () => {
