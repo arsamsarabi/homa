@@ -99,11 +99,7 @@ export function blockBox(from: number, to: number): { top: number; height: numbe
 }
 
 /** Scroll top so `nowOffsetPx` sits in the vertical middle of the viewport, clamped to `[0, maxScroll]`. */
-export function scrollTopForNow(opts: {
-  nowOffsetPx: number;
-  viewportHeight: number;
-  maxScroll: number;
-}): number {
+export function scrollTopForNow(opts: { nowOffsetPx: number; viewportHeight: number; maxScroll: number }): number {
   return clamp(opts.nowOffsetPx - opts.viewportHeight / 2, 0, Math.max(0, opts.maxScroll));
 }
 
