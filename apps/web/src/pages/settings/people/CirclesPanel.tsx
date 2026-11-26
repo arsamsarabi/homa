@@ -1,10 +1,11 @@
-import { Button, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Avatar, Button, ColorSwatch, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { useCircleMutations, useCircles, usePeople } from '@/hooks/people';
 import type { Circle } from '@/schemas';
+import { circleAvatarSrc } from '@/services/people';
 import { useAnnouncer } from '@/stores';
 import { CircleDrawer, type CircleDrawerTarget } from './CircleDrawer';
 import classes from './PeopleSection.module.css';
@@ -51,12 +52,26 @@ export function CirclesPanel(): JSX.Element {
       <Stack component="ul" gap={0} className={classes.list} aria-label={t('people.circles.title')}>
         {circles.data?.map((c) => (
           <Group component="li" key={c.id} justify="space-between" wrap="nowrap" className={classes.item}>
-            <Stack gap={0}>
-              <Text fw={600}>{c.name}</Text>
-              <Text size="xs" c="dimmed">
-                {members(c)}
-              </Text>
-            </Stack>
+            <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+              <Avatar
+                src={circleAvatarSrc(c)}
+                alt=""
+                size={36}
+                radius="md"
+                style={{ border: `2px solid ${c.color}`, flexShrink: 0 }}
+              />
+              <Stack gap={0} style={{ minWidth: 0 }}>
+                <Group gap={6} wrap="nowrap">
+                  <ColorSwatch color={c.color} size={10} aria-hidden />
+                  <Text fw={600} truncate>
+                    {c.name}
+                  </Text>
+                </Group>
+                <Text size="xs" c="dimmed" truncate>
+                  {members(c)}
+                </Text>
+              </Stack>
+            </Group>
             <Group gap="xs" wrap="nowrap">
               <Button
                 size="xs"
@@ -76,6 +91,8 @@ export function CirclesPanel(): JSX.Element {
                   remove.mutate(c.id, { onSuccess: () => announce(t('people.circles.deleted', { name: c.name })) })
                 }
                 aria-label={t('people.circles.deleteLabel', { name: c.name })}
+                loading={remove.isPending && remove.variables === c.id}
+                disabled={remove.isPending}
               >
                 {t('people.circles.delete')}
               </Button>

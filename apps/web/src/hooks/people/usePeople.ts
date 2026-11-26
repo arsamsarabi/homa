@@ -82,11 +82,21 @@ export const useCircles = (): UseQueryResult<Circle[]> =>
     queryFn: async (): Promise<Circle[]> => CircleListSchema.parse(await unwrap(homaClient.GET('/circles'))),
   });
 
-export type CircleDraftInput = { name: string; memberIds: string[] };
+export type CircleDraftInput = {
+  name: string;
+  color: string;
+  avatarSeed: string;
+  avatarImage: string | null;
+  memberIds: string[];
+};
 export type CircleMutations = {
   create: UseMutationResult<Circle, Error, CircleDraftInput>;
-  /** Renames (when the name changed) and sets the members. */
-  update: UseMutationResult<Circle, Error, CircleDraftInput & { id: string; renamed: boolean }>;
+  /** Patches name/colour/avatar when they changed, then sets the members. */
+  update: UseMutationResult<
+    Circle,
+    Error,
+    CircleDraftInput & { id: string; patch: Partial<Omit<CircleDraftInput, 'memberIds'>> }
+  >;
   remove: UseMutationResult<void, Error, string>;
 };
 
@@ -102,12 +112,14 @@ export function useCircleMutations(): CircleMutations {
     update: useMutation({
       mutationFn: async ({
         id,
-        name,
         memberIds,
-        renamed,
-      }: CircleDraftInput & { id: string; renamed: boolean }): Promise<Circle> => {
+        patch,
+      }: CircleDraftInput & {
+        id: string;
+        patch: Partial<Omit<CircleDraftInput, 'memberIds'>>;
+      }): Promise<Circle> => {
         const path = { params: { path: { id } } };
-        if (renamed) await unwrap(homaClient.PATCH('/circles/{id}', { ...path, body: { name } }));
+        if (Object.keys(patch).length) await unwrap(homaClient.PATCH('/circles/{id}', { ...path, body: patch }));
         return CircleSchema.parse(
           await unwrap(homaClient.PUT('/circles/{id}/members', { ...path, body: { memberIds } })),
         );

@@ -7,7 +7,18 @@ export const PEOPLE_LIMITS = {
   circlesPerUser: 50,
   membersPerCircle: 200,
   circleName: 60,
+  /** Max length of an uploaded avatar data URL (~375KB binary). */
+  avatarImage: 500_000,
+  avatarSeed: 64,
 } as const;
+
+const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #7d7fa3');
+const AvatarSeed = z.string().trim().min(1).max(PEOPLE_LIMITS.avatarSeed);
+const AvatarImage = z
+  .string()
+  .max(PEOPLE_LIMITS.avatarImage)
+  .regex(/^data:image\/(png|jpeg|webp|gif);base64,/, 'a data:image URL')
+  .nullable();
 
 export const WHO_CAN_INVITE = ['admins', 'everyone'] as const;
 
@@ -56,6 +67,9 @@ export const Circle = z
   .object({
     id: z.uuid(),
     name: z.string(),
+    color: Color,
+    avatarSeed: AvatarSeed.openapi({ description: 'Seed for the generated identicon when avatarImage is null' }),
+    avatarImage: AvatarImage.openapi({ description: 'Uploaded picture as a data URL, or null for the generated one' }),
     memberIds: z.array(z.string()).openapi({ description: 'The people in it, by name' }),
     createdAt: z.iso.datetime(),
   })
@@ -63,9 +77,28 @@ export const Circle = z
 
 const CircleName = z.string().trim().min(1).max(PEOPLE_LIMITS.circleName);
 export const CircleInput = z
-  .object({ name: CircleName, memberIds: z.array(z.string().min(1)).max(PEOPLE_LIMITS.membersPerCircle).optional() })
+  .object({
+    name: CircleName,
+    color: Color.optional(),
+    avatarSeed: AvatarSeed.optional(),
+    avatarImage: AvatarImage.optional(),
+    memberIds: z.array(z.string().min(1)).max(PEOPLE_LIMITS.membersPerCircle).optional(),
+  })
   .openapi('CircleInput');
-export const CirclePatch = z.object({ name: CircleName }).openapi('CirclePatch');
+export const CirclePatch = z
+  .object({
+    name: CircleName.optional(),
+    color: Color.optional(),
+    avatarSeed: AvatarSeed.optional(),
+    avatarImage: AvatarImage.optional(),
+  })
+  .refine(
+    (v) => v.name !== undefined || v.color !== undefined || v.avatarSeed !== undefined || v.avatarImage !== undefined,
+    {
+      message: 'at least one field is required',
+    },
+  )
+  .openapi('CirclePatch');
 export const CircleMembers = z
   .object({ memberIds: z.array(z.string().min(1)).max(PEOPLE_LIMITS.membersPerCircle) })
   .openapi('CircleMembers');

@@ -17,6 +17,9 @@ export const inviteOut = (i: repo.InviteView): z.infer<typeof Invite> => ({
 export const circleOut = (c: repo.CircleWithMembers): z.infer<typeof Circle> => ({
   id: c.id,
   name: c.name,
+  color: c.color,
+  avatarSeed: c.avatarSeed,
+  avatarImage: c.avatarImage,
   memberIds: c.memberIds,
   createdAt: c.createdAt.toISOString(),
 });

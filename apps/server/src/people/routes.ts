@@ -91,14 +91,14 @@ const r = {
     request: jsonBody(CircleInput),
     responses: { 201: jsonContent(Circle, 'Created'), 400: errors[400], 401: errors[401] },
   }),
-  renameCircle: createRoute({
+  updateCircle: createRoute({
     method: 'patch',
     path: '/circles/{id}',
-    operationId: 'renameCircle',
+    operationId: 'updateCircle',
     tags,
-    summary: 'Rename a circle',
+    summary: 'Rename, recolor or change a circle’s avatar',
     request: { params: Id, ...jsonBody(CirclePatch) },
-    responses: { 200: jsonContent(Circle, 'Renamed'), 400: errors[400], 401: errors[401], 404: errors[404] },
+    responses: { 200: jsonContent(Circle, 'Updated'), 400: errors[400], 401: errors[401], 404: errors[404] },
   }),
   setCircleMembers: createRoute({
     method: 'put',
@@ -156,8 +156,8 @@ export function peopleApi(deps?: { db: Db; auth: Auth; notify?: NotifySettings }
     .openapi(r.createCircle, async (c) =>
       c.json(circleOut(await circles.createCircle(db(), c.var.userId, c.req.valid('json'))), 201),
     )
-    .openapi(r.renameCircle, async (c) =>
-      c.json(circleOut(await circles.renameCircle(db(), c.var.userId, id(c), c.req.valid('json').name)), 200),
+    .openapi(r.updateCircle, async (c) =>
+      c.json(circleOut(await circles.updateCircle(db(), c.var.userId, id(c), c.req.valid('json'))), 200),
     )
     .openapi(r.setCircleMembers, async (c) =>
       c.json(circleOut(await circles.setCircleMembers(db(), c.var.userId, id(c), c.req.valid('json').memberIds)), 200),

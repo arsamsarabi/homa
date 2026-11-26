@@ -33,6 +33,15 @@ export const circles = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    /** Display colour (`#rrggbb`). */
+    color: text('color').notNull().default('#7d7fa3'),
+    /**
+     * Seed for a deterministic GitHub-style identicon. Prefer this over hosting blobs: the client
+     * builds an SVG data URL from the seed; `avatarImage` overrides when the user uploads a picture.
+     */
+    avatarSeed: text('avatar_seed').notNull(),
+    /** Optional uploaded image as a small `data:image/...;base64,...` URL. Null → use `avatarSeed`. */
+    avatarImage: text('avatar_image'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()

@@ -966,8 +966,8 @@ export interface paths {
         delete: operations["deleteCircle"];
         options?: never;
         head?: never;
-        /** Rename a circle */
-        patch: operations["renameCircle"];
+        /** Rename, recolor or change a circle’s avatar */
+        patch: operations["updateCircle"];
         trace?: never;
     };
     "/circles/{id}/members": {
@@ -1767,6 +1767,11 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            color: string;
+            /** @description Seed for the generated identicon when avatarImage is null */
+            avatarSeed: string;
+            /** @description Uploaded picture as a data URL, or null for the generated one */
+            avatarImage: string | null;
             /** @description The people in it, by name */
             memberIds: string[];
             /** Format: date-time */
@@ -1774,10 +1779,16 @@ export interface components {
         };
         CircleInput: {
             name: string;
+            color?: string;
+            avatarSeed?: string;
+            avatarImage?: string | null;
             memberIds?: string[];
         };
         CirclePatch: {
-            name: string;
+            name?: string;
+            color?: string;
+            avatarSeed?: string;
+            avatarImage?: string | null;
         };
         CircleMembers: {
             memberIds: string[];
@@ -4851,7 +4862,7 @@ export interface operations {
             };
         };
     };
-    renameCircle: {
+    updateCircle: {
         parameters: {
             query?: never;
             header?: never;
@@ -4866,7 +4877,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Renamed */
+            /** @description Updated */
             200: {
                 headers: {
                     [name: string]: unknown;
