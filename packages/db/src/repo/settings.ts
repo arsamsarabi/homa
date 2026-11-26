@@ -10,6 +10,8 @@ export type SettingsRow = {
   /** null means Monday–Friday. */
   workWeekDays: number[] | null;
   defaultReminderMinutes: number | null;
+  /** Sharing preset for calendars with null default_access: private | freebusy | read. */
+  sharingPreset: 'private' | 'freebusy' | 'read';
 };
 
 // biome-ignore lint/nursery/useExplicitType: Drizzle infers the selected row type from these columns.
@@ -19,6 +21,7 @@ const columns = {
   weekStart: users.weekStart,
   workWeekDays: users.workWeekDays,
   defaultReminderMinutes: users.defaultReminderMinutes,
+  sharingPreset: users.sharingPreset,
 };
 
 /** The user's settings, or undefined if there is no such user. */

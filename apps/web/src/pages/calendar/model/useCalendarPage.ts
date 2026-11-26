@@ -5,7 +5,15 @@ import { useMemo } from 'react';
 import { useCalendars, useOccurrences } from '@/hooks/calendar';
 import { type DateFormats, useCalendarLocale, useDateFormats } from '@/hooks/locale';
 import { useSettings } from '@/hooks/settings';
-import { type Calendar, DEFAULT_WORK_WEEK_DAYS, type Occurrence, type SecondaryCalendar, type View } from '@/schemas';
+import {
+  type AccessLevel,
+  type Calendar,
+  DEFAULT_WORK_WEEK_DAYS,
+  type Occurrence,
+  type SecondaryCalendar,
+  type View,
+} from '@/schemas';
+import { isReadOnlyCalendar, isWritableCalendar } from '@/services/calendar-sharing';
 import { type DayRange, rangeFor, today } from '@/services/dates';
 import { instantOf } from '@/services/zones';
 import { defaultCalendarId, useLastCalendar } from '@/stores';
@@ -23,14 +31,18 @@ export type CalendarPageModel = CalendarUrlState & {
   /** Today, as a wall date in the viewed zone. */
   today: Date;
   calendars: Calendar[];
-  /** Calendars events can be created in or moved to (not subscriptions). */
+  /** Calendars events can be created in or moved to (own non-subscriptions, or shared at edit). */
   writableCalendars: Calendar[];
   /** Where new events go: the last calendar created in, else the first writable one. */
   defaultCalendarId: string | undefined;
-  /** True for a read-only calendar (a subscription): its events open as details, not a form. */
+  /** True when events can't be edited here (subscription, freebusy, or read). */
   isReadOnly: (calendarId: string) => boolean;
+  /** Effective access for a calendar id, if known. */
+  accessOf: (calendarId: string) => AccessLevel | undefined;
   /** Calendar id → color. */
   colors: Record<string, string>;
+  /** Calendar id → calendar row. */
+  calendarById: Record<string, Calendar>;
   occurrences: UseQueryResult<Occurrence[]>;
   pickDay: (d: Date) => void;
   editor: EventEditorState;
@@ -62,13 +74,17 @@ export function useCalendarPage(): CalendarPageModel {
   const actions = useOccurrenceActions(scope.ask, editor.close);
 
   const calendars = useMemo((): Calendar[] => calendarsQuery.data ?? [], [calendarsQuery.data]);
+  const calendarById = useMemo(
+    (): Record<string, Calendar> => Object.fromEntries(calendars.map((c) => [c.id, c])),
+    [calendars],
+  );
   const colors = useMemo(
     (): Record<string, string> => Object.fromEntries(calendars.map((c) => [c.id, c.color])),
     [calendars],
   );
-  const writableCalendars = useMemo((): Calendar[] => calendars.filter((c) => !c.readOnly), [calendars]);
+  const writableCalendars = useMemo((): Calendar[] => calendars.filter(isWritableCalendar), [calendars]);
   const readOnlyIds = useMemo(
-    (): ReadonlySet<string> => new Set(calendars.filter((c) => c.readOnly).map((c) => c.id)),
+    (): ReadonlySet<string> => new Set(calendars.filter(isReadOnlyCalendar).map((c) => c.id)),
     [calendars],
   );
   const lastCalendarId = useLastCalendar((s) => s.id);
@@ -89,7 +105,9 @@ export function useCalendarPage(): CalendarPageModel {
       lastCalendarId,
     ),
     isReadOnly: (calendarId: string): boolean => readOnlyIds.has(calendarId),
+    accessOf: (calendarId: string): AccessLevel | undefined => calendarById[calendarId]?.access,
     colors,
+    calendarById,
     occurrences,
     pickDay,
     editor,

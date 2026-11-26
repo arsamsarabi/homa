@@ -190,7 +190,14 @@ const connectionOut = ({ connection: c, calendars }: service.ConnectionView): z.
   notice: c.notice,
   noticeAt: c.noticeAt?.toISOString() ?? null,
   createdAt: c.createdAt.toISOString(),
-  calendars: calendars.map(calendarOut),
+  calendars: calendars.map((cal) =>
+    calendarOut({
+      calendar: cal,
+      access: 'owner',
+      owner: { id: c.ownerUserId, name: '' },
+      hidden: cal.hidden,
+    }),
+  ),
 });
 
 /** Connection routes. Without `deps` (the OpenAPI dump) they're described but answer 401. */

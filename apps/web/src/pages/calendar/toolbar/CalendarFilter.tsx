@@ -8,6 +8,7 @@ import { useCalendarUpdate } from '@/hooks/calendar';
 import { useConnections } from '@/hooks/connections';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Calendar, Connection } from '@/schemas';
+import { groupSharedByOwner } from '@/services/calendar-sharing';
 import { useAnnouncer } from '@/stores';
 
 // CalDAV accounts are labeled "<user> on <host>"; well-known hosts get their service's name.
@@ -29,6 +30,8 @@ const accountHeading = (k: Connection, t: TFunction): { provider: string; accoun
   return { provider: t(`calendars.groups.${k.provider}`), account: k.label };
 };
 
+type FilterGroup = { key: string; label: string; account: string | null; list: Calendar[] };
+
 /** Shows or hides each calendar's events in the views. The choice is saved, so it follows you across devices. */
 export function CalendarFilter(): JSX.Element {
   const { t } = useTranslation();
@@ -37,11 +40,12 @@ export function CalendarFilter(): JSX.Element {
   const announce = useAnnouncer((s) => s.announce);
   const hidden = calendars.filter((c) => c.hidden);
   const connections = useConnections().data ?? [];
+  const owned = calendars.filter((c) => c.access === 'owner');
   const inConnection = (ids: ReadonlySet<string>): Calendar[] =>
-    calendars.filter((c) => c.connectionId && ids.has(c.connectionId));
-  // Your own calendars, then one group per connected account, then every feed subscription together.
-  const groups = [
-    { key: 'mine', label: t('calendars.mine'), account: null, list: calendars.filter((c) => !c.connectionId) },
+    owned.filter((c) => c.connectionId && ids.has(c.connectionId));
+  // Your own calendars (by connection), then shared calendars grouped by owner ("Shared by Ada").
+  const groups: FilterGroup[] = [
+    { key: 'mine', label: t('calendars.mine'), account: null, list: owned.filter((c) => !c.connectionId) },
     ...connections
       .filter((k) => k.provider !== 'ics')
       .map((k) => {
@@ -54,6 +58,12 @@ export function CalendarFilter(): JSX.Element {
       account: null,
       list: inConnection(new Set(connections.filter((k) => k.provider === 'ics').map((k) => k.id))),
     },
+    ...groupSharedByOwner(calendars).map((g) => ({
+      key: `shared:${g.ownerId}`,
+      label: t('calendars.sharedBy', { name: g.ownerName }),
+      account: null,
+      list: g.calendars,
+    })),
   ].filter((g) => g.list.length > 0);
   const set = (c: Calendar, visible: boolean): void =>
     update.mutate(

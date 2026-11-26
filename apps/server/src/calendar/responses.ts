@@ -1,19 +1,23 @@
 // Database rows to API responses (dates as ISO strings, internal columns left out).
 import type { repo } from '@homa/db';
 import type { z } from '@hono/zod-openapi';
+import type { AccessibleCalendar } from './access';
+import type { AvailabilityOut } from './availability-service';
 import type { OccurrenceView } from './occurrences-service';
-import type { Calendar, Event, Occurrence } from './schemas';
+import type { Availability, Calendar, CalendarGrants, Event, Occurrence } from './schemas';
 
-export const calendarOut = (c: repo.CalendarRow): z.infer<typeof Calendar> => ({
-  id: c.id,
-  name: c.name,
-  color: c.color,
-  connectionId: c.connectionId,
-  readOnly: c.readOnly,
+export const calendarOut = (c: AccessibleCalendar): z.infer<typeof Calendar> => ({
+  id: c.calendar.id,
+  name: c.calendar.name,
+  color: c.calendar.color,
+  connectionId: c.calendar.connectionId,
+  readOnly: c.calendar.readOnly,
   hidden: c.hidden,
-  remoteMissing: c.remoteMissing,
-  createdAt: c.createdAt.toISOString(),
-  updatedAt: c.updatedAt.toISOString(),
+  remoteMissing: c.calendar.remoteMissing,
+  access: c.access,
+  owner: c.owner,
+  createdAt: c.calendar.createdAt.toISOString(),
+  updatedAt: c.calendar.updatedAt.toISOString(),
 });
 
 /** An event with its reminders' minutes. */
@@ -53,4 +57,36 @@ export const occurrenceOut = (o: OccurrenceView): z.infer<typeof Occurrence> => 
   overridden: o.overridden,
   taskId: o.task?.id ?? null,
   taskDone: o.task?.done ?? false,
+});
+
+/** Free/busy: times only; empty title; no description, location, recurrence flags or task (decision 13). */
+export const freebusyOccurrenceOut = (o: OccurrenceView): z.infer<typeof Occurrence> => ({
+  ...occurrenceOut(o),
+  summary: '',
+  description: null,
+  location: null,
+  recurring: false,
+  overridden: false,
+  taskId: null,
+  taskDone: false,
+});
+
+export const grantsOut = (
+  defaultAccess: 'none' | 'freebusy' | 'read' | null,
+  grants: readonly repo.CalendarGrantRow[],
+): z.infer<typeof CalendarGrants> => ({
+  defaultAccess,
+  grants: grants.map((g) =>
+    g.granteeUserId ? { userId: g.granteeUserId, level: g.level } : { circleId: g.circleId as string, level: g.level },
+  ),
+});
+
+export const availabilityOut = (a: AvailabilityOut): z.infer<typeof Availability> => ({
+  from: a.from.toISOString(),
+  to: a.to.toISOString(),
+  people: a.people.map((p) => ({
+    userId: p.userId,
+    shared: p.shared,
+    busy: p.busy.map((b) => ({ start: b.start.toISOString(), end: b.end.toISOString() })),
+  })),
 });

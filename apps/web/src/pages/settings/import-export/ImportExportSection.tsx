@@ -14,8 +14,8 @@ export function ImportExportSection(): JSX.Element {
   const announce = useAnnouncer((s) => s.announce);
   const [picked, setPicked] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  // Subscriptions are read-only, so they can't be imported into.
-  const writable = useMemo(() => calendars.data?.filter((c) => !c.readOnly), [calendars.data]);
+  // Import is owner-only (shared calendars answer 404); subscriptions stay out too.
+  const writable = useMemo(() => calendars.data?.filter((c) => c.access === 'owner' && !c.readOnly), [calendars.data]);
   const calendarId = picked ?? writable?.[0]?.id ?? null;
 
   const run = (): void => {

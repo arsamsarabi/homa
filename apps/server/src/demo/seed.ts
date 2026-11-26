@@ -41,10 +41,11 @@ export async function seedDemo(db: Db, opts: SeedAuth, now = new Date()): Promis
     instantOf(new Date(day(n).getTime() + (h * 60 + m) * 60_000), DEMO_TZ);
   const monday = -((today.getUTCDay() + 6) % 7);
 
-  const [personal] = await listCalendars(db, uid);
-  if (!personal) throw new Error('the demo account has no Personal calendar');
-  const work = await createCalendar(db, uid, { name: 'Work', color: '#3b7dd8' });
-  const family = await createCalendar(db, uid, { name: 'خانواده', color: '#c2543a' });
+  const [personalCal] = await listCalendars(db, uid);
+  if (!personalCal) throw new Error('the demo account has no Personal calendar');
+  const personal = personalCal.calendar;
+  const work = (await createCalendar(db, uid, { name: 'Work', color: '#3b7dd8' })).calendar;
+  const family = (await createCalendar(db, uid, { name: 'خانواده', color: '#c2543a' })).calendar;
 
   type Ev = {
     cal: string;

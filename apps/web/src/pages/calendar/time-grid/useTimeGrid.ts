@@ -1,11 +1,19 @@
 // Day and week view data: what goes in the all-day row and each column, the clock, the start scroll.
-import { type PointerEvent as ReactPointerEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { allDayRowItems, type Placed, type TimedItem, timedColumnItems } from '@/services/calendar-layout';
 import { sameDay } from '@/services/dates';
 import { type Occasion, occasionsOn } from '@/services/jalali';
-import { type DragOutcome, draftGhost, dragGhost, type Ghost, HOUR_PX, initialScrollHour } from '@/services/time-grid';
+import { type DragOutcome, draftGhost, dragGhost, type Ghost, initialScrollTop } from '@/services/time-grid';
 import { wallOf } from '@/services/zones';
 import { type GridDrag, useGridDrag } from './useGridDrag';
 
@@ -68,8 +76,10 @@ export function useTimeGrid(): TimeGridModel {
     : undefined;
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: initialScrollHour(days, wallOf(new Date(), tz)) * HOUR_PX });
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: initialScrollTop(days, wallOf(new Date(), tz), el.clientHeight, el.scrollHeight) });
   }, [days, tz]);
 
   return {

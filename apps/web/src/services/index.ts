@@ -1,4 +1,5 @@
 export * from './calendar-layout';
+export * from './calendar-sharing';
 export * from './dates';
 export * from './event-form';
 export * from './jalali';

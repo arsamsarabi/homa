@@ -6,11 +6,12 @@ import { useCalendarUpdate } from '@/hooks/calendar';
 import { useConfirmClose } from '@/hooks/confirm-close';
 import type { Calendar } from '@/schemas';
 import { useAnnouncer } from '@/stores';
+import { CalendarSharingSection } from './CalendarSharingSection';
 import { SWATCHES } from './swatches';
 
 export type CalendarEditDrawerProps = { calendar: Calendar | undefined; onClose: () => void };
 
-/** Rename or recolor a calendar. For a connected one, only Homa's copy changes, not the original. */
+/** Rename or recolor a calendar you own, and manage who can see it. */
 export function CalendarEditDrawer({ calendar, onClose }: CalendarEditDrawerProps): JSX.Element {
   const { t } = useTranslation();
   const editCalendar = useCalendarUpdate();
@@ -51,43 +52,46 @@ export function CalendarEditDrawer({ calendar, onClose }: CalendarEditDrawerProp
         title={t('connections.editTitle')}
       >
         {calendar && (
-          <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
-            <Stack>
-              <TextInput
-                name="name"
-                label={t('connections.name')}
-                defaultValue={calendar.name}
-                maxLength={100}
-                required
-                data-autofocus
-              />
-              <ColorInput
-                label={t('connections.color')}
-                value={color ?? calendar.color}
-                onChange={(v: string): void => {
-                  guard.markDirty();
-                  setColor(v);
-                }}
-                format="hex"
-                swatches={[...SWATCHES]}
-                swatchesPerRow={7}
-                closeOnColorSwatchClick
-              />
-              {editCalendar.isError && (
-                <Alert color="red" role="alert">
-                  {editCalendar.error.message}
-                </Alert>
-              )}
-              <Group justify="flex-end">
-                <Button variant="default" onClick={guard.requestClose}>
-                  {t('common.cancel')}
-                </Button>
-                <Button type="submit" loading={editCalendar.isPending}>
-                  {t('connections.save')}
-                </Button>
-              </Group>
-            </Stack>
-          </form>
+          <Stack>
+            <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
+              <Stack>
+                <TextInput
+                  name="name"
+                  label={t('connections.name')}
+                  defaultValue={calendar.name}
+                  maxLength={100}
+                  required
+                  data-autofocus
+                />
+                <ColorInput
+                  label={t('connections.color')}
+                  value={color ?? calendar.color}
+                  onChange={(v: string): void => {
+                    guard.markDirty();
+                    setColor(v);
+                  }}
+                  format="hex"
+                  swatches={[...SWATCHES]}
+                  swatchesPerRow={7}
+                  closeOnColorSwatchClick
+                />
+                {editCalendar.isError && (
+                  <Alert color="red" role="alert">
+                    {editCalendar.error.message}
+                  </Alert>
+                )}
+                <Group justify="flex-end">
+                  <Button variant="default" onClick={guard.requestClose}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button type="submit" loading={editCalendar.isPending}>
+                    {t('connections.save')}
+                  </Button>
+                </Group>
+              </Stack>
+            </form>
+            {calendar.access === 'owner' && <CalendarSharingSection calendarId={calendar.id} />}
+          </Stack>
         )}
       </Drawer>
       <ConfirmCloseModal opened={guard.asking} onDiscard={guard.discard} onKeep={guard.keepEditing} />

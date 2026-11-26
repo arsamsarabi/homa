@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { ownCalendar } from '@/testing/calendars';
 import { type FakeApi, json, renderApp, setUpInstance, signedIn } from '@/testing/renderApp';
 
-const calendar = {
+const calendar = ownCalendar({
   id: 'c2',
   name: 'UK holidays',
   color: '#336699',
@@ -10,7 +11,7 @@ const calendar = {
   readOnly: true,
   createdAt: '2026-11-02T00:00:00Z',
   updatedAt: '2026-11-02T00:00:00Z',
-};
+});
 const ok = {
   id: 'k1',
   provider: 'ics',

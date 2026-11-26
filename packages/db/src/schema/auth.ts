@@ -32,6 +32,13 @@ export const users = pgTable('users', {
   workWeekDays: smallint('work_week_days').array(),
   /** The reminder the event form adds to new timed events, in minutes before; null for none. */
   defaultReminderMinutes: integer('default_reminder_minutes').default(10),
+  /**
+   * Sharing preset for calendars whose `default_access` is null: `private` (none), `freebusy`
+   * or `read`. Existing accounts start private so upgrading shares nothing (decision 11).
+   */
+  sharingPreset: text('sharing_preset', { enum: ['private', 'freebusy', 'read'] })
+    .notNull()
+    .default('private'),
   ...timestamps,
 });
 

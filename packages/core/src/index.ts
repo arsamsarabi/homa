@@ -1,3 +1,4 @@
+export * from './availability';
 export * from './calendars';
 export * from './errors';
 export * from './events';

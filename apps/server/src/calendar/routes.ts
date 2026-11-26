@@ -4,12 +4,19 @@ import type { Db } from '@homa/db';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
 import { type Auth, requireUser, type UserVars } from '@/auth';
 import { errorResponses as errors, jsonBody, jsonContent, newApi } from '@/http/openapi';
+import { getAvailability } from './availability-service';
 import * as calendars from './calendars-service';
 import * as events from './events-service';
+import * as grants from './grants-service';
 import { listOccurrences } from './occurrences-service';
-import { calendarOut, eventOut, occurrenceOut } from './responses';
+import { availabilityOut, calendarOut, eventOut, freebusyOccurrenceOut, grantsOut, occurrenceOut } from './responses';
 import {
+  AVAILABILITY_LIMITS,
+  Availability,
+  AvailabilityInput,
   Calendar,
+  CalendarGrants,
+  CalendarGrantsPut,
   CalendarInput,
   CalendarPatch,
   Event,
@@ -23,15 +30,15 @@ import {
   ScopeQuery,
 } from './schemas';
 
-const tags = { calendars: ['Calendars'], events: ['Events'] };
+const tags = { calendars: ['Calendars'], events: ['Events'], availability: ['Availability'] };
 const r = {
   listCalendars: createRoute({
     method: 'get',
     path: '/calendars',
     operationId: 'listCalendars',
     tags: tags.calendars,
-    summary: 'Your calendars',
-    responses: { 200: jsonContent(z.array(Calendar), 'Calendars, oldest first'), 401: errors[401] },
+    summary: 'Your calendars, then ones shared with you',
+    responses: { 200: jsonContent(z.array(Calendar), 'Calendars, own first'), 401: errors[401] },
   }),
   createCalendar: createRoute({
     method: 'post',
@@ -47,7 +54,7 @@ const r = {
     path: '/calendars/{id}',
     operationId: 'updateCalendar',
     tags: tags.calendars,
-    summary: 'Rename, recolor, hide or show a calendar',
+    summary: 'Rename, recolor, hide or show a calendar (shared: hide only)',
     request: { params: Id, ...jsonBody(CalendarPatch) },
     responses: { 200: jsonContent(Calendar, 'Updated'), ...errors },
   }),
@@ -60,6 +67,29 @@ const r = {
     description: 'A subscribed calendar is removed with its connection (DELETE /connections/{id}) instead: 400.',
     request: { params: Id },
     responses: { 204: { description: 'Deleted' }, 400: errors[400], 401: errors[401], 404: errors[404] },
+  }),
+  getGrants: createRoute({
+    method: 'get',
+    path: '/calendars/{id}/grants',
+    operationId: 'getCalendarGrants',
+    tags: tags.calendars,
+    summary: 'Who can see this calendar (owner only)',
+    request: { params: Id },
+    responses: { 200: jsonContent(CalendarGrants, 'Default and grants'), 401: errors[401], 404: errors[404] },
+  }),
+  putGrants: createRoute({
+    method: 'put',
+    path: '/calendars/{id}/grants',
+    operationId: 'putCalendarGrants',
+    tags: tags.calendars,
+    summary: 'Replace who can see this calendar (owner only)',
+    request: { params: Id, ...jsonBody(CalendarGrantsPut) },
+    responses: {
+      200: jsonContent(CalendarGrants, 'Default and grants after the change'),
+      400: errors[400],
+      401: errors[401],
+      404: errors[404],
+    },
   }),
   createEvent: createRoute({
     method: 'post',
@@ -106,7 +136,7 @@ const r = {
     tags: tags.events,
     summary: "Replace an event's reminders",
     description:
-      'They apply to every occurrence. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.',
+      'They apply to every occurrence. Owner only. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.',
     request: { params: Id, ...jsonBody(RemindersInput) },
     responses: {
       200: jsonContent(Event, 'The event with its reminders'),
@@ -121,13 +151,27 @@ const r = {
     operationId: 'listOccurrences',
     tags: tags.events,
     summary: 'Every event occurrence in a time range',
-    description: `Overlapping [from, to), sorted by start. The range can be at most ${MAX_RANGE_DAYS} days.`,
+    description: `Overlapping [from, to), sorted by start. The range can be at most ${MAX_RANGE_DAYS} days. Shared calendars at freebusy show as busy blocks only.`,
     request: { query: OccurrenceQuery },
     responses: { 200: jsonContent(z.array(Occurrence), 'Occurrences'), 400: errors[400], 401: errors[401] },
   }),
+  getAvailability: createRoute({
+    method: 'post',
+    path: '/availability',
+    operationId: 'getAvailability',
+    tags: tags.availability,
+    summary: 'Free/busy for a set of people',
+    description: `Busy intervals the caller is allowed to see. At most ${AVAILABILITY_LIMITS.maxPeople} people and ${AVAILABILITY_LIMITS.maxRangeDays} days. All-day events do not count. Unknown user ids are a 400.`,
+    request: jsonBody(AvailabilityInput),
+    responses: {
+      200: jsonContent(Availability, 'Busy intervals per person'),
+      400: errors[400],
+      401: errors[401],
+    },
+  }),
 };
 
-const PATHS = ['/calendars', '/calendars/*', '/events', '/events/*', '/occurrences'];
+const PATHS = ['/calendars', '/calendars/*', '/events', '/events/*', '/occurrences', '/availability'];
 
 /** Calendar routes. Without `deps` (the OpenAPI dump) they're described but answer 401. */
 export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars> {
@@ -154,6 +198,20 @@ export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars
     .openapi(r.deleteCalendar, async (c) => {
       await calendars.deleteCalendar(db(), c.var.userId, c.req.valid('param').id);
       return c.body(null, 204);
+    })
+    .openapi(r.getGrants, async (c) => {
+      const view = await grants.getGrants(db(), c.var.userId, c.req.valid('param').id);
+      return c.json(grantsOut(view.defaultAccess, view.grants), 200);
+    })
+    .openapi(r.putGrants, async (c) => {
+      const body = c.req.valid('json');
+      const view = await grants.putGrants(db(), c.var.userId, c.req.valid('param').id, {
+        defaultAccess: body.defaultAccess,
+        grants: body.grants.map((g) =>
+          g.userId ? { userId: g.userId, level: g.level } : { circleId: g.circleId as string, level: g.level },
+        ),
+      });
+      return c.json(grantsOut(view.defaultAccess, view.grants), 200);
     })
     .openapi(r.createEvent, async (c) => {
       const { reminders, ...input } = c.req.valid('json');
@@ -195,6 +253,15 @@ export function calendarApi(deps?: { db: Db; auth: Auth }): OpenAPIHono<UserVars
     })
     .openapi(r.listOccurrences, async (c) => {
       const { from, to, calendarId } = c.req.valid('query');
-      return c.json((await listOccurrences(db(), c.var.userId, from, to, calendarId)).map(occurrenceOut), 200);
+      const rows = await listOccurrences(db(), c.var.userId, from, to, calendarId);
+      return c.json(
+        rows.map((o) => (o.access === 'freebusy' ? freebusyOccurrenceOut(o) : occurrenceOut(o))),
+        200,
+      );
+    })
+    .openapi(r.getAvailability, async (c) => {
+      const body = c.req.valid('json');
+      const result = await getAvailability(db(), c.var.userId, body);
+      return c.json(availabilityOut(result), 200);
     });
 }

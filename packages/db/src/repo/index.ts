@@ -1,3 +1,10 @@
+export {
+  findAccessInput,
+  findCalendar,
+  listSharedAccessInputs,
+  type SharedAccessInput,
+  userNames,
+} from './access';
 export { countUsers, deleteExpiredAuth, findUserRole } from './auth';
 export {
   type CalendarRow,
@@ -47,7 +54,13 @@ export {
   updateConnectionCredentials,
 } from './connections';
 export { wipeAllAccounts } from './demo';
-export { type CachedOccurrence, deleteInstances, listCachedOccurrences, replaceInstances } from './event-instances';
+export {
+  type CachedOccurrence,
+  deleteInstances,
+  listCachedOccurrences,
+  listCachedOccurrencesForCalendars,
+  replaceInstances,
+} from './event-instances';
 export {
   deleteOverrides,
   findOverride,
@@ -71,12 +84,23 @@ export {
   insertEvent,
   listEventsByIds,
   listEventsPastCache,
+  listEventsPastCacheForCalendars,
   listEventsToExtend,
   listOwnerEvents,
   listRemoteState,
   type NewEventRow,
   updateEventColumns,
 } from './events';
+export {
+  type CalendarGrantRow,
+  type GrantTarget,
+  listCalendarGrants,
+  listSharedCalendarPrefs,
+  replaceCalendarGrants,
+  type SharedCalendarPrefRow,
+  setCalendarDefaultAccess,
+  setSharedCalendarHidden,
+} from './grants';
 export { findInstanceSettings, type InstanceSettingsRow, updateInstanceSettings } from './instance';
 export {
   type ClaimedDelivery,

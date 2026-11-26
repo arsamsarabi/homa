@@ -117,6 +117,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       weekStart: null,
       workWeekDays: null,
       defaultReminderMinutes: 10,
+      sharingPreset: 'private',
     });
   });
 
