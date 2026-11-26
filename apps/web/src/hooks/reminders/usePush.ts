@@ -21,6 +21,26 @@ const supported = (): boolean =>
   'PushManager' in window &&
   'Notification' in window;
 
+/** How long to wait for a service worker before treating push as unavailable. */
+const READY_MS = 8_000;
+
+/**
+ * `navigator.serviceWorker.ready` never resolves until a worker is registered. Vite PWA does not
+ * register one in dev by default, so awaiting `ready` alone leaves the UI stuck on "loading".
+ */
+export async function pushRegistration(timeoutMs = READY_MS): Promise<ServiceWorkerRegistration> {
+  const existing = await navigator.serviceWorker.getRegistration();
+  if (existing?.active) return existing;
+  const ready = navigator.serviceWorker.ready;
+  const timedOut = new Promise<never>((_, reject) => {
+    const id = setTimeout(() => {
+      clearTimeout(id);
+      reject(new Error('Service worker is not available yet. Try again after the app has fully loaded.'));
+    }, timeoutMs);
+  });
+  return Promise.race([ready, timedOut]);
+}
+
 /**
  * @example const push = usePush(); push.state === 'off' && push.enable()
  */
@@ -30,13 +50,31 @@ export function usePush(): PushControl {
   const [error, setError] = useState<string>();
 
   const refresh = useCallback(async (): Promise<void> => {
-    if (!supported()) return;
-    if (Notification.permission === 'denied') return setState('denied');
-    const reg = await navigator.serviceWorker.ready;
+    if (!supported()) {
+      setState('unsupported');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      setState('denied');
+      return;
+    }
+    // No registration yet (typical in Vite dev): show Off so the button is usable; enable() still
+    // waits briefly for a worker. Do not await `ready` here — it can hang forever.
+    const existing = await navigator.serviceWorker.getRegistration();
+    if (!existing) {
+      setState('off');
+      return;
+    }
+    const reg = existing.active ? existing : await navigator.serviceWorker.ready;
     setState((await reg.pushManager.getSubscription()) ? 'on' : 'off');
   }, []);
+
   useEffect(() => {
-    refresh().catch((err: unknown) => console.error('push state failed', err));
+    refresh().catch((err: unknown) => {
+      console.error('push state failed', err);
+      setState('off');
+      setError(err instanceof Error ? err.message : String(err));
+    });
   }, [refresh]);
 
   async function run(work: () => Promise<void>): Promise<void> {
@@ -56,7 +94,7 @@ export function usePush(): PushControl {
     run(async () => {
       if ((await Notification.requestPermission()) !== 'granted') return;
       const { publicKey } = await unwrap(homaClient.GET('/push/key'));
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await pushRegistration();
       let sub = await reg.pushManager.getSubscription();
       // A subscription made with another key (the server's keys changed) can't be used.
       const key = keyBytes(publicKey);
@@ -76,7 +114,7 @@ export function usePush(): PushControl {
 
   const disable = (): Promise<void> =>
     run(async () => {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await pushRegistration();
       const sub = await reg.pushManager.getSubscription();
       if (!sub) return;
       await unwrap(homaClient.DELETE('/push/subscriptions', { body: { endpoint: sub.endpoint } }));
