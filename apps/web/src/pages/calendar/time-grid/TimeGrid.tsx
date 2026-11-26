@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { EventChip } from '@/components';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import { sameDay } from '@/services/dates';
+import { draftLabel } from '@/services/event-form';
 import { HOUR_PX } from '@/services/time-grid';
 import { DayColumn } from './DayColumn';
 import classes from './TimeGrid.module.css';
@@ -16,8 +17,9 @@ const HOURS = Array.from({ length: 23 }, (_, i) => i + 1);
 
 export function TimeGrid(): JSX.Element {
   const { t } = useTranslation();
-  const { view, formats, colors, secondary } = useCalendarPageModel();
+  const { view, formats, colors, secondary, editor } = useCalendarPageModel();
   const grid = useTimeGrid();
+  const draftTitle = editor.draft ? draftLabel(editor.draft, t('calendar.untitled')) : t('calendar.untitled');
 
   return (
     <section
@@ -54,7 +56,7 @@ export function TimeGrid(): JSX.Element {
           <div key={d.toISOString()} className={classes.allDayCell}>
             {grid.allDayDraft === i && (
               <div className={classes.allDayDraft} data-draft aria-hidden="true">
-                {t('editor.draft')}
+                {draftTitle}
               </div>
             )}
             {grid.allDay[i]?.map((o) => (
@@ -88,6 +90,7 @@ export function TimeGrid(): JSX.Element {
                 items={grid.columns[i] ?? []}
                 ghost={grid.ghost}
                 draft={grid.draft}
+                draftTitle={draftTitle}
                 colors={colors}
                 time={formats.time}
               />

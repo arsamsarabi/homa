@@ -15,6 +15,8 @@ export type EventEditorState = {
   openEdit: (o: Occurrence) => void;
   /** Keep the calendar draft/preview in sync with the form's times. */
   setTimes: (start: Date, end: Date, allDay: boolean) => void;
+  /** Keep the dashed ghost in sync with the title field. */
+  setSummary: (summary: string) => void;
   /** Always closes (after save). */
   close: () => void;
   markDirty: () => void;
@@ -106,6 +108,7 @@ export function useEventEditor(): EventEditorState {
         setDraft({
           kind: 'edit',
           occurrence,
+          summary: occurrence.summary ?? '',
           preview: { start: new Date(occurrence.start), end: new Date(occurrence.end), allDay: occurrence.allDay },
         });
       });
@@ -116,6 +119,9 @@ export function useEventEditor(): EventEditorState {
         if (d.kind === 'create') return { ...d, start, end, allDay };
         return { ...d, preview: { start, end, allDay } };
       });
+    },
+    setSummary: (summary: string): void => {
+      setDraft((d) => (d ? { ...d, summary } : d));
     },
     close: clearDraft,
   };

@@ -5,13 +5,15 @@ import { useTranslation } from 'react-i18next';
 import { EventChip } from '@/components';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import { isoDate, sameDay } from '@/services/dates';
+import { draftLabel } from '@/services/event-form';
 import classes from './MonthView.module.css';
 import { SHOWN_PER_DAY, useMonthView } from './useMonthView';
 
 export function MonthView(): JSX.Element {
   const { t } = useTranslation();
-  const { formats, colors, secondary, today } = useCalendarPageModel();
+  const { formats, colors, secondary, today, editor } = useCalendarPageModel();
   const m = useMonthView();
+  const draftTitle = editor.draft ? draftLabel(editor.draft, t('calendar.untitled')) : t('calendar.untitled');
 
   return (
     <section
@@ -27,6 +29,7 @@ export function MonthView(): JSX.Element {
       {m.days.map((d, i) => {
         const key = isoDate(d);
         const items = m.cells[i] ?? [];
+        const isToday = sameDay(d, today);
         return (
           // biome-ignore lint/a11y/noStaticElementInteractions: clicking blank space is a mouse shortcut; the day button and "New event" are the accessible ways in.
           // biome-ignore lint/a11y/useKeyWithClickEvents: as above.
@@ -40,19 +43,21 @@ export function MonthView(): JSX.Element {
               if (e.target === e.currentTarget) m.createAt(d);
             }}
           >
-            <UnstyledButton
-              className={classes.day}
-              aria-current={sameDay(d, today) ? 'date' : undefined}
-              aria-label={formats.fullDate.format(d)}
-              onClick={() => m.pickDay(d)}
-            >
-              {formats.dayNumber.format(d)}
-            </UnstyledButton>
-            {secondary === 'jalali' && (
-              <span className={classes.jalali} aria-hidden="true">
-                {formats.jalaliDayMonth.format(d)}
-              </span>
-            )}
+            <div className={classes.dayRow} data-today={isToday || undefined}>
+              <UnstyledButton
+                className={classes.day}
+                aria-current={isToday ? 'date' : undefined}
+                aria-label={formats.fullDate.format(d)}
+                onClick={() => m.pickDay(d)}
+              >
+                {formats.dayNumber.format(d)}
+              </UnstyledButton>
+              {secondary === 'jalali' && (
+                <span className={classes.jalali} aria-hidden="true">
+                  {formats.jalaliDayMonth.format(d)}
+                </span>
+              )}
+            </div>
             {m.occasions[i]?.map((o) => (
               <span key={o} className={classes.occasion}>
                 {t(`occasions.${o}`)}
@@ -60,7 +65,7 @@ export function MonthView(): JSX.Element {
             ))}
             {m.draftDay === key && (
               <div className={classes.draft} data-draft aria-hidden="true">
-                {t('editor.draft')}
+                {draftTitle}
               </div>
             )}
             {items.slice(0, SHOWN_PER_DAY).map((o) => (

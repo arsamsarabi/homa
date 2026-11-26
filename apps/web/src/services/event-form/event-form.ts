@@ -23,9 +23,16 @@ export type Draft =
   | {
       kind: 'edit';
       occurrence: Occurrence;
+      /** Live title while the form is open (mirrors the title field). */
+      summary?: string;
       /** Live start/end while the form is open (instants, or UTC midnights when all-day). */
       preview?: { start: Date; end: Date; allDay: boolean };
     };
+
+/** Dashed calendar ghost label: live form title, or untitled when empty. */
+export function draftLabel(draft: Draft, untitled: string): string {
+  return draft.summary?.trim() || untitled;
+}
 
 export type EditorResult =
   | { kind: 'create'; body: EventInput }

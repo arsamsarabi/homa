@@ -2,6 +2,7 @@ export {
   buildEditorResult,
   type Draft,
   draftAllDay,
+  draftLabel,
   draftZone,
   type EditorResult,
   type FormInput,

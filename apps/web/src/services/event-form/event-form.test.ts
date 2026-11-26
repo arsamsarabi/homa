@@ -3,6 +3,7 @@ import type { Occurrence } from '@/schemas';
 import {
   buildEditorResult,
   type Draft,
+  draftLabel,
   draftZone,
   type FormInput,
   formTimes,
@@ -149,4 +150,12 @@ test('reminders: a new event sends them, an edit only when they changed', () => 
   expect(created).toMatchObject({ kind: 'create', body: { reminders: [10] } });
   expect(buildEditorResult(edit, input({}), ctx)).not.toHaveProperty('reminders');
   expect(buildEditorResult(edit, input({ reminders: [0, 1440] }), ctx)).toMatchObject({ reminders: [0, 1440] });
+});
+
+test('draftLabel uses the live summary, or untitled when empty', () => {
+  expect(draftLabel({ ...create, summary: '  Dentist  ' }, 'Untitled')).toBe('Dentist');
+  expect(draftLabel({ ...create, summary: '' }, 'Untitled')).toBe('Untitled');
+  expect(draftLabel({ ...create, summary: undefined }, 'Untitled')).toBe('Untitled');
+  expect(draftLabel({ kind: 'edit', occurrence, summary: 'Renamed' }, 'Untitled')).toBe('Renamed');
+  expect(draftLabel({ kind: 'edit', occurrence, summary: '   ' }, 'Untitled')).toBe('Untitled');
 });
