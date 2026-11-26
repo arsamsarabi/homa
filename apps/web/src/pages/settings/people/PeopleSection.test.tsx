@@ -31,7 +31,17 @@ describe('people settings', () => {
         ]);
       if (url.pathname === '/api/people') return json(people);
       if (url.pathname === '/api/circles')
-        return json([{ id: 'c1', name: 'Family', memberIds: ['u2', 'u3'], createdAt: '2026-11-20T00:00:00Z' }]);
+        return json([
+          {
+            id: 'c1',
+            name: 'Family',
+            color: '#669070',
+            avatarSeed: 'family',
+            avatarImage: null,
+            memberIds: ['u2', 'u3'],
+            createdAt: '2026-11-20T00:00:00Z',
+          },
+        ]);
       return admin(url, req);
     });
     const invites = await screen.findByRole('list', { name: 'Invites' });

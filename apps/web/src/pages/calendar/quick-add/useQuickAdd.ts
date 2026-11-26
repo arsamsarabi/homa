@@ -114,7 +114,7 @@ export function useQuickAdd(): QuickAddModel {
   // Read the preview out once typing pauses, not on every key.
   const [spoken] = useDebouncedValue(summary, 700);
   useEffect(() => {
-    if (spoken) announce(t('quickAdd.announce', { preview: spoken }));
+    if (spoken) announce(t('quickAdd.announce', { preview: spoken }), { toast: false });
   }, [spoken, announce, t]);
 
   function openEditor(q: QuickAdd): void {

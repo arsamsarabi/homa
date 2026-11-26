@@ -34,6 +34,9 @@ export type SignUpSearch = z.infer<typeof SignUpSearchSchema>;
 export const CircleSchema = z.object({
   id: z.string(),
   name: z.string(),
+  color: z.string(),
+  avatarSeed: z.string(),
+  avatarImage: z.string().nullable(),
   memberIds: z.array(z.string()),
   createdAt: z.string(),
 });

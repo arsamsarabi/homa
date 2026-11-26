@@ -46,6 +46,7 @@ function emailSender(
   db: Db,
   sendMail: (m: Mail) => Promise<void>,
   kind: AccountEmail,
+  appUrl: string,
 ): (data: EmailData, request?: Request) => Promise<void> {
   return async ({ user, url }: EmailData, request?: Request): Promise<void> => {
     // Better Auth asks on every sign-up; the admin is already confirmed and needs no link.
@@ -55,7 +56,7 @@ function emailSender(
     link.searchParams.set('callbackURL', kind === 'verify' ? VERIFY_EMAIL_PATH : RESET_PASSWORD_PATH);
     const send = async (): Promise<void> => {
       const { defaultLanguage } = await getInstanceSettings(db);
-      await sendMail(accountEmail(kind, emailLanguage(request, defaultLanguage), user, link.toString()));
+      await sendMail(accountEmail(kind, emailLanguage(request, defaultLanguage), user, link.toString(), appUrl));
     };
     // Not awaited: the reply must not take longer, or fail, only because the address has an account.
     send().catch((err: unknown) =>
@@ -79,14 +80,14 @@ function authConfig(db: Db, opts: AuthOptions) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: Boolean(opts.requireEmailVerification && opts.sendMail),
-      ...(opts.sendMail && { sendResetPassword: emailSender(db, opts.sendMail, 'reset') }),
+      ...(opts.sendMail && { sendResetPassword: emailSender(db, opts.sendMail, 'reset', opts.baseURL) }),
       resetPasswordTokenExpiresIn: 60 * 60,
       // A reset is often because someone else may know the old password: sign out everywhere.
       revokeSessionsOnPasswordReset: true,
     },
     ...(opts.sendMail && {
       emailVerification: {
-        sendVerificationEmail: emailSender(db, opts.sendMail, 'verify'),
+        sendVerificationEmail: emailSender(db, opts.sendMail, 'verify', opts.baseURL),
         // Someone who lost the first email gets a new link when they try to sign in.
         sendOnSignIn: true,
         autoSignInAfterVerification: true,

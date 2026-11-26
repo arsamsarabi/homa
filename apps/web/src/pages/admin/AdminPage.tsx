@@ -31,7 +31,7 @@ export function AdminPage(): JSX.Element {
         )}
         <InstanceFields value={draft.value} onChange={draft.change} />
         <Group>
-          <Button onClick={save} loading={draft.busy} disabled={draft.value.name.trim() === ''}>
+          <Button onClick={save} loading={draft.busy} disabled={draft.busy || draft.value.name.trim() === ''}>
             {t('settings.save')}
           </Button>
         </Group>

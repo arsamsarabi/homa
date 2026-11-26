@@ -112,6 +112,8 @@ export function ChannelsSection(): JSX.Element {
                 size="xs"
                 variant="light"
                 color="red"
+                loading={remove.isPending && remove.variables === c.id}
+                disabled={remove.isPending && remove.variables === c.id}
                 onClick={(): void =>
                   remove.mutate(c.id, { onSuccess: () => announce(t('channels.deleted', { name: c.name })) })
                 }

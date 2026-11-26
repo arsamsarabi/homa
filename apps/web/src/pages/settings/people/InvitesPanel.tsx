@@ -75,6 +75,7 @@ export function InvitesPanel(): JSX.Element {
                   variant="light"
                   color="red"
                   loading={revoke.isPending && revoke.variables === invite.id}
+                  disabled={revoke.isPending && revoke.variables === invite.id}
                   onClick={(): void =>
                     revoke.mutate(invite.id, { onSuccess: () => announce(t('people.invites.revoked', { who })) })
                   }

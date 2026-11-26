@@ -1,1 +1,1 @@
-export { type AnnouncerState, useAnnouncer } from './announcer-store';
+export { type AnnounceOptions, type AnnouncerState, useAnnouncer } from './announcer-store';

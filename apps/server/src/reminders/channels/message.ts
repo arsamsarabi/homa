@@ -73,6 +73,7 @@ export function reminderMail(m: Message, appUrl: string, to: Pick<repo.Recipient
   const text = `${m.title}\n${m.body}\n\n${w.open}: ${url}\n`;
   const html = emailHtml({
     language,
+    appUrl,
     title: m.subject,
     heading: m.title,
     paragraphs: [m.body],

@@ -5,6 +5,8 @@ export type EmailLanguage = 'en' | 'fa';
 
 export type EmailLayout = {
   language: EmailLanguage;
+  /** HOMA_URL: the app origin that serves static brand assets (e.g. /icon-192.png). */
+  appUrl: string;
   /** The document title, usually the subject. */
   title: string;
   heading: string;
@@ -19,9 +21,16 @@ const BRAND = { en: 'Homa', fa: 'هما' } as const;
 export const escapeHtml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+/** Absolute URL for the square mark the web app already serves. */
+export function emailLogoUrl(appUrl: string): string {
+  return `${appUrl.replace(/\/+$/, '')}/icon-192.png`;
+}
+
 export function emailHtml(e: EmailLayout): string {
   const dir = e.language === 'fa' ? 'rtl' : 'ltr';
   const font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  const logo = escapeHtml(emailLogoUrl(e.appUrl));
+  const brand = BRAND[e.language];
   const paragraphs = e.paragraphs
     .map((p, i) => `<p style="margin:0 0 ${i === e.paragraphs.length - 1 ? 24 : 16}px">${escapeHtml(p)}</p>\n`)
     .join('');
@@ -60,7 +69,7 @@ export function emailHtml(e: EmailLayout): string {
 <tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="homa-card" style="max-width:480px;background-color:#fefcfb;color:#22223b;border:1px solid #c9ada7;border-radius:12px;font-family:${font};font-size:16px;line-height:1.6" dir="${dir}">
 <tr><td style="padding:32px">
-<p class="homa-brand" style="margin:0 0 24px;font-family:'Rajdhani',${font};font-size:28px;font-weight:700;letter-spacing:0.01em;color:#22223b">${BRAND[e.language]}</p>
+<p class="homa-brand" style="margin:0 0 24px;font-family:'Rajdhani',${font};font-size:28px;font-weight:700;letter-spacing:0.01em;color:#22223b"><img src="${logo}" width="48" height="48" alt="" style="display:block;border:0;margin:0 0 12px">${brand}</p>
 <h1 class="homa-title" style="margin:0 0 16px;font-family:'Rajdhani',${font};font-size:24px;font-weight:700;color:#22223b">${escapeHtml(e.heading)}</h1>
 ${paragraphs}${button}${note}</td></tr>
 </table>

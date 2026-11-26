@@ -28,6 +28,7 @@ export function inviteEmail(
   to: string,
   from: { inviter: string; instance: string },
   url: string,
+  appUrl: string,
 ): Mail {
   const w = TEXT[language];
   const subject = w.subject(from.inviter, from.instance);
@@ -35,6 +36,7 @@ export function inviteEmail(
   const text = `${body}\n\n${w.button}: ${url}\n\n${w.note}\n`;
   const html = emailHtml({
     language,
+    appUrl,
     title: subject,
     heading: w.heading,
     paragraphs: [body],

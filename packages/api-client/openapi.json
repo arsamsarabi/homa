@@ -2507,6 +2507,25 @@
           "name": {
             "type": "string"
           },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$/i"
+          },
+          "avatarSeed": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "Seed for the generated identicon when avatarImage is null"
+          },
+          "avatarImage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500000,
+            "pattern": "^data:image\\/(png|jpeg|webp|gif);base64,",
+            "description": "Uploaded picture as a data URL, or null for the generated one"
+          },
           "memberIds": {
             "type": "array",
             "items": {
@@ -2522,6 +2541,9 @@
         "required": [
           "id",
           "name",
+          "color",
+          "avatarSeed",
+          "avatarImage",
           "memberIds",
           "createdAt"
         ]
@@ -2533,6 +2555,23 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 60
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$/i"
+          },
+          "avatarSeed": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "avatarImage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500000,
+            "pattern": "^data:image\\/(png|jpeg|webp|gif);base64,"
           },
           "memberIds": {
             "type": "array",
@@ -2554,11 +2593,25 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 60
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-f]{6}$/i"
+          },
+          "avatarSeed": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "avatarImage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500000,
+            "pattern": "^data:image\\/(png|jpeg|webp|gif);base64,"
           }
-        },
-        "required": [
-          "name"
-        ]
+        }
       },
       "CircleMembers": {
         "type": "object",
@@ -6435,11 +6488,11 @@
     },
     "/circles/{id}": {
       "patch": {
-        "operationId": "renameCircle",
+        "operationId": "updateCircle",
         "tags": [
           "People"
         ],
-        "summary": "Rename a circle",
+        "summary": "Rename, recolor or change a circle’s avatar",
         "parameters": [
           {
             "schema": {
@@ -6463,7 +6516,7 @@
         },
         "responses": {
           "200": {
-            "description": "Renamed",
+            "description": "Updated",
             "content": {
               "application/json": {
                 "schema": {

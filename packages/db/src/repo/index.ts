@@ -114,6 +114,7 @@ export {
 } from './outbox';
 export {
   type CircleRow,
+  type CircleValues,
   type CircleWithMembers,
   circleNameTaken,
   claimInvite,
@@ -134,10 +135,10 @@ export {
   listPeople,
   type NewInvite,
   type Person,
-  renameOwnedCircle,
   replaceCircleMembers,
   setInviteEmailed,
   setInviteUsedByToken,
+  updateOwnedCircle,
 } from './people';
 export {
   countProjects,

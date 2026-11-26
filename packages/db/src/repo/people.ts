@@ -187,16 +187,31 @@ export async function circleNameTaken(
   return row !== undefined;
 }
 
-export async function insertCircle(db: Executor, ownerUserId: string, name: string): Promise<CircleRow> {
-  const [row] = await db.insert(circles).values({ ownerUserId, name }).returning();
+export type CircleValues = {
+  name: string;
+  color: string;
+  avatarSeed: string;
+  avatarImage: string | null;
+};
+
+export async function insertCircle(db: Executor, ownerUserId: string, values: CircleValues): Promise<CircleRow> {
+  const [row] = await db
+    .insert(circles)
+    .values({ ownerUserId, ...values })
+    .returning();
   if (!row) throw new Error('insert into circles returned no row');
   return row;
 }
 
-/** Returns false if the circle isn't the owner's. */
-export async function renameOwnedCircle(db: Executor, ownerUserId: string, id: string, name: string): Promise<boolean> {
-  const rows = await db.update(circles).set({ name }).where(ownedCircle(ownerUserId, id)).returning({ id: circles.id });
-  return rows.length > 0;
+/** Returns the updated row, or undefined if it isn't the owner's. Callers don't pass an empty patch. */
+export async function updateOwnedCircle(
+  db: Executor,
+  ownerUserId: string,
+  id: string,
+  patch: Partial<CircleValues>,
+): Promise<CircleRow | undefined> {
+  const [row] = await db.update(circles).set(patch).where(ownedCircle(ownerUserId, id)).returning();
+  return row;
 }
 
 /** Deletes the circle (its members and grants cascade). Returns false if it isn't the owner's. */

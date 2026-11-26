@@ -167,8 +167,18 @@ describe.skipIf(!testDatabaseUrl)('people', () => {
 
   test('circles belong to their owner and hold other people', async () => {
     const carolId = await userId('carol@example.com');
-    const family = await call('POST', '/circles', { name: 'Family', memberIds: [bobId, carolId, bobId] });
+    const family = await call('POST', '/circles', {
+      name: 'Family',
+      memberIds: [bobId, carolId, bobId],
+      color: '#669070',
+      avatarSeed: 'family-seed',
+    });
     expect(family.status).toBe(201);
+    expect(family.body).toMatchObject({
+      color: '#669070',
+      avatarSeed: 'family-seed',
+      avatarImage: null,
+    });
     expect([...(family.body.memberIds as string[])].sort()).toEqual([bobId, carolId].sort());
     const id = String(family.body.id);
 
@@ -185,9 +195,28 @@ describe.skipIf(!testDatabaseUrl)('people', () => {
     expect((await call('DELETE', `/circles/${id}`, undefined, bob)).status).toBe(404);
 
     expect((await call('PATCH', `/circles/${id}`, { name: 'Close family' })).body.name).toBe('Close family');
+    const recolored = await call('PATCH', `/circles/${id}`, {
+      color: '#c2575b',
+      avatarSeed: 'shuffled',
+      avatarImage: 'data:image/png;base64,abc',
+    });
+    expect(recolored.body).toMatchObject({
+      name: 'Close family',
+      color: '#c2575b',
+      avatarSeed: 'shuffled',
+      avatarImage: 'data:image/png;base64,abc',
+    });
     expect((await call('PUT', `/circles/${id}/members`, { memberIds: [carolId] })).body.memberIds).toEqual([carolId]);
     expect((await call('GET', '/circles')).body.map((c) => c.name)).toEqual(['Close family']);
     expect((await call('DELETE', `/circles/${id}`)).status).toBe(204);
     expect(await t.db.$count(schema.circleMembers)).toBe(0);
+  });
+
+  test('a new circle gets a colour and avatar seed when none are sent', async () => {
+    const made = await call('POST', '/circles', { name: 'Defaults' });
+    expect(made.status).toBe(201);
+    expect(made.body.color).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(String(made.body.avatarSeed).length).toBeGreaterThan(0);
+    expect(made.body.avatarImage).toBeNull();
   });
 });
