@@ -91,6 +91,8 @@
     "loading": "Loading events",
     "loadFailed": "Couldn't load your events",
     "moveFailed": "Couldn't move the event: {{message}}",
+    "saveFailed": "Couldn't save the event: {{message}}",
+    "deleteFailed": "Couldn't delete the event: {{message}}",
     "announce": {
       "saved": "Event saved",
       "moved": "Event moved",

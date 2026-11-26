@@ -47,7 +47,10 @@ function TaskForm({
   const [subtask, setSubtask] = useState('');
   const subtasks = task.parentId ? [] : m.subtasksOf(task.id);
   const repeat = repeatOf(task.rrule);
-  const fail = (err: Error): void => setError(err.message);
+  const fail = (err: Error): void => {
+    setError(err.message);
+    announce(t('tasks.saveFailed', { message: err.message }));
+  };
 
   const submit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -77,14 +80,14 @@ function TaskForm({
     );
   };
 
-  const onDelete = (): void =>
+  const onDelete = (): void => {
+    const title = task.title;
+    onSaved();
     remove.mutate(task.id, {
-      onSuccess: () => {
-        announce(t('tasks.deleted', { title: task.title }));
-        onSaved();
-      },
-      onError: fail,
+      onSuccess: () => announce(t('tasks.deleted', { title })),
+      onError: (err: Error): void => announce(t('tasks.deleteFailed', { message: err.message })),
     });
+  };
 
   const addSubtask = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key !== 'Enter') return;

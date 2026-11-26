@@ -91,6 +91,8 @@
     "loading": "در حال بارگذاری رویدادها",
     "loadFailed": "رویدادها بارگذاری نشدند",
     "moveFailed": "جابه‌جایی رویداد انجام نشد: {{message}}",
+    "saveFailed": "رویداد ذخیره نشد: {{message}}",
+    "deleteFailed": "رویداد حذف نشد: {{message}}",
     "announce": {
       "saved": "رویداد ذخیره شد",
       "moved": "رویداد جابه‌جا شد",

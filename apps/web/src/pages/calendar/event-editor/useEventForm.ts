@@ -211,7 +211,8 @@ export function useEventForm(draft: Draft): EventFormModel {
     error,
     submit,
     remove: (): void => {
-      if (occurrence) void run(() => actions.remove(occurrence));
+      // Do not wrap in run(): remove closes the editor before the request finishes.
+      if (occurrence) void actions.remove(occurrence);
     },
     close: editor.requestClose,
     markDirty: editor.markDirty,

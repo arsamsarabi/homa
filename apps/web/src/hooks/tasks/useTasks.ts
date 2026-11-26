@@ -20,6 +20,7 @@ import {
   TaskListSchema,
   TaskSchema,
 } from '@/schemas';
+import { withoutCompleted, withoutTask, withTaskPatch } from '@/services/optimistic';
 
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -71,6 +72,8 @@ export type BlockVars = { id: string; calendarId: string; start: string; end: st
 
 const path = (id: string): { params: { path: { id: string } } } => ({ params: { path: { id } } });
 
+type TaskSnapshot = { open: Task[] | undefined };
+
 export function useTaskMutations(): TaskMutations {
   const qc = useQueryClient();
   // A task can name new tags, so the tag list refreshes too.
@@ -84,6 +87,15 @@ export function useTaskMutations(): TaskMutations {
   const refreshWithCalendar = async (): Promise<void> => {
     await Promise.all([refresh(), qc.invalidateQueries({ queryKey: calendarKeys.occurrences })]);
   };
+
+  const snapOpen = async (): Promise<TaskSnapshot> => {
+    await qc.cancelQueries({ queryKey: taskKeys.open });
+    return { open: qc.getQueryData<Task[]>(taskKeys.open) };
+  };
+  const restoreOpen = (snap: TaskSnapshot | undefined): void => {
+    qc.setQueryData(taskKeys.open, snap?.open);
+  };
+
   return {
     create: useMutation({
       mutationFn: async (body: TaskInput): Promise<Task> =>
@@ -93,11 +105,23 @@ export function useTaskMutations(): TaskMutations {
     update: useMutation({
       mutationFn: async ({ id, ...body }: TaskPatch & { id: string }): Promise<Task> =>
         TaskSchema.parse(await unwrap(homaClient.PATCH('/tasks/{id}', { ...path(id), body }))),
+      onMutate: async ({ id, ...body }: TaskPatch & { id: string }): Promise<TaskSnapshot> => {
+        const snap = await snapOpen();
+        qc.setQueryData<Task[]>(taskKeys.open, (list) => (list ? withTaskPatch(list, id, body) : list));
+        return snap;
+      },
+      onError: (_e: Error, _v: TaskPatch & { id: string }, snap: TaskSnapshot | undefined): void => restoreOpen(snap),
       onSettled: refresh,
     }),
     complete: useMutation({
       mutationFn: async (id: string): Promise<Task> =>
         TaskSchema.parse(await unwrap(homaClient.POST('/tasks/{id}/complete', path(id)))),
+      onMutate: async (id: string): Promise<TaskSnapshot> => {
+        const snap = await snapOpen();
+        qc.setQueryData<Task[]>(taskKeys.open, (list) => (list ? withoutCompleted(list, id) : list));
+        return snap;
+      },
+      onError: (_e: Error, _id: string, snap: TaskSnapshot | undefined): void => restoreOpen(snap),
       onSettled: refreshWithCalendar,
     }),
     reopen: useMutation({
@@ -109,6 +133,12 @@ export function useTaskMutations(): TaskMutations {
       mutationFn: async (id: string): Promise<void> => {
         await unwrap(homaClient.DELETE('/tasks/{id}', path(id)));
       },
+      onMutate: async (id: string): Promise<TaskSnapshot> => {
+        const snap = await snapOpen();
+        qc.setQueryData<Task[]>(taskKeys.open, (list) => (list ? withoutTask(list, id) : list));
+        return snap;
+      },
+      onError: (_e: Error, _id: string, snap: TaskSnapshot | undefined): void => restoreOpen(snap),
       onSettled: refresh,
     }),
     schedule: useMutation({
