@@ -28,7 +28,7 @@ Uncommitted work already on `main` (push service-worker hang fix + test) ships i
 | **4** | Optimistic mutations | Optimistic save for events/todos + toast success/fail + revert |
 | **5** | Keyboard discoverability | Shortcut hints in UI; settings toggle to hide (hints on by default) |
 | **6** | Settings & calendar connect | Tabbed settings; tidy calendar connection flow |
-| **7** | Onboarding & navigation | Onboarding back buttons; invite → default invited circle; breadcrumbs where useful |
+| **7** | Onboarding & navigation | Onboarding back buttons; invite → default invited circle; breadcrumbs where useful; **email template Homa logo 3×** (shared layout, currently 48×48 → 144×144 in `apps/server/src/email/layout.ts`) |
 | **8** | Larger / explore | Event resize-to-duration; notifications panel redesign; availability subscription (spike only) |
 
 **Dependencies:** Phase 4 is the cross-cutting mutation foundation. Phases 2–3 may keep current mutation/toast patterns and get a second pass after Phase 4 if needed. Phase 3 uses one shared unsaved-confirm path for Esc and click-away.
