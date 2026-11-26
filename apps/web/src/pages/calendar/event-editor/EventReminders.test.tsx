@@ -82,4 +82,3 @@ describe('event reminders', () => {
     expect(within(details).getByRole('button', { name: 'Remove 1 day before' })).toBeTruthy();
   });
 });
-
