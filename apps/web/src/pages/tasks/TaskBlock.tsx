@@ -73,12 +73,7 @@ export function TaskBlock({ task }: { task: Task }): JSX.Element {
   const calendarName = (id: string): string => calendars.data?.find((c) => c.id === id)?.name ?? '';
 
   return (
-    // Keep block fields out of the task form's dirty tracking (Esc after Block time should close).
-    <Stack
-      gap="xs"
-      onChange={(e: ChangeEvent<HTMLDivElement>): void => e.stopPropagation()}
-      onInput={(e: ChangeEvent<HTMLDivElement>): void => e.stopPropagation()}
-    >
+    <Stack gap="xs">
       <Text size="sm" fw={500}>
         {t('tasks.block')}
       </Text>

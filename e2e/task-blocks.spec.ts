@@ -38,6 +38,9 @@ test('tasks: reminders, and a time block on the calendar that shows done @smoke'
   await drawer.getByRole('button', { name: 'Block time' }).click();
   await expect(drawer.getByRole('button', { name: 'Move the block', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
+  // Block fields are outside the dirty form; if a confirm still appears, discard.
+  const discard = page.getByRole('button', { name: 'Discard' });
+  if (await discard.isVisible().catch(() => false)) await discard.click();
   await expect(drawer).toBeHidden();
   await expect(today.getByText(/Blocked Today, 06:00/)).toBeVisible();
 
