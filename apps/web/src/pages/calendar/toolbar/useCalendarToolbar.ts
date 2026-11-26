@@ -13,7 +13,6 @@ export type CalendarToolbar = {
   jalaliTitle: string | undefined;
   view: View;
   views: { value: View; label: string }[];
-  tz: string;
   today: () => void;
   previous: () => void;
   next: () => void;
@@ -30,7 +29,6 @@ export function useCalendarToolbar(): CalendarToolbar {
     jalaliTitle: secondary === 'jalali' ? jalaliViewTitle(view, date, range, formats) : undefined,
     view,
     views,
-    tz,
     today: (): void => go({ date: today }),
     previous: (): void => go({ date: step(view, date, -1) }),
     next: (): void => go({ date: step(view, date, 1) }),
