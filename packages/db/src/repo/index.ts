@@ -77,6 +77,16 @@ export {
   type NewEventRow,
   updateEventColumns,
 } from './events';
+export {
+  type CalendarGrantRow,
+  type GrantTarget,
+  listCalendarGrants,
+  listSharedCalendarPrefs,
+  replaceCalendarGrants,
+  type SharedCalendarPrefRow,
+  setCalendarDefaultAccess,
+  setSharedCalendarHidden,
+} from './grants';
 export { findInstanceSettings, type InstanceSettingsRow, updateInstanceSettings } from './instance';
 export {
   type ClaimedDelivery,
