@@ -80,5 +80,9 @@ describe('event reminders', () => {
     fireEvent.click(add());
     await waitFor(() => expect(sent).toEqual([{ reminders: [1440] }]));
     expect(within(details).getByRole('button', { name: 'Remove 1 day before' })).toBeTruthy();
+    await waitFor(() => {
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts.some((el) => el.textContent?.includes('Reminder saved'))).toBe(true);
+    });
   });
 });

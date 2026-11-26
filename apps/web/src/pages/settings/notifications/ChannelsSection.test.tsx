@@ -1,7 +1,7 @@
 // The add and edit drawer is covered in e2e/channels.spec.ts: closing a drawer on the Settings page
 // stalls happy-dom.
 import { describe, expect, test } from 'bun:test';
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { json, renderApp, signedInWith } from '@/testing/renderApp';
 
 const user = signedInWith({ homeTz: 'UTC', secondaryCalendar: 'none' });
@@ -42,5 +42,25 @@ describe('notification channels', () => {
     fireEvent.click(within(list).getByRole('button', { name: 'Send a test to "Phone"' }));
     expect(await within(list).findByText("The test didn't go through: ntfy.sh answered 503")).toBeTruthy();
     expect(tested).toHaveLength(1);
+  });
+
+  test('toggling a channel on or off announces success', async () => {
+    let enabled = true;
+    renderApp('/settings', async (url, req) => {
+      if (url.pathname === '/api/notification-channels' && req.method === 'GET')
+        return json({ items: [channel({ enabled })], email: true });
+      if (url.pathname === '/api/notification-channels/ch1' && req.method === 'PATCH') {
+        const body = (await req.json()) as { enabled?: boolean };
+        enabled = body.enabled ?? enabled;
+        return json(channel({ enabled }));
+      }
+      return user(url, req);
+    });
+    const toggle = await screen.findByRole('switch', { name: 'Send to "Phone"' });
+    fireEvent.click(toggle);
+    await waitFor(() => {
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts.some((el) => el.textContent?.includes('Phone disabled'))).toBe(true);
+    });
   });
 });

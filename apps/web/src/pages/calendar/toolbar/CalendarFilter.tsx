@@ -8,6 +8,7 @@ import { useCalendarUpdate } from '@/hooks/calendar';
 import { useConnections } from '@/hooks/connections';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Calendar, Connection } from '@/schemas';
+import { useAnnouncer } from '@/stores';
 
 // CalDAV accounts are labeled "<user> on <host>"; well-known hosts get their service's name.
 const CALDAV_HOSTS: [RegExp, string][] = [
@@ -33,6 +34,7 @@ export function CalendarFilter(): JSX.Element {
   const { t } = useTranslation();
   const { calendars } = useCalendarPageModel();
   const update = useCalendarUpdate();
+  const announce = useAnnouncer((s) => s.announce);
   const hidden = calendars.filter((c) => c.hidden);
   const connections = useConnections().data ?? [];
   const inConnection = (ids: ReadonlySet<string>): Calendar[] =>
@@ -53,7 +55,11 @@ export function CalendarFilter(): JSX.Element {
       list: inConnection(new Set(connections.filter((k) => k.provider === 'ics').map((k) => k.id))),
     },
   ].filter((g) => g.list.length > 0);
-  const set = (c: Calendar, visible: boolean): void => update.mutate({ id: c.id, hidden: !visible });
+  const set = (c: Calendar, visible: boolean): void =>
+    update.mutate(
+      { id: c.id, hidden: !visible },
+      { onSuccess: () => announce(t(visible ? 'calendars.shown' : 'calendars.hiddenDone', { name: c.name })) },
+    );
 
   return (
     <Popover position="bottom-end" shadow="md" withArrow withinPortal={false}>
