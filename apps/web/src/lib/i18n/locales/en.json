@@ -82,6 +82,7 @@
     "views": {
       "day": "Day",
       "week": "Week",
+      "workWeek": "Work week",
       "month": "Month",
       "year": "Year",
       "agenda": "Agenda"

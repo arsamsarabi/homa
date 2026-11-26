@@ -1,4 +1,4 @@
-import { Button, Group, SegmentedControl, Select } from '@mantine/core';
+import { Button, Group, Select } from '@mantine/core';
 import { IconPlus, IconWorld } from '@tabler/icons-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,11 +40,15 @@ export function CalendarToolbar(): JSX.Element {
           limit={50}
           w={220}
         />
-        <SegmentedControl
-          value={bar.view}
-          onChange={bar.pickView}
-          data={bar.views}
+        <Select
           aria-label={t('calendar.viewLabel')}
+          data={bar.views}
+          value={bar.view}
+          onChange={(v: string | null): void => {
+            if (v) bar.pickView(v);
+          }}
+          allowDeselect={false}
+          w={140}
         />
         <Button leftSection={<IconPlus size={16} aria-hidden />} onClick={bar.newEvent}>
           {t('calendar.newEvent')}

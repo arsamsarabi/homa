@@ -68,6 +68,9 @@ export function rangeFor(view: View, date: Date, weekStart: number): DayRange {
       return span(d, 1);
     case 'week':
       return span(startOfWeek(d, weekStart), 7);
+    case 'workWeek':
+      // Monday–Friday of the week that contains `d` (ISO work week).
+      return span(startOfWeek(d, 1), 5);
     case 'month': {
       const days = monthGrid(d, weekStart);
       return { from: days[0] ?? d, to: addDays(days.at(-1) ?? d, 1), days };
@@ -85,6 +88,7 @@ export function step(view: View, date: Date, dir: 1 | -1): Date {
     case 'day':
       return addDays(date, dir);
     case 'week':
+    case 'workWeek':
       return addDays(date, 7 * dir);
     case 'month':
       return firstOfMonth(date.getUTCFullYear(), date.getUTCMonth() + dir);

@@ -21,7 +21,7 @@ export function CalendarPage(): JSX.Element {
 
 function CalendarPageBody(): JSX.Element {
   const { view } = useCalendarPageModel();
-  const fill = view === 'day' || view === 'week';
+  const fill = view === 'day' || view === 'week' || view === 'workWeek';
   return (
     <Stack gap="md" className={fill ? classes.fill : undefined}>
       <CalendarToolbar />

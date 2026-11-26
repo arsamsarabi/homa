@@ -3,6 +3,7 @@ import { type PointerEvent as ReactPointerEvent, type RefObject, useEffect, useM
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { allDayRowItems, type Placed, type TimedItem, timedColumnItems } from '@/services/calendar-layout';
+import { sameDay } from '@/services/dates';
 import { type Occasion, occasionsOn } from '@/services/jalali';
 import { type DragOutcome, draftGhost, dragGhost, type Ghost, HOUR_PX, initialScrollHour } from '@/services/time-grid';
 import { wallOf } from '@/services/zones';
@@ -13,8 +14,10 @@ export type TimeGridModel = GridDrag & {
   allDay: Occurrence[][];
   columns: Placed<TimedItem>[][];
   ghost: Ghost | undefined;
-  /** The placeholder for a new event while its editor is open. */
+  /** The placeholder for a new timed event while its editor is open. */
   draft: Ghost | undefined;
+  /** Day index of an all-day draft placeholder, when the editor is for an all-day span. */
+  allDayDraft: number | undefined;
   /** Persian occasions per day, when the Jalali calendar is on. */
   occasions: Occasion[][];
   /** Now, as a wall time in the viewed zone. */
@@ -27,11 +30,18 @@ export type TimeGridModel = GridDrag & {
 export function useTimeGrid(): TimeGridModel {
   const { range, tz, secondary, occurrences, editor, actions, pickDay, isReadOnly } = useCalendarPageModel();
   const days = range.days;
-  const occ = occurrences.data;
+  const d = editor.draft;
+  const editing = d?.kind === 'edit' ? `${d.occurrence.eventId}\0${d.occurrence.recurrenceId}` : undefined;
+  const preview = d?.kind === 'create' ? d : d?.kind === 'edit' ? d.preview : undefined;
+  const occ = useMemo((): Occurrence[] | undefined => {
+    const list = occurrences.data;
+    if (!list || !editing) return list;
+    return list.filter((o) => `${o.eventId}\0${o.recurrenceId}` !== editing);
+  }, [occurrences.data, editing]);
   const allDay = useMemo((): Occurrence[][] => allDayRowItems(days, occ ?? [], tz), [days, occ, tz]);
   const columns = useMemo((): Placed<TimedItem>[][] => timedColumnItems(days, occ ?? [], tz), [days, occ, tz]);
   const occasions = useMemo(
-    (): Occasion[][] => days.map((d) => (secondary === 'jalali' ? occasionsOn(d) : [])),
+    (): Occasion[][] => days.map((day) => (secondary === 'jalali' ? occasionsOn(day) : [])),
     [days, secondary],
   );
 
@@ -49,8 +59,13 @@ export function useTimeGrid(): TimeGridModel {
   }, []);
   const now = wallOf(instant, tz);
 
-  const d = editor.draft;
-  const draft = d?.kind === 'create' && !d.allDay ? draftGhost(d, days, tz) : undefined;
+  const draft = preview && !preview.allDay ? draftGhost(preview, days, tz) : undefined;
+  const allDayDraft = preview?.allDay
+    ? (() => {
+        const i = days.findIndex((day) => sameDay(day, preview.start));
+        return i >= 0 ? i : undefined;
+      })()
+    : undefined;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -75,6 +90,7 @@ export function useTimeGrid(): TimeGridModel {
     columns,
     ghost: dragGhost(gridDrag.drag, days, tz),
     draft,
+    allDayDraft,
     occasions,
     now,
     scrollRef,

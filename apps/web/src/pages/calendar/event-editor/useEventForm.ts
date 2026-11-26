@@ -11,6 +11,7 @@ import {
   draftAllDay,
   draftZone,
   formTimes,
+  parseFormTimes,
   REPEATS,
   type Repeat,
   shownRepeat,
@@ -39,6 +40,8 @@ export type EventFormModel = {
   /** The repeat can't be shown until the series has loaded. */
   repeatLoading: boolean;
   times: { start: string; end: string };
+  setStart: (v: string) => void;
+  setEnd: (v: string) => void;
   busy: boolean;
   error: string | undefined;
   submit: (e: FormEvent<HTMLFormElement>) => void;
@@ -71,8 +74,11 @@ export function useEventForm(draft: Draft): EventFormModel {
   const series = useSeries(occurrence?.eventId);
   const defaultReminder = useSettings().data?.defaultReminderMinutes;
 
-  const [allDay, setAllDay] = useState(draftAllDay(draft));
-  const [tz, setTz] = useState(draftZone(draft, viewTz));
+  const [allDay, setAllDayState] = useState(draftAllDay(draft));
+  const [tz, setTzState] = useState(draftZone(draft, viewTz));
+  const seed = formTimes(draft, draftAllDay(draft), draftZone(draft, viewTz));
+  const [start, setStartState] = useState(seed.start);
+  const [end, setEndState] = useState(seed.end);
   const [calendarId, setCalendarId] = useState(
     occurrence?.calendarId ?? (draft.kind === 'create' ? draft.calendarId : undefined) ?? defaultCalendarId ?? '',
   );
@@ -90,9 +96,6 @@ export function useEventForm(draft: Draft): EventFormModel {
   };
   const reminders = pickedReminders ?? startReminders();
   const repeat = shownRepeat(draft, picked, seriesRrule);
-  // Recomputed when the zone changes, but the inputs keep what was typed: changing the zone keeps the
-  // wall times and moves the event, as other calendars do.
-  const times = useMemo(() => formTimes(draft, allDay, tz), [draft, allDay, tz]);
   const zones = useMemo((): string[] => timeZones(), []);
   const calendarOptions = useMemo(
     () => writableCalendars.map((c) => ({ value: c.id, label: c.name })),
@@ -103,6 +106,36 @@ export function useEventForm(draft: Draft): EventFormModel {
       REPEATS.filter((r) => r !== 'custom' || repeat === 'custom').map((r) => ({ value: r, label: t(`repeat.${r}`) })),
     [repeat, t],
   );
+
+  function syncPreview(nextAllDay: boolean, nextTz: string, nextStart: string, nextEnd: string): void {
+    const span = parseFormTimes(nextAllDay, nextStart, nextEnd, nextTz);
+    if (span) editor.setTimes(span.start, span.end, nextAllDay);
+  }
+
+  function setAllDay(v: boolean): void {
+    // Changing all-day resets the inputs from the draft (same as remounting with a new key before).
+    const next = formTimes(draft, v, tz);
+    setAllDayState(v);
+    setStartState(next.start);
+    setEndState(next.end);
+    syncPreview(v, tz, next.start, next.end);
+  }
+
+  function setTz(v: string): void {
+    // Zone change keeps the typed wall times and moves the instant (and the draft) with them.
+    setTzState(v);
+    syncPreview(allDay, v, start, end);
+  }
+
+  function setStart(v: string): void {
+    setStartState(v);
+    syncPreview(allDay, tz, v, end);
+  }
+
+  function setEnd(v: string): void {
+    setEndState(v);
+    syncPreview(allDay, tz, start, v);
+  }
 
   async function run(work: () => Promise<void>): Promise<void> {
     setBusy(true);
@@ -126,8 +159,8 @@ export function useEventForm(draft: Draft): EventFormModel {
         summary: get('summary'),
         description: get('description'),
         location: get('location'),
-        start: get('start'),
-        end: get('end'),
+        start,
+        end,
         allDay,
         tz,
         calendarId,
@@ -160,7 +193,9 @@ export function useEventForm(draft: Draft): EventFormModel {
     repeat,
     setRepeat: setPicked,
     repeatLoading: Boolean(occurrence?.recurring) && series.isPending,
-    times,
+    times: { start, end },
+    setStart,
+    setEnd,
     busy,
     error,
     submit,

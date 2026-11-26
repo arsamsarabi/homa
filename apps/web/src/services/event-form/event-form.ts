@@ -20,7 +20,12 @@ export type Draft =
       rrule?: string | null;
       calendarId?: string;
     }
-  | { kind: 'edit'; occurrence: Occurrence };
+  | {
+      kind: 'edit';
+      occurrence: Occurrence;
+      /** Live start/end while the form is open (instants, or UTC midnights when all-day). */
+      preview?: { start: Date; end: Date; allDay: boolean };
+    };
 
 export type EditorResult =
   | { kind: 'create'; body: EventInput }

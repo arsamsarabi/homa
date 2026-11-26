@@ -33,10 +33,17 @@ const cellAt = (x: number, y: number): string | undefined =>
 
 export function useMonthView(): MonthViewModel {
   const { range, date, tz, secondary, occurrences, editor, actions, pickDay, isReadOnly } = useCalendarPageModel();
-  const occ = occurrences.data;
+  const d = editor.draft;
+  const editing = d?.kind === 'edit' ? `${d.occurrence.eventId}\0${d.occurrence.recurrenceId}` : undefined;
+  const preview = d?.kind === 'create' ? d : d?.kind === 'edit' ? d.preview : undefined;
+  const occ = useMemo((): Occurrence[] | undefined => {
+    const list = occurrences.data;
+    if (!list || !editing) return list;
+    return list.filter((o) => `${o.eventId}\0${o.recurrenceId}` !== editing);
+  }, [occurrences.data, editing]);
   const cells = useMemo((): Occurrence[][] => monthCellItems(range.days, occ ?? [], tz), [range.days, occ, tz]);
   const occasions = useMemo(
-    (): Occasion[][] => range.days.map((d) => (secondary === 'jalali' ? occasionsOn(d) : [])),
+    (): Occasion[][] => range.days.map((day) => (secondary === 'jalali' ? occasionsOn(day) : [])),
     [range.days, secondary],
   );
   const [over, setOver] = useState<string>();
@@ -77,8 +84,7 @@ export function useMonthView(): MonthViewModel {
     window.addEventListener('pointerup', up);
   }
 
-  const d = editor.draft;
-  const draftDay = d?.kind === 'create' ? isoDate(wallOf(d.start, tz)) : undefined;
+  const draftDay = preview ? isoDate(preview.allDay ? preview.start : wallOf(preview.start, tz)) : undefined;
 
   return {
     days: range.days,
