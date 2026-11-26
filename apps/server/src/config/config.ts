@@ -103,6 +103,12 @@ const Env = z
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    // One OIDC provider for sign-in (Better Auth genericOAuth, provider id `oidc`). All three of
+    // issuer, client id and secret, or none. The button label defaults to "SSO".
+    HOMA_OIDC_ISSUER: z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional()),
+    HOMA_OIDC_CLIENT_ID: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    HOMA_OIDC_CLIENT_SECRET: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+    HOMA_OIDC_NAME: z.preprocess((v) => (v === '' ? undefined : v), z.string().default('SSO')),
   })
   .refine((env) => !env.HOMA_GOOGLE_CLIENT_ID === !env.HOMA_GOOGLE_CLIENT_SECRET, {
     message: 'set both HOMA_GOOGLE_CLIENT_ID and HOMA_GOOGLE_CLIENT_SECRET, or neither',
@@ -126,9 +132,24 @@ const Env = z
     path: ['HOMA_REQUIRE_EMAIL_VERIFICATION'],
   })
   .refine(
-    (env) => !(env.HOMA_DEMO && (env.HOMA_SMTP_URL || env.HOMA_GOOGLE_CLIENT_ID || env.HOMA_MICROSOFT_CLIENT_ID)),
+    (env) => {
+      const n = [env.HOMA_OIDC_ISSUER, env.HOMA_OIDC_CLIENT_ID, env.HOMA_OIDC_CLIENT_SECRET].filter(Boolean).length;
+      return n === 0 || n === 3;
+    },
     {
-      message: 'HOMA_DEMO=true sends nothing out: leave HOMA_SMTP_URL, HOMA_GOOGLE_* and HOMA_MICROSOFT_* unset',
+      message: 'set HOMA_OIDC_ISSUER, HOMA_OIDC_CLIENT_ID and HOMA_OIDC_CLIENT_SECRET all together, or none',
+      path: ['HOMA_OIDC_CLIENT_SECRET'],
+    },
+  )
+  .refine(
+    (env) =>
+      !(
+        env.HOMA_DEMO &&
+        (env.HOMA_SMTP_URL || env.HOMA_GOOGLE_CLIENT_ID || env.HOMA_MICROSOFT_CLIENT_ID || env.HOMA_OIDC_ISSUER)
+      ),
+    {
+      message:
+        'HOMA_DEMO=true sends nothing out: leave HOMA_SMTP_URL, HOMA_GOOGLE_*, HOMA_MICROSOFT_* and HOMA_OIDC_* unset',
       path: ['HOMA_DEMO'],
     },
   )
@@ -138,6 +159,40 @@ const Env = z
   }));
 
 export type Config = z.infer<typeof Env>;
+
+/** The one OIDC provider, when configured; null when all three secrets are unset. */
+export type OidcSettings = {
+  issuer: string;
+  clientId: string;
+  clientSecret: string;
+  name: string;
+  /** Register this URI with the identity provider. */
+  redirectUri: string;
+};
+
+/** Passkey relying-party settings derived from HOMA_URL and the instance name. */
+export type PasskeySettings = { rpID: string; rpName: string; origin: string };
+
+const trimTrailingSlash = (url: string): string => url.replace(/\/$/, '');
+
+/** Reads OIDC from a validated config, or null when it isn't set up. */
+export function oidcFrom(config: Config): OidcSettings | null {
+  if (!config.HOMA_OIDC_ISSUER || !config.HOMA_OIDC_CLIENT_ID || !config.HOMA_OIDC_CLIENT_SECRET) return null;
+  const base = trimTrailingSlash(config.HOMA_URL);
+  return {
+    issuer: config.HOMA_OIDC_ISSUER,
+    clientId: config.HOMA_OIDC_CLIENT_ID,
+    clientSecret: config.HOMA_OIDC_CLIENT_SECRET,
+    name: config.HOMA_OIDC_NAME,
+    redirectUri: `${base}/api/auth/callback/oidc`,
+  };
+}
+
+/** Passkey rpID/origin from HOMA_URL; rpName is the instance's display name. */
+export function passkeyFrom(config: Config, instanceName: string): PasskeySettings {
+  const origin = trimTrailingSlash(config.HOMA_URL);
+  return { rpID: new URL(origin).hostname, rpName: instanceName, origin };
+}
 
 /** Reads and validates the environment. Throws one error listing every problem. */
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {

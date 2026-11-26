@@ -22,6 +22,13 @@ export const PublicInstanceSchema = z.object({
   passwordReset: z.boolean(),
   /** Whether everyone, not only admins, can create invite links. */
   anyoneCanInvite: z.boolean(),
+  /** Single sign-on when OIDC is configured; null otherwise. */
+  oidc: z
+    .object({
+      name: z.string(),
+      redirectUri: z.string(),
+    })
+    .nullable(),
   /** A demo instance's shared sign-in; null on every other instance. */
   demo: z.object({ email: z.string(), password: z.string() }).nullable(),
 });

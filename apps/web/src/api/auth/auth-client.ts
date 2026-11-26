@@ -1,11 +1,12 @@
 // Better Auth's browser client for sign-up, sign-in, sign-out and the session.
+import { passkeyClient } from '@better-auth/passkey/client';
 import { adminClient } from 'better-auth/client/plugins';
 import { createAuthClient } from 'better-auth/react';
 
 export const authClient = createAuthClient({
   basePath: '/api/auth',
-  // Types the admin plugin's fields on the session (user.role).
-  plugins: [adminClient()],
+  // Types the admin plugin's fields on the session (user.role) and the passkey client methods.
+  plugins: [adminClient(), passkeyClient()],
   // Look fetch up per request (not once at import) so tests can fake the network.
   fetchOptions: {
     customFetchImpl: (input: string | URL | Request, init?: RequestInit): Promise<Response> => {

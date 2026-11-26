@@ -25,6 +25,13 @@ export const PublicInstance = z
       .boolean()
       .openapi({ description: 'Whether this server can email password reset links (it has email set up)' }),
     anyoneCanInvite: z.boolean().openapi({ description: 'Whether everyone, not only admins, can create invite links' }),
+    oidc: z
+      .object({
+        name: z.string().openapi({ description: 'The sign-in button label ("Sign in with …")' }),
+        redirectUri: z.string().openapi({ description: 'The redirect URI to register with the identity provider' }),
+      })
+      .nullable()
+      .openapi({ description: 'Single sign-on when OIDC is configured from the environment; null otherwise' }),
     demo: z
       .object({ email: z.string(), password: z.string() })
       .nullable()

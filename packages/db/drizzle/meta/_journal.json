@@ -134,6 +134,13 @@
       "when": 1795717239942,
       "tag": "0018_calendar_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795719537834,
+      "tag": "0019_passkeys",
+      "breakpoints": true
     }
   ]
 }
