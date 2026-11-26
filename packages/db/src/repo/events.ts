@@ -71,6 +71,26 @@ export const listEventsPastCache = (
       ),
     );
 
+/** Recurring events in these calendars (any owner) that start before `to` but whose cache stops before it. */
+export const listEventsPastCacheForCalendars = (
+  db: Executor,
+  calendarIds: readonly string[],
+  to: Date,
+): Promise<EventRow[]> =>
+  calendarIds.length
+    ? db
+        .select()
+        .from(events)
+        .where(
+          and(
+            inArray(events.calendarId, [...calendarIds]),
+            isNotNull(events.rrule),
+            lt(events.expandedUntil, to),
+            lt(events.startAt, to),
+          ),
+        )
+    : Promise.resolve([]);
+
 /** Ids of the calendar's events with these iCalendar UIDs, by UID: what an import updates. */
 export async function findEventIdsByUid(
   db: Executor,

@@ -91,11 +91,24 @@
           },
           "hidden": {
             "type": "boolean",
-            "description": "Left out of the calendar views; its events still sync"
+            "description": "Left out of the calendar views; for a shared calendar this is your own choice"
           },
           "remoteMissing": {
             "type": "boolean",
             "description": "Deleted at the source, or no longer shared with the account; it can be deleted here"
+          },
+          "access": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "freebusy",
+              "read",
+              "edit"
+            ],
+            "description": "Effective access on this calendar for the caller"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/CalendarOwner"
           },
           "createdAt": {
             "type": "string",
@@ -114,8 +127,26 @@
           "readOnly",
           "hidden",
           "remoteMissing",
+          "access",
+          "owner",
           "createdAt",
           "updatedAt"
+        ]
+      },
+      "CalendarOwner": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "Error": {
@@ -162,6 +193,87 @@
             "type": "boolean"
           }
         }
+      },
+      "CalendarGrants": {
+        "type": "object",
+        "properties": {
+          "defaultAccess": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "none",
+              "freebusy",
+              "read",
+              null
+            ]
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GrantTarget"
+            },
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "defaultAccess",
+          "grants"
+        ]
+      },
+      "GrantTarget": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "circleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "freebusy",
+              "read",
+              "edit"
+            ]
+          }
+        },
+        "required": [
+          "level"
+        ]
+      },
+      "CalendarGrantsPut": {
+        "type": "object",
+        "properties": {
+          "defaultAccess": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "none",
+              "freebusy",
+              "read",
+              null
+            ]
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GrantTarget"
+            },
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "defaultAccess",
+          "grants"
+        ]
       },
       "Event": {
         "type": "object",
@@ -551,6 +663,15 @@
             "maximum": 40320,
             "example": 10,
             "description": "The reminder the event form adds to new timed events, in minutes before; null for none"
+          },
+          "sharingPreset": {
+            "type": "string",
+            "enum": [
+              "private",
+              "freebusy",
+              "read"
+            ],
+            "description": "Default for calendars with no per-calendar default: private shares nothing"
           }
         },
         "required": [
@@ -558,7 +679,8 @@
           "secondaryCalendar",
           "weekStart",
           "workWeekDays",
-          "defaultReminderMinutes"
+          "defaultReminderMinutes",
+          "sharingPreset"
         ]
       },
       "SettingsPatch": {
@@ -620,6 +742,15 @@
             "maximum": 40320,
             "example": 10,
             "description": "The reminder the event form adds to new timed events, in minutes before; null for none"
+          },
+          "sharingPreset": {
+            "type": "string",
+            "enum": [
+              "private",
+              "freebusy",
+              "read"
+            ],
+            "description": "Default for calendars with no per-calendar default: private shares nothing"
           }
         }
       },
@@ -888,6 +1019,14 @@
                   "integer",
                   "null"
                 ]
+              },
+              "sharingPreset": {
+                "type": "string",
+                "enum": [
+                  "private",
+                  "freebusy",
+                  "read"
+                ]
               }
             },
             "required": [
@@ -895,7 +1034,8 @@
               "secondaryCalendar",
               "weekStart",
               "workWeekDays",
-              "defaultReminderMinutes"
+              "defaultReminderMinutes",
+              "sharingPreset"
             ]
           },
           "calendars": {
@@ -2746,10 +2886,10 @@
         "tags": [
           "Calendars"
         ],
-        "summary": "Your calendars",
+        "summary": "Your calendars, then ones shared with you",
         "responses": {
           "200": {
-            "description": "Calendars, oldest first",
+            "description": "Calendars, own first",
             "content": {
               "application/json": {
                 "schema": {
@@ -2829,7 +2969,7 @@
         "tags": [
           "Calendars"
         ],
-        "summary": "Rename, recolor, hide or show a calendar",
+        "summary": "Rename, recolor, hide or show a calendar (shared: hide only)",
         "parameters": [
           {
             "schema": {
@@ -2925,6 +3065,128 @@
         "responses": {
           "204": {
             "description": "Deleted"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{id}/grants": {
+      "get": {
+        "operationId": "getCalendarGrants",
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "Who can see this calendar (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default and grants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarGrants"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putCalendarGrants",
+        "tags": [
+          "Calendars"
+        ],
+        "summary": "Replace who can see this calendar (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarGrantsPut"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default and grants after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarGrants"
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request",
@@ -3273,7 +3535,7 @@
           "Events"
         ],
         "summary": "Replace an event's reminders",
-        "description": "They apply to every occurrence. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.",
+        "description": "They apply to every occurrence. Owner only. On read-only calendars (subscriptions) they stay in Homa; on two-way calendars they sync.",
         "parameters": [
           {
             "schema": {
@@ -3346,7 +3608,7 @@
           "Events"
         ],
         "summary": "Every event occurrence in a time range",
-        "description": "Overlapping [from, to), sorted by start. The range can be at most 400 days.",
+        "description": "Overlapping [from, to), sorted by start. The range can be at most 400 days. Shared calendars at freebusy show as busy blocks only.",
         "parameters": [
           {
             "schema": {
