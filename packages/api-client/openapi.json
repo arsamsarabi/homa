@@ -872,6 +872,17 @@
                 "minimum": 0,
                 "maximum": 6
               },
+              "workWeekDays": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                }
+              },
               "defaultReminderMinutes": {
                 "type": [
                   "integer",
@@ -883,6 +894,7 @@
               "homeTz",
               "secondaryCalendar",
               "weekStart",
+              "workWeekDays",
               "defaultReminderMinutes"
             ]
           },

@@ -1326,6 +1326,7 @@ export interface components {
                 homeTz: string | null;
                 secondaryCalendar: string;
                 weekStart: number | null;
+                workWeekDays: number[] | null;
                 defaultReminderMinutes: number | null;
             };
             calendars: components["schemas"]["Calendar"][];

@@ -189,6 +189,7 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
       homeTz: null,
       secondaryCalendar: 'none',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
     expect(doc.calendars.map((c) => c.id)).toEqual([adaCalendar]);
