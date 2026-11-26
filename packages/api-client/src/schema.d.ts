@@ -174,6 +174,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Free/busy for a set of people
+         * @description Busy intervals the caller is allowed to see. At most 50 people and 92 days. All-day events do not count. Unknown user ids are a 400.
+         */
+        post: operations["getAvailability"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/settings": {
         parameters: {
             query?: never;
@@ -1192,6 +1212,32 @@ export interface components {
             taskId: string | null;
             /** @description That task is completed */
             taskDone: boolean;
+        };
+        Availability: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            people: components["schemas"]["PersonAvailability"][];
+        };
+        PersonAvailability: {
+            userId: string;
+            /** @description False when the caller sees none of this person’s calendars */
+            shared: boolean;
+            busy: components["schemas"]["BusyInterval"][];
+        };
+        BusyInterval: {
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+        };
+        AvailabilityInput: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            userIds: string[];
         };
         Settings: {
             /**
@@ -2494,6 +2540,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Occurrence"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AvailabilityInput"];
+            };
+        };
+        responses: {
+            /** @description Busy intervals per person */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Availability"];
                 };
             };
             /** @description Invalid request */

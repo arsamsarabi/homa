@@ -16,6 +16,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./availability": "./src/availability/index.ts",
     "./quick-add": "./src/quick-add/index.ts",
     "./time": "./src/time/index.ts"
   }
