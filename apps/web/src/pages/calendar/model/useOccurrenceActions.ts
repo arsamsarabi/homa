@@ -63,8 +63,9 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
       }
       announce(t('calendar.announce.saved'));
     } catch (err: unknown) {
-      // The editor may already be closed; toast is the failure feedback.
+      // Toast always; rethrow so quick-add can keep the line and callers can react.
       announce(t('calendar.saveFailed', { message: messageOf(err) }));
+      throw err;
     }
   }
 
@@ -86,6 +87,7 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
       announce(t('calendar.announce.deleted'));
     } catch (err: unknown) {
       announce(t('calendar.deleteFailed', { message: messageOf(err) }));
+      throw err;
     }
   }
 
