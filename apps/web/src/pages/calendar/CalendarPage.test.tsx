@@ -130,8 +130,8 @@ describe('calendar page', () => {
     expect(screen.queryByLabelText(/time zone/i)).toBeNull();
   });
 
-  test('shows times in the home zone, or the zone in the URL', async () => {
-    // 10:00 UTC on 19 November 2026: 13:30 in Tehran, 05:00 in New York.
+  test('shows times in the home zone, ignoring any tz in the URL', async () => {
+    // 10:00 UTC on 19 November 2026: 13:30 in Tehran (not 05:00 New York).
     const meeting = {
       ...dentist,
       start: '2026-11-19T10:00:00Z',
@@ -139,18 +139,12 @@ describe('calendar page', () => {
       recurrenceId: '2026-11-19T10:00:00Z',
     };
     const tehran = signedInWith({ homeTz: 'Asia/Tehran', secondaryCalendar: 'none' });
-    const first = renderApp(
-      '/?view=agenda&date=2026-11-19',
-      api(() => json([meeting]), tehran),
-    );
-    expect(await screen.findByText(/13:30/)).toBeTruthy();
-    first.unmount();
-
     renderApp(
       '/?view=agenda&date=2026-11-19&tz=America/New_York',
       api(() => json([meeting]), tehran),
     );
-    expect(await screen.findByText(/\b0?5:00/)).toBeTruthy();
+    expect(await screen.findByText(/13:30/)).toBeTruthy();
+    expect(screen.queryByText(/\b0?5:00/)).toBeNull();
   });
 
   test('the week starts on the day chosen in settings', async () => {
