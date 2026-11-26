@@ -98,9 +98,8 @@ export function useOccurrenceActions(ask: ScopePrompt['ask'], closeEditor: () =>
         if (done) announce(t('calendar.announce.moved'));
       })
       .catch((err: unknown) => {
-        const message = messageOf(err);
-        setError(message);
-        announce(t('calendar.moveFailed', { message }), { kind: 'error' });
+        // Inline banner above the calendar owns failure feedback; do not also toast.
+        setError(messageOf(err));
       });
   }
 

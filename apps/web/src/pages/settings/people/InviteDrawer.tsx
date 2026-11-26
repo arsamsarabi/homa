@@ -7,6 +7,7 @@ import { useInviteMutations } from '@/hooks/people';
 import { isolate } from '@/lib/i18n';
 import type { CreatedInvite } from '@/schemas';
 import { inviteLink } from '@/services/people';
+import { useAnnouncer } from '@/stores';
 
 export type InviteDrawerProps = { opened: boolean; onClose: () => void };
 
@@ -14,6 +15,7 @@ export type InviteDrawerProps = { opened: boolean; onClose: () => void };
 export function InviteDrawer({ opened, onClose }: InviteDrawerProps): JSX.Element {
   const { t } = useTranslation();
   const { create } = useInviteMutations();
+  const announce = useAnnouncer((s) => s.announce);
   const [created, setCreated] = useState<CreatedInvite>();
   const [error, setError] = useState<string>();
   const guard = useConfirmClose(() => {
@@ -33,6 +35,7 @@ export function InviteDrawer({ opened, onClose }: InviteDrawerProps): JSX.Elemen
       onSuccess: (invite: CreatedInvite): void => {
         guard.resetDirty();
         setCreated(invite);
+        announce(t('people.invites.created'));
       },
       onError: (err: Error) => setError(err.message),
     });

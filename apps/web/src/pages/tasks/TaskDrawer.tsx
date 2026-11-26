@@ -47,10 +47,8 @@ function TaskForm({
   const [subtask, setSubtask] = useState('');
   const subtasks = task.parentId ? [] : m.subtasksOf(task.id);
   const repeat = repeatOf(task.rrule);
-  const fail = (err: Error): void => {
-    setError(err.message);
-    announce(t('tasks.saveFailed', { message: err.message }), { kind: 'error' });
-  };
+  // Inline Alert owns failure feedback; do not also toast.
+  const fail = (err: Error): void => setError(err.message);
 
   const submit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
