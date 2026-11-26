@@ -83,12 +83,12 @@ Status: done. 5a (#51), 5b (#52), 5c (#53).
 
 ## Phase 6: sharing and people
 
-Status: in progress. Designed in [phase-6-sharing.md](../design/phase-6-sharing.md).
+Status: done. Designed in [phase-6-sharing.md](../design/phase-6-sharing.md). 6a (#93), 6b (#108–#110), 6c (#111), 6d (#112).
 
-- **6a** done (#93): multi-user invites, people directory and circles.
-- **6b** foundation done (#108): `calendar_grants`, defaults and `resolveAccess`. Grant checks on the API (#109), then sharing UI (#110), in review.
-- **6c** availability API (free/busy) in review (#111).
-- **6d** OIDC and passkeys in review (#112).
+- Multi-user invites, people directory and circles.
+- Calendar grants, sharing preset, grant checks on every path, and sharing UI in the views and Settings.
+- Availability API (permission-aware free/busy).
+- OIDC single sign-on (one provider from the environment) and passkeys.
 
 ## Phase 7: group date-finding
 
@@ -124,4 +124,4 @@ Expo mobile app, task sync (VTODO, Google Tasks, Microsoft To Do, Todoist), host
 
 - Phases 2 and 3 come first because the v1 hero is the calendar and sync.
 - Phase 6 must land before phase 7: polls depend on permission-aware availability.
-- The data model carried multi-user columns (`owner_user_id`, grants) from phase 1; sharing UI arrives in the rest of phase 6b.
+- The data model carried multi-user columns (`owner_user_id`, grants) from phase 1; phase 6 filled in grants, the sharing UI, availability and OIDC/passkeys.
