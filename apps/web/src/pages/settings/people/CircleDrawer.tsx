@@ -82,7 +82,11 @@ export function CircleDrawer({ target, people, onClose }: CircleDrawerProps): JS
               <Button variant="default" onClick={close}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" loading={create.isPending || update.isPending}>
+              <Button
+                type="submit"
+                loading={create.isPending || update.isPending}
+                disabled={create.isPending || update.isPending}
+              >
                 {t('people.circles.save')}
               </Button>
             </Group>

@@ -19,11 +19,16 @@ describe('admin page', () => {
     const gate = new Promise<void>((r) => {
       release = r;
     });
+    let releaseSave: () => void = () => undefined;
+    const saveGate = new Promise<void>((r) => {
+      releaseSave = r;
+    });
     renderApp('/admin', async (url, req) => {
       if (url.pathname !== '/api/admin/instance') return admin(url, req);
       if (req.method === 'PATCH') {
         const body = await req.json();
         sent.push(body);
+        await saveGate;
         return json({ ...saved, ...body });
       }
       await gate;
@@ -37,8 +42,13 @@ describe('admin page', () => {
       'Asia/Tehran',
     );
     fireEvent.click(screen.getByLabelText('Only people with an invite'));
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    const save = screen.getByRole('button', { name: 'Save' });
+    fireEvent.click(save);
+    await waitFor(() => expect((save as HTMLButtonElement).disabled).toBe(true));
+    expect(save.getAttribute('data-loading')).toBe('true');
+    releaseSave();
     await waitFor(() => expect(sent).toEqual([{ signUps: 'closed' }]));
+    expect((await screen.findByTestId('announcer-toast')).textContent).toBe('Instance settings saved');
   });
 
   test('a failed load shows why and can retry', async () => {

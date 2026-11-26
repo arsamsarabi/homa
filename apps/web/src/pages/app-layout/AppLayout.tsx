@@ -20,6 +20,7 @@ export function AppLayout(): JSX.Element {
   const signOut = useSignOut();
   const message = useAnnouncer((s) => s.message);
   const id = useAnnouncer((s) => s.id);
+  const toast = useAnnouncer((s) => s.toast);
   const [helpOpen, help] = useDisclosure(false);
   useHotkeys([['shift+slash', help.open, { usePhysicalKeys: true }]]);
 
@@ -52,7 +53,7 @@ export function AppLayout(): JSX.Element {
       </AppShell.Main>
       <CommandPalette actions={actions} />
       <ShortcutsHelp opened={helpOpen} onClose={help.close} />
-      <LiveRegion message={message} id={id} />
+      <LiveRegion message={message} id={id} toast={toast} />
     </AppShell>
   );
 }

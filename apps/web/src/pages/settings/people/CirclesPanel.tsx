@@ -70,6 +70,8 @@ export function CirclesPanel(): JSX.Element {
                 size="xs"
                 variant="light"
                 color="red"
+                loading={remove.isPending && remove.variables === c.id}
+                disabled={remove.isPending && remove.variables === c.id}
                 onClick={(): void =>
                   remove.mutate(c.id, { onSuccess: () => announce(t('people.circles.deleted', { name: c.name })) })
                 }

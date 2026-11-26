@@ -74,7 +74,7 @@ export function InviteDrawer({ opened, onClose }: InviteDrawerProps): JSX.Elemen
               <Button variant="default" onClick={close}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" loading={create.isPending}>
+              <Button type="submit" loading={create.isPending} disabled={create.isPending}>
                 {t('people.invites.create')}
               </Button>
             </Group>

@@ -42,7 +42,7 @@ export function SettingsPage(): JSX.Element {
         )}
         <SettingsFields value={draft.value} browserTz={browserTimeZone()} onChange={draft.change} />
         <Group>
-          <Button onClick={save} loading={draft.busy}>
+          <Button onClick={save} loading={draft.busy} disabled={draft.busy}>
             {t('settings.save')}
           </Button>
         </Group>

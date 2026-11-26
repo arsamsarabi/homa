@@ -188,7 +188,11 @@ export function ChannelDrawer({ draft, emailAvailable, onClose }: ChannelDrawerP
               <Button variant="default" onClick={close}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" loading={create.isPending || update.isPending}>
+              <Button
+                type="submit"
+                loading={create.isPending || update.isPending}
+                disabled={create.isPending || update.isPending}
+              >
                 {t('channels.save')}
               </Button>
             </Group>
