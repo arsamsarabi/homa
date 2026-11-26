@@ -50,17 +50,11 @@ describe('calendar access helpers', () => {
   });
 
   test('groupSharedByOwner skips owned and sorts by owner name', () => {
-    const list = [
-      cal({ id: 'a', name: 'Mine', access: 'owner' }),
-      cal({ id: 'b', name: 'Bob work', access: 'read', owner: { id: 'u2', name: 'Bob' } }),
-      cal({ id: 'c', name: 'Ada shared', access: 'freebusy', owner: { id: 'u3', name: 'Zed' } }),
-      cal({ id: 'd', name: 'Bob home', access: 'edit', owner: { id: 'u2', name: 'Bob' } }),
-    ];
-    const bobWork = list[1];
-    const zed = list[2];
-    const bobHome = list[3];
-    expect(bobWork && zed && bobHome).toBeTruthy();
-    expect(groupSharedByOwner(list)).toEqual([
+    const mine = cal({ id: 'a', name: 'Mine', access: 'owner' });
+    const bobWork = cal({ id: 'b', name: 'Bob work', access: 'read', owner: { id: 'u2', name: 'Bob' } });
+    const zed = cal({ id: 'c', name: 'Ada shared', access: 'freebusy', owner: { id: 'u3', name: 'Zed' } });
+    const bobHome = cal({ id: 'd', name: 'Bob home', access: 'edit', owner: { id: 'u2', name: 'Bob' } });
+    expect(groupSharedByOwner([mine, bobWork, zed, bobHome])).toEqual([
       {
         ownerId: 'u2',
         ownerName: 'Bob',
