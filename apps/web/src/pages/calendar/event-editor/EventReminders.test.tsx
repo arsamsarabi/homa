@@ -73,10 +73,13 @@ describe('event reminders', () => {
     });
     fireEvent.click(await screen.findByText('Bank holiday'));
     const details = await screen.findByRole('dialog', { name: 'Edit event' });
-    const dayBefore = (await within(details).findByRole('checkbox', { name: '1 day before' })) as HTMLInputElement;
-    await waitFor(() => expect(dayBefore.disabled).toBe(false));
-    fireEvent.click(dayBefore);
+    const add = (): HTMLButtonElement => within(details).getByRole('button', { name: 'Add' }) as HTMLButtonElement;
+    await waitFor(() => expect(add().disabled).toBe(false));
+    fireEvent.change(within(details).getByLabelText('Amount'), { target: { value: '1' } });
+    fireEvent.change(within(details).getByLabelText('Unit'), { target: { value: 'days' } });
+    fireEvent.click(add());
     await waitFor(() => expect(sent).toEqual([{ reminders: [1440] }]));
+    const dayBefore = within(details).getByRole('checkbox', { name: '1 day before' }) as HTMLInputElement;
     await waitFor(() => expect(dayBefore.checked).toBe(true));
   });
 });

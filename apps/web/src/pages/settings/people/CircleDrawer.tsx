@@ -14,6 +14,8 @@ import {
 import { IconPhoto, IconRefresh } from '@tabler/icons-react';
 import { type FormEvent, type JSX, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ConfirmCloseModal } from '@/components';
+import { useConfirmClose } from '@/hooks/confirm-close';
 import { useCircleMutations } from '@/hooks/people';
 import { SWATCHES } from '@/pages/settings/calendars';
 import type { Circle, Person } from '@/schemas';
@@ -61,18 +63,21 @@ export function CircleDrawer({ target, people, onClose }: CircleDrawerProps): JS
     );
   }, [target]);
 
-  const close = (): void => {
+  const guard = useConfirmClose(() => {
     setMemberIds(undefined);
     setError(undefined);
     onClose();
-  };
+  });
   const done = (c: Circle): void => {
     announce(t('people.circles.saved', { name: c.name }));
-    close();
+    guard.forceClose();
   };
   const fail = (err: Error): void => setError(t('people.circles.saveFailed', { message: err.message }));
 
-  const shuffle = (): void => setAppearance((a) => ({ ...a, avatarSeed: randomAvatarSeed(), avatarImage: null }));
+  const shuffle = (): void => {
+    guard.markDirty();
+    setAppearance((a) => ({ ...a, avatarSeed: randomAvatarSeed(), avatarImage: null }));
+  };
 
   const onUpload = async (file: File | null): Promise<void> => {
     if (!file) return;
@@ -100,111 +105,114 @@ export function CircleDrawer({ target, people, onClose }: CircleDrawerProps): JS
   };
 
   return (
-    <Drawer
-      opened={target !== undefined}
-      onClose={close}
-      position="right"
-      size="md"
-      padding="lg"
-      title={editing ? t('people.circles.editTitle') : t('people.circles.new')}
-    >
-      {target && (
-        <form onSubmit={submit}>
-          <Stack>
-            {error && (
-              <Alert color="red" role="alert">
-                {error}
-              </Alert>
-            )}
-            <TextInput
-              name="name"
-              label={t('people.circles.name')}
-              placeholder={t('people.circles.namePlaceholder')}
-              defaultValue={editing?.name ?? ''}
-              maxLength={60}
-              required
-              data-autofocus
-              disabled={saving}
-            />
-            <Stack gap="xs">
-              <Text size="sm" fw={500}>
-                {t('people.circles.avatar')}
-              </Text>
-              <Group gap="md" align="center">
-                <Avatar
-                  src={preview}
-                  alt=""
-                  size={56}
-                  radius="md"
-                  style={{ border: `3px solid ${appearance.color}` }}
-                />
-                <Group gap="xs">
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="default"
-                    leftSection={<IconRefresh size={14} aria-hidden />}
-                    onClick={shuffle}
-                    disabled={saving}
-                  >
-                    {t('people.circles.shuffleAvatar')}
-                  </Button>
-                  <FileButton
-                    onChange={(f: File | null) => void onUpload(f)}
-                    accept="image/png,image/jpeg,image/webp,image/gif"
-                  >
-                    {(props: { onClick: () => void }) => (
-                      <Button
-                        {...props}
-                        type="button"
-                        size="xs"
-                        variant="light"
-                        leftSection={<IconPhoto size={14} aria-hidden />}
-                        disabled={saving}
-                      >
-                        {t('people.circles.uploadAvatar')}
-                      </Button>
-                    )}
-                  </FileButton>
+    <>
+      <Drawer
+        opened={target !== undefined}
+        onClose={guard.requestClose}
+        position="right"
+        size="md"
+        padding="lg"
+        title={editing ? t('people.circles.editTitle') : t('people.circles.new')}
+      >
+        {target && (
+          <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
+            <Stack>
+              {error && (
+                <Alert color="red" role="alert">
+                  {error}
+                </Alert>
+              )}
+              <TextInput
+                name="name"
+                label={t('people.circles.name')}
+                placeholder={t('people.circles.namePlaceholder')}
+                defaultValue={editing?.name ?? ''}
+                maxLength={60}
+                required
+                data-autofocus
+                disabled={saving}
+              />
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>
+                  {t('people.circles.avatar')}
+                </Text>
+                <Group gap="md" align="center">
+                  <Avatar
+                    src={preview}
+                    alt=""
+                    size={56}
+                    radius="md"
+                    style={{ border: `3px solid ${appearance.color}` }}
+                  />
+                  <Group gap="xs">
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="default"
+                      leftSection={<IconRefresh size={14} aria-hidden />}
+                      onClick={shuffle}
+                      disabled={saving}
+                    >
+                      {t('people.circles.shuffleAvatar')}
+                    </Button>
+                    <FileButton
+                      onChange={(f: File | null) => void onUpload(f)}
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                    >
+                      {(props: { onClick: () => void }) => (
+                        <Button
+                          {...props}
+                          type="button"
+                          size="xs"
+                          variant="light"
+                          leftSection={<IconPhoto size={14} aria-hidden />}
+                          disabled={saving}
+                        >
+                          {t('people.circles.uploadAvatar')}
+                        </Button>
+                      )}
+                    </FileButton>
+                  </Group>
                 </Group>
+                <Text size="xs" c="dimmed">
+                  {t('people.circles.avatarHint')}
+                </Text>
+              </Stack>
+              <ColorInput
+                label={t('people.circles.color')}
+                value={appearance.color}
+                onChange={(color: string) => setAppearance((a) => ({ ...a, color }))}
+                format="hex"
+                swatches={[...SWATCHES]}
+                swatchesPerRow={7}
+                closeOnColorSwatchClick
+                disabled={saving}
+              />
+              <MultiSelect
+                label={t('people.circles.members')}
+                description={people.length ? undefined : t('people.circles.nobodyYet')}
+                data={people.map((p) => ({ value: p.id, label: `${p.name} (${p.email})` }))}
+                value={chosen}
+                onChange={setMemberIds}
+                searchable
+                clearable
+                hidePickedOptions
+                nothingFoundMessage={t('people.circles.nobodyFound')}
+                disabled={saving}
+              />
+              <Group justify="flex-end">
+                <Button variant="default" onClick={guard.requestClose} disabled={saving}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" loading={saving} disabled={saving}>
+                  {t('people.circles.save')}
+                </Button>
               </Group>
-              <Text size="xs" c="dimmed">
-                {t('people.circles.avatarHint')}
-              </Text>
             </Stack>
-            <ColorInput
-              label={t('people.circles.color')}
-              value={appearance.color}
-              onChange={(color: string) => setAppearance((a) => ({ ...a, color }))}
-              format="hex"
-              swatches={[...SWATCHES]}
-              swatchesPerRow={7}
-              closeOnColorSwatchClick
-              disabled={saving}
-            />
-            <MultiSelect
-              label={t('people.circles.members')}
-              description={people.length ? undefined : t('people.circles.nobodyYet')}
-              data={people.map((p) => ({ value: p.id, label: `${p.name} (${p.email})` }))}
-              value={chosen}
-              onChange={setMemberIds}
-              searchable
-              clearable
-              hidePickedOptions
-              nothingFoundMessage={t('people.circles.nobodyFound')}
-              disabled={saving}
-            />
-            <Group justify="flex-end">
-              <Button variant="default" onClick={close} disabled={saving}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit" loading={saving} disabled={saving}>
-                {t('people.circles.save')}
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      )}
-    </Drawer>
+          </form>
+        )}
+      </Drawer>
+      <ConfirmCloseModal opened={guard.asking} onDiscard={guard.discard} onKeep={guard.keepEditing} />
+    </>
   );
 }

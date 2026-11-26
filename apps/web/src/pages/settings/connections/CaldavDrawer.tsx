@@ -1,6 +1,8 @@
 import { Alert, Button, Drawer, Group, PasswordInput, Select, Stack, Text, TextInput } from '@mantine/core';
-import { type ChangeEvent, type FormEvent, type JSX, useState } from 'react';
+import { type ChangeEvent, type FormEvent, type JSX, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ConfirmCloseModal } from '@/components';
+import { useConfirmClose } from '@/hooks/confirm-close';
 import { useConnectionMutations } from '@/hooks/connections';
 import type { Connection } from '@/schemas';
 import { useAnnouncer } from '@/stores';
@@ -35,14 +37,18 @@ export function CaldavDrawer({ opened, connectionId, onClose }: CaldavDrawerProp
   const [added, setAdded] = useState<string>();
   const choosing = connectionId ?? added;
 
-  const close = (): void => {
+  const guard = useConfirmClose(() => {
     addCaldav.reset();
     setAdded(undefined);
     onClose();
-  };
+  });
+  useEffect(() => {
+    if (!opened) guard.resetDirty();
+  }, [opened]);
 
   const pick = (value: string | null): void => {
     const next = (value ?? 'other') as Preset;
+    guard.markDirty();
     setPreset(next);
     setServerUrl(PRESETS[next]);
   };
@@ -62,64 +68,67 @@ export function CaldavDrawer({ opened, connectionId, onClose }: CaldavDrawerProp
   };
 
   return (
-    <Drawer
-      opened={opened}
-      onClose={close}
-      position="right"
-      size="md"
-      padding="lg"
-      title={choosing ? t('caldav.chooseTitle') : t('caldav.title')}
-    >
-      {choosing ? (
-        <RemoteCalendarPicker connectionId={choosing} onDone={close} />
-      ) : (
-        <form onSubmit={submit}>
-          <Stack>
-            <Select
-              label={t('caldav.provider')}
-              data={(Object.keys(PRESETS) as Preset[]).map((p) => ({ value: p, label: t(`caldav.presets.${p}`) }))}
-              value={preset}
-              onChange={pick}
-              allowDeselect={false}
-            />
-            <TextInput
-              label={t('caldav.server')}
-              description={t(`caldav.hints.${preset}`)}
-              value={serverUrl}
-              onChange={(e: ChangeEvent<HTMLInputElement>): void => setServerUrl(e.currentTarget.value)}
-              placeholder="https://"
-              type="url"
-              required
-            />
-            <TextInput name="username" label={t('caldav.username')} autoComplete="username" required data-autofocus />
-            <PasswordInput
-              name="password"
-              label={t('caldav.password')}
-              description={t('caldav.passwordHint')}
-              autoComplete="off"
-              required
-            />
-            {addCaldav.isError && (
-              <Alert color="red" role="alert">
-                {addCaldav.error.message}
-              </Alert>
-            )}
-            {addCaldav.isPending && (
-              <Text size="sm" role="status">
-                {t('caldav.checking')}
-              </Text>
-            )}
-            <Group justify="flex-end">
-              <Button variant="default" onClick={close}>
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit" loading={addCaldav.isPending}>
-                {t('caldav.connect')}
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      )}
-    </Drawer>
+    <>
+      <Drawer
+        opened={opened}
+        onClose={choosing ? guard.forceClose : guard.requestClose}
+        position="right"
+        size="md"
+        padding="lg"
+        title={choosing ? t('caldav.chooseTitle') : t('caldav.title')}
+      >
+        {choosing ? (
+          <RemoteCalendarPicker connectionId={choosing} onDone={guard.forceClose} />
+        ) : (
+          <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
+            <Stack>
+              <Select
+                label={t('caldav.provider')}
+                data={(Object.keys(PRESETS) as Preset[]).map((p) => ({ value: p, label: t(`caldav.presets.${p}`) }))}
+                value={preset}
+                onChange={pick}
+                allowDeselect={false}
+              />
+              <TextInput
+                label={t('caldav.server')}
+                description={t(`caldav.hints.${preset}`)}
+                value={serverUrl}
+                onChange={(e: ChangeEvent<HTMLInputElement>): void => setServerUrl(e.currentTarget.value)}
+                placeholder="https://"
+                type="url"
+                required
+              />
+              <TextInput name="username" label={t('caldav.username')} autoComplete="username" required data-autofocus />
+              <PasswordInput
+                name="password"
+                label={t('caldav.password')}
+                description={t('caldav.passwordHint')}
+                autoComplete="off"
+                required
+              />
+              {addCaldav.isError && (
+                <Alert color="red" role="alert">
+                  {addCaldav.error.message}
+                </Alert>
+              )}
+              {addCaldav.isPending && (
+                <Text size="sm" role="status">
+                  {t('caldav.checking')}
+                </Text>
+              )}
+              <Group justify="flex-end">
+                <Button variant="default" onClick={guard.requestClose}>
+                  {t('common.cancel')}
+                </Button>
+                <Button type="submit" loading={addCaldav.isPending}>
+                  {t('caldav.connect')}
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        )}
+      </Drawer>
+      <ConfirmCloseModal opened={guard.asking} onDiscard={guard.discard} onKeep={guard.keepEditing} />
+    </>
   );
 }

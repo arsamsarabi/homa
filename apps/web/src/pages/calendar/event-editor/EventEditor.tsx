@@ -2,8 +2,9 @@
 // calendar still in view (not modal); on phones it's a bottom sheet. A new draft remounts the form.
 import { Drawer, FocusTrap, Paper } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { type JSX, type KeyboardEvent, useLayoutEffect, useRef, useState } from 'react';
+import { type JSX, type KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ConfirmCloseModal } from '@/components';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Draft } from '@/services/event-form';
 import { type Box, placeBeside } from '@/services/popover';
@@ -12,7 +13,7 @@ import { EventForm } from './EventForm';
 
 export function EventEditor(): JSX.Element | null {
   const { t, i18n } = useTranslation();
-  const { draft, anchor, close } = useCalendarPageModel().editor;
+  const { draft, anchor, requestClose, confirmClose, confirmDiscard, confirmKeep } = useCalendarPageModel().editor;
   const phone = useMediaQuery('(max-width: 48em)');
   const label = t(draft?.kind === 'edit' ? 'editor.editTitle' : 'editor.newTitle');
   // Remount when opening a different draft — not when live preview times change (that wiped the form).
@@ -23,25 +24,40 @@ export function EventEditor(): JSX.Element | null {
         ? 'create'
         : 'closed';
 
+  const modal = <ConfirmCloseModal opened={confirmClose} onDiscard={confirmDiscard} onKeep={confirmKeep} />;
+
   if (phone) {
     return (
-      <Drawer
-        opened={draft !== undefined}
-        onClose={close}
-        position="bottom"
-        size="auto"
-        padding="md"
-        withCloseButton={false}
-        aria-label={label}
-        classNames={{ content: classes.sheet }}
-      >
-        {draft && <EventForm key={key} draft={draft} />}
-      </Drawer>
+      <>
+        <Drawer
+          opened={draft !== undefined}
+          onClose={requestClose}
+          position="bottom"
+          size="auto"
+          padding="md"
+          withCloseButton={false}
+          aria-label={label}
+          classNames={{ content: classes.sheet }}
+        >
+          {draft && <EventForm key={key} draft={draft} />}
+        </Drawer>
+        {modal}
+      </>
     );
   }
-  if (!draft) return null;
+  if (!draft) return modal;
   return (
-    <FloatingPanel key={key} draft={draft} label={label} anchor={anchor} rtl={i18n.dir() === 'rtl'} onClose={close} />
+    <>
+      <FloatingPanel
+        key={key}
+        draft={draft}
+        label={label}
+        anchor={anchor}
+        rtl={i18n.dir() === 'rtl'}
+        onClose={requestClose}
+      />
+      {modal}
+    </>
   );
 }
 
@@ -66,6 +82,24 @@ function FloatingPanel({ draft, label, anchor, rtl, onClose }: PanelProps): JSX.
     window.addEventListener('resize', place);
     return () => window.removeEventListener('resize', place);
   }, [anchor, rtl]);
+
+  useEffect(() => {
+    const onPointer = (e: PointerEvent): void => {
+      const el = ref.current;
+      const target = e.target;
+      if (!el || !(target instanceof Node)) return;
+      if (el.contains(target)) return;
+      // The unsaved-changes modal (or any other dialog) is also outside the panel.
+      if (target instanceof Element) {
+        for (const dialog of document.querySelectorAll('[role="dialog"]')) {
+          if (dialog !== el && dialog.contains(target)) return;
+        }
+      }
+      onClose();
+    };
+    document.addEventListener('pointerdown', onPointer);
+    return () => document.removeEventListener('pointerdown', onPointer);
+  }, [onClose]);
 
   return (
     <Paper

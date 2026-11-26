@@ -1,14 +1,23 @@
 // Reminder offsets and snooze times: pure rules for the reminder chips, the bell and push.
 import { instantOf, wallOf } from '@/services/zones';
 
-/** The offsets the event form offers, in minutes before the start. */
+/** Common offsets kept for settings defaults and quick picks, in minutes before the start. */
 export const REMINDER_PRESETS: readonly number[] = [0, 5, 10, 15, 30, 60, 120, 1440, 2880, 10080];
 /** Most reminders on one event (the API's limit). */
 export const MAX_REMINDERS = 5;
 /** The default reminder when the user hasn't chosen one. */
 export const DEFAULT_REMINDER = 10;
 
-export type OffsetLabel = { key: 'atStart' } | { key: 'minutes' | 'hours' | 'days' | 'weeks'; count: number };
+export type ReminderUnit = 'minutes' | 'hours' | 'days' | 'weeks';
+export const REMINDER_UNITS: readonly ReminderUnit[] = ['minutes', 'hours', 'days', 'weeks'];
+export const UNIT_MINUTES: Record<ReminderUnit, number> = {
+  minutes: 1,
+  hours: 60,
+  days: 1440,
+  weeks: 10080,
+};
+
+export type OffsetLabel = { key: 'atStart' } | { key: ReminderUnit; count: number };
 
 /** How to name an offset: the largest whole unit. */
 export function offsetLabel(minutes: number): OffsetLabel {
@@ -19,15 +28,34 @@ export function offsetLabel(minutes: number): OffsetLabel {
   return { key: 'minutes', count: minutes };
 }
 
+/** Minutes before start from a count and unit (0 minutes = at start). */
+export function minutesFromParts(count: number, unit: ReminderUnit): number {
+  return count * UNIT_MINUTES[unit];
+}
+
 /** The chips to show: the presets plus any other offset the event already has, sorted. */
 export const reminderChoices = (current: readonly number[]): number[] =>
   [...new Set([...REMINDER_PRESETS, ...current])].sort((a, b) => a - b);
 
+export type AddReminderResult = { ok: true; value: number[] } | { ok: false; reason: 'duplicate' | 'max' | 'invalid' };
+
+/** Adds an offset, or explains why it was refused. */
+export function addReminder(current: readonly number[], minutes: number): AddReminderResult {
+  if (!Number.isInteger(minutes) || minutes < 0) return { ok: false, reason: 'invalid' };
+  if (current.includes(minutes)) return { ok: false, reason: 'duplicate' };
+  if (current.length >= MAX_REMINDERS) return { ok: false, reason: 'max' };
+  return { ok: true, value: [...current, minutes].sort((a, b) => a - b) };
+}
+
+/** Drops an offset if present. */
+export const removeReminder = (current: readonly number[], minutes: number): number[] =>
+  current.filter((m) => m !== minutes);
+
 /** Toggles an offset, keeping at most MAX_REMINDERS (a sixth isn't added). */
 export function toggleReminder(current: readonly number[], minutes: number): number[] {
-  if (current.includes(minutes)) return current.filter((m) => m !== minutes);
-  if (current.length >= MAX_REMINDERS) return [...current];
-  return [...current, minutes].sort((a, b) => a - b);
+  if (current.includes(minutes)) return removeReminder(current, minutes);
+  const added = addReminder(current, minutes);
+  return added.ok ? added.value : [...current];
 }
 
 export const SNOOZES = ['5', '10', '30', '60', 'tomorrow'] as const;

@@ -47,6 +47,7 @@ export type EventFormModel = {
   submit: (e: FormEvent<HTMLFormElement>) => void;
   remove: () => void;
   close: () => void;
+  markDirty: () => void;
   /** The chosen calendar's color, for the header dot. */
   color: string | undefined;
   /** Minutes before each occurrence's start. */
@@ -118,22 +119,26 @@ export function useEventForm(draft: Draft): EventFormModel {
     setAllDayState(v);
     setStartState(next.start);
     setEndState(next.end);
+    editor.markDirty();
     syncPreview(v, tz, next.start, next.end);
   }
 
   function setTz(v: string): void {
     // Zone change keeps the typed wall times and moves the instant (and the draft) with them.
     setTzState(v);
+    editor.markDirty();
     syncPreview(allDay, v, start, end);
   }
 
   function setStart(v: string): void {
     setStartState(v);
+    editor.markDirty();
     syncPreview(allDay, tz, v, end);
   }
 
   function setEnd(v: string): void {
     setEndState(v);
+    editor.markDirty();
     syncPreview(allDay, tz, start, v);
   }
 
@@ -188,10 +193,16 @@ export function useEventForm(draft: Draft): EventFormModel {
     allDay,
     setAllDay,
     calendarId,
-    setCalendarId,
+    setCalendarId: (v: string): void => {
+      editor.markDirty();
+      setCalendarId(v);
+    },
     color: colors[calendarId],
     repeat,
-    setRepeat: setPicked,
+    setRepeat: (v: Repeat): void => {
+      editor.markDirty();
+      setPicked(v);
+    },
     repeatLoading: Boolean(occurrence?.recurring) && series.isPending,
     times: { start, end },
     setStart,
@@ -202,9 +213,13 @@ export function useEventForm(draft: Draft): EventFormModel {
     remove: (): void => {
       if (occurrence) void run(() => actions.remove(occurrence));
     },
-    close: editor.close,
+    close: editor.requestClose,
+    markDirty: editor.markDirty,
     reminders,
-    setReminders,
+    setReminders: (v: number[]): void => {
+      editor.markDirty();
+      setReminders(v);
+    },
     remindersLoading: occurrence !== undefined && series.isPending,
   };
 }

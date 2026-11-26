@@ -11,9 +11,10 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
-import { type ChangeEvent, type FormEvent, type JSX, type KeyboardEvent, useState } from 'react';
+import { type ChangeEvent, type FormEvent, type JSX, type KeyboardEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ReminderChips } from '@/components';
+import { ConfirmCloseModal, ReminderChips } from '@/components';
+import { useConfirmClose } from '@/hooks/confirm-close';
 import { useTaskMutations } from '@/hooks/tasks';
 import type { Task } from '@/schemas';
 import { type Repeat, repeatOf, rruleOf } from '@/services/event-form';
@@ -24,7 +25,17 @@ import { TaskBlock } from './TaskBlock';
 const REPEATS: readonly Repeat[] = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
 const PRIORITIES = ['0', '1', '2', '3'] as const;
 
-function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.Element {
+function TaskForm({
+  task,
+  onClose,
+  onSaved,
+  onDirty,
+}: {
+  task: Task;
+  onClose: () => void;
+  onSaved: () => void;
+  onDirty: () => void;
+}): JSX.Element {
   const { t } = useTranslation();
   const m = useTasksPageModel();
   const { update, remove, create, complete, reopen } = useTaskMutations();
@@ -59,7 +70,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
       {
         onSuccess: () => {
           announce(t('tasks.saved'));
-          onClose();
+          onSaved();
         },
         onError: fail,
       },
@@ -70,7 +81,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
     remove.mutate(task.id, {
       onSuccess: () => {
         announce(t('tasks.deleted', { title: task.title }));
-        onClose();
+        onSaved();
       },
       onError: fail,
     });
@@ -84,7 +95,7 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
   };
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} onInput={onDirty} onChange={onDirty}>
       <Stack>
         {error && (
           <Alert color="red" role="alert">
@@ -121,7 +132,10 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
             type="date"
             label={t('tasks.due')}
             value={dueDate}
-            onChange={(e: ChangeEvent<HTMLInputElement>): void => setDueDate(e.currentTarget.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>): void => {
+              onDirty();
+              setDueDate(e.currentTarget.value);
+            }}
             description={dueDate ? m.labels.due({ dueDate, dueTime: null, tz: task.tz }) : t('tasks.clearDue')}
           />
           <TextInput
@@ -146,7 +160,10 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
         />
         <ReminderChips
           value={reminders}
-          onChange={setReminders}
+          onChange={(v: number[]): void => {
+            onDirty();
+            setReminders(v);
+          }}
           atStartLabel={t('tasks.atDue')}
           disabled={!dueDate}
           description={dueDate ? t('tasks.reminderHint') : t('tasks.reminderNeedsDate')}
@@ -161,7 +178,10 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
           label={t('tasks.tagsField')}
           description={t('tasks.tagsHint')}
           value={tags}
-          onChange={setTags}
+          onChange={(v: string[]): void => {
+            onDirty();
+            setTags(v);
+          }}
           data={m.tags.map((g) => g.name)}
           maxTags={20}
           splitChars={[',']}
@@ -221,17 +241,34 @@ function TaskForm({ task, onClose }: { task: Task; onClose: () => void }): JSX.E
 export function TaskDrawer(): JSX.Element {
   const { t } = useTranslation();
   const m = useTasksPageModel();
-  const close = (): void => m.openTask(undefined);
+  const realClose = (): void => m.openTask(undefined);
+  const guard = useConfirmClose(realClose);
+  const editingId = m.editing?.id;
+  useEffect(() => {
+    guard.resetDirty();
+  }, [editingId]);
+
   return (
-    <Drawer
-      opened={m.editing !== undefined}
-      onClose={close}
-      position="right"
-      size="md"
-      padding="lg"
-      title={t('tasks.editTitle')}
-    >
-      {m.editing && <TaskForm key={m.editing.id} task={m.editing} onClose={close} />}
-    </Drawer>
+    <>
+      <Drawer
+        opened={m.editing !== undefined}
+        onClose={guard.requestClose}
+        position="right"
+        size="md"
+        padding="lg"
+        title={t('tasks.editTitle')}
+      >
+        {m.editing && (
+          <TaskForm
+            key={m.editing.id}
+            task={m.editing}
+            onClose={guard.requestClose}
+            onSaved={guard.forceClose}
+            onDirty={guard.markDirty}
+          />
+        )}
+      </Drawer>
+      <ConfirmCloseModal opened={guard.asking} onDiscard={guard.discard} onKeep={guard.keepEditing} />
+    </>
   );
 }

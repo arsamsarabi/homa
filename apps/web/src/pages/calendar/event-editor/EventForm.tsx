@@ -30,7 +30,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
   if (f.readOnly && f.occurrence) return <ReadOnlyDetails occurrence={f.occurrence} onClose={f.close} />;
 
   return (
-    <form onSubmit={f.submit}>
+    <form onSubmit={f.submit} onInput={f.markDirty}>
       <Stack gap="sm">
         <Group gap="xs" wrap="nowrap">
           <ColorSwatch color={f.color ?? 'var(--mantine-primary-color-filled)'} size={12} aria-hidden />

@@ -1,5 +1,14 @@
 import { describe, expect, test } from 'bun:test';
-import { keyBytes, offsetLabel, reminderChoices, snoozeUntil, toggleReminder } from './reminders';
+import {
+  addReminder,
+  keyBytes,
+  minutesFromParts,
+  offsetLabel,
+  reminderChoices,
+  removeReminder,
+  snoozeUntil,
+  toggleReminder,
+} from './reminders';
 
 describe('reminder offsets', () => {
   test('are named by their largest whole unit', () => {
@@ -11,15 +20,31 @@ describe('reminder offsets', () => {
     expect(offsetLabel(90)).toEqual({ key: 'minutes', count: 90 });
   });
 
+  test('parts convert to minutes', () => {
+    expect(minutesFromParts(0, 'minutes')).toBe(0);
+    expect(minutesFromParts(10, 'minutes')).toBe(10);
+    expect(minutesFromParts(2, 'hours')).toBe(120);
+    expect(minutesFromParts(1, 'days')).toBe(1440);
+    expect(minutesFromParts(2, 'weeks')).toBe(20160);
+  });
+
   test('choices add offsets the event has beside the presets', () => {
     expect(reminderChoices([45])).toContain(45);
     expect(reminderChoices([10])).toEqual(reminderChoices([]));
+  });
+
+  test('adding refuses duplicates, a sixth, and bad values', () => {
+    expect(addReminder([60], 10)).toEqual({ ok: true, value: [10, 60] });
+    expect(addReminder([10], 10)).toEqual({ ok: false, reason: 'duplicate' });
+    expect(addReminder([1, 2, 3, 4, 5], 6)).toEqual({ ok: false, reason: 'max' });
+    expect(addReminder([], -1)).toEqual({ ok: false, reason: 'invalid' });
   });
 
   test('toggling keeps them sorted and at most five', () => {
     expect(toggleReminder([60], 10)).toEqual([10, 60]);
     expect(toggleReminder([10, 60], 10)).toEqual([60]);
     expect(toggleReminder([1, 2, 3, 4, 5], 6)).toEqual([1, 2, 3, 4, 5]);
+    expect(removeReminder([10, 60], 10)).toEqual([60]);
   });
 });
 

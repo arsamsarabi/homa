@@ -1,5 +1,6 @@
 export * from './calendar';
 export * from './commands';
+export * from './confirm-close';
 export * from './connections';
 export * from './instance';
 export * from './locale';
