@@ -33,11 +33,15 @@ describe('ranges', () => {
     expect(isoDate(r.from)).toBe('2026-11-16');
     expect(r.days).toHaveLength(7);
   });
-  test('work week is Monday to Friday', () => {
-    const r = rangeFor('workWeek', thu, 0);
+  test('work week defaults to Monday to Friday in the week that starts on weekStart', () => {
+    const r = rangeFor('workWeek', thu, 1);
     expect(isoDate(r.from)).toBe('2026-11-16');
     expect(r.days).toHaveLength(5);
     expect(isoDate(r.days.at(-1) ?? new Date())).toBe('2026-11-20');
+  });
+  test('work week can be a custom set of days', () => {
+    const r = rangeFor('workWeek', thu, 1, [1, 3, 5]);
+    expect(r.days.map(isoDate)).toEqual(['2026-11-16', '2026-11-18', '2026-11-20']);
   });
   test('year and agenda', () => {
     expect(isoDate(rangeFor('year', thu, 1).to)).toBe('2027-01-01');

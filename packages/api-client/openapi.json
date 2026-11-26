@@ -521,6 +521,27 @@
             "example": 1,
             "description": "First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)"
           },
+          "workWeekDays": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "minItems": 1,
+            "maxItems": 7,
+            "example": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "description": "Days in the work-week view: 0 = Sunday … 6 = Saturday; 1–7 unique days; null is Monday–Friday"
+          },
           "defaultReminderMinutes": {
             "type": [
               "integer",
@@ -536,6 +557,7 @@
           "homeTz",
           "secondaryCalendar",
           "weekStart",
+          "workWeekDays",
           "defaultReminderMinutes"
         ]
       },
@@ -567,6 +589,27 @@
             "maximum": 6,
             "example": 1,
             "description": "First day of the week: 0 = Sunday … 6 = Saturday; null follows the language (Monday, or Saturday in Farsi)"
+          },
+          "workWeekDays": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "minItems": 1,
+            "maxItems": 7,
+            "example": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "description": "Days in the work-week view: 0 = Sunday … 6 = Saturday; 1–7 unique days; null is Monday–Friday"
           },
           "defaultReminderMinutes": {
             "type": [

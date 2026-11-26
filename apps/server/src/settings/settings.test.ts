@@ -32,6 +32,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       homeTz: null,
       secondaryCalendar: 'none',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
   });
@@ -44,18 +45,21 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       homeTz: 'Asia/Tehran',
       secondaryCalendar: 'jalali',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
     expect(await (await get(a)).json()).toEqual({
       homeTz: 'Asia/Tehran',
       secondaryCalendar: 'jalali',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
     expect(await (await get(b)).json()).toEqual({
       homeTz: null,
       secondaryCalendar: 'none',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
 
@@ -64,6 +68,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       homeTz: null,
       secondaryCalendar: 'jalali',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
   });
@@ -75,6 +80,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       homeTz: null,
       secondaryCalendar: 'none',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
   });
@@ -84,6 +90,16 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
     expect((await patch(a, { homeTz: 'Mars/Olympus' })).status).toBe(400);
     expect((await patch(a, { secondaryCalendar: 'mayan' })).status).toBe(400);
     expect((await patch(a, { weekStart: 7 })).status).toBe(400);
+    expect((await patch(a, { workWeekDays: [] })).status).toBe(400);
+    expect((await patch(a, { workWeekDays: [1, 1] })).status).toBe(400);
+    expect((await patch(a, { workWeekDays: [7] })).status).toBe(400);
+  });
+
+  test('work week days can be set and cleared', async () => {
+    const a = await signUp('workweek@example.com');
+    expect(await (await patch(a, { workWeekDays: [1, 3, 5] })).json()).toMatchObject({ workWeekDays: [1, 3, 5] });
+    expect(await (await get(a)).json()).toMatchObject({ workWeekDays: [1, 3, 5] });
+    expect(await (await patch(a, { workWeekDays: null })).json()).toMatchObject({ workWeekDays: null });
   });
 
   test('the first day of the week can be set and cleared', async () => {

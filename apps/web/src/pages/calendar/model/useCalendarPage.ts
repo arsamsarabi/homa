@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { useCalendars, useOccurrences } from '@/hooks/calendar';
 import { type DateFormats, useCalendarLocale, useDateFormats } from '@/hooks/locale';
 import { useSettings } from '@/hooks/settings';
-import type { Calendar, Occurrence, SecondaryCalendar, View } from '@/schemas';
+import { type Calendar, DEFAULT_WORK_WEEK_DAYS, type Occurrence, type SecondaryCalendar, type View } from '@/schemas';
 import { type DayRange, rangeFor, today } from '@/services/dates';
 import { instantOf } from '@/services/zones';
 import { defaultCalendarId, useLastCalendar } from '@/stores';
@@ -43,8 +43,13 @@ export function useCalendarPage(): CalendarPageModel {
   const calendarLocale = useCalendarLocale();
   const { locale, weekStart } = calendarLocale;
   const formats = useDateFormats(calendarLocale);
-  const secondary = useSettings().data?.secondaryCalendar ?? 'none';
-  const range = useMemo((): DayRange => rangeFor(url.view, url.date, weekStart), [url.view, url.date, weekStart]);
+  const settings = useSettings().data;
+  const secondary = settings?.secondaryCalendar ?? 'none';
+  const workWeekDays = settings?.workWeekDays ?? DEFAULT_WORK_WEEK_DAYS;
+  const range = useMemo(
+    (): DayRange => rangeFor(url.view, url.date, weekStart, workWeekDays),
+    [url.view, url.date, weekStart, workWeekDays],
+  );
   const calendarsQuery = useCalendars();
   const hiddenIds = useMemo(
     (): ReadonlySet<string> => new Set((calendarsQuery.data ?? []).filter((c) => c.hidden).map((c) => c.id)),

@@ -7,6 +7,8 @@ export type SettingsRow = {
   homeTz: string | null;
   secondaryCalendar: string;
   weekStart: number | null;
+  /** null means Monday–Friday. */
+  workWeekDays: number[] | null;
   defaultReminderMinutes: number | null;
 };
 
@@ -15,6 +17,7 @@ const columns = {
   homeTz: users.homeTz,
   secondaryCalendar: users.secondaryCalendar,
   weekStart: users.weekStart,
+  workWeekDays: users.workWeekDays,
   defaultReminderMinutes: users.defaultReminderMinutes,
 };
 

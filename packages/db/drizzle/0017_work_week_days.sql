@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "work_week_days" smallint[];
