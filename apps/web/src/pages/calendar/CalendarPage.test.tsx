@@ -199,6 +199,18 @@ describe('calendar page', () => {
     expect(await screen.findByRole('region', { name: 'Month' })).toBeTruthy();
   });
 
+  test('work week shows five weekdays and is in the view menu', async () => {
+    renderApp(
+      '/?view=workWeek&date=2026-11-19',
+      api(() => json([])),
+    );
+    const week = await screen.findByRole('region', { name: /^Work week$/ });
+    await waitFor(() => expect(week.textContent).toMatch(/Mon 16/));
+    expect(week.textContent).toMatch(/Fri 20/);
+    expect(week.textContent ?? '').not.toMatch(/Sat /);
+    expect(screen.getByRole('combobox', { name: 'View' })).toBeTruthy();
+  });
+
   test('previous and next sit around the date title and step the week', async () => {
     renderApp(
       '/?view=week&date=2026-11-19',

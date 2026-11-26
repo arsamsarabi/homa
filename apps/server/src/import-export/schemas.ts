@@ -38,6 +38,7 @@ export const DataExport = z
       homeTz: z.string().nullable(),
       secondaryCalendar: z.string(),
       weekStart: z.number().int().min(0).max(6).nullable(),
+      workWeekDays: z.array(z.number().int().min(0).max(6)).nullable(),
       defaultReminderMinutes: z.number().int().nullable(),
     }),
     calendars: z.array(Calendar),

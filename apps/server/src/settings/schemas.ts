@@ -25,11 +25,26 @@ export const DefaultReminderMinutes = z.number().int().min(0).max(REMINDER_LIMIT
   description: 'The reminder the event form adds to new timed events, in minutes before; null for none',
 });
 
+const Weekday = z.number().int().min(0).max(6);
+
+/** Which weekdays the work-week view shows; null means Monday–Friday. */
+export const WorkWeekDays = z
+  .array(Weekday)
+  .min(1)
+  .max(7)
+  .refine((days) => new Set(days).size === days.length, 'each day at most once')
+  .nullable()
+  .openapi({
+    example: [1, 2, 3, 4, 5],
+    description: 'Days in the work-week view: 0 = Sunday … 6 = Saturday; 1–7 unique days; null is Monday–Friday',
+  });
+
 export const Settings = z
   .object({
     homeTz: HomeTz,
     secondaryCalendar: SecondaryCalendar,
     weekStart: WeekStart,
+    workWeekDays: WorkWeekDays,
     defaultReminderMinutes: DefaultReminderMinutes,
   })
   .openapi('Settings');

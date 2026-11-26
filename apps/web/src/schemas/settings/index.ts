@@ -1,1 +1,7 @@
-export { SECONDARY_CALENDARS, type SecondaryCalendar, type Settings, SettingsSchema } from './settings';
+export {
+  DEFAULT_WORK_WEEK_DAYS,
+  SECONDARY_CALENDARS,
+  type SecondaryCalendar,
+  type Settings,
+  SettingsSchema,
+} from './settings';

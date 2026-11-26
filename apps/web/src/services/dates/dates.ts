@@ -1,7 +1,7 @@
 // Date math for the calendar views, on wall times (see @/services/zones): Dates whose UTC fields
 // are the clock and calendar in the zone being viewed. All-day events are stored as UTC midnights,
 // which are already wall dates.
-import type { View } from '@/schemas';
+import { DEFAULT_WORK_WEEK_DAYS, type View } from '@/schemas';
 import { wallOf } from '@/services/zones';
 
 export const MINUTE = 60_000;
@@ -61,13 +61,26 @@ const span = (from: Date, n: number): DayRange => ({
 });
 
 /** The dates a view fetches and the days it lays out. */
-export function rangeFor(view: View, date: Date, weekStart: number): DayRange {
+export function rangeFor(
+  view: View,
+  date: Date,
+  weekStart: number,
+  workWeekDays: readonly number[] = DEFAULT_WORK_WEEK_DAYS,
+): DayRange {
   const d = startOfDay(date);
   switch (view) {
     case 'day':
       return span(d, 1);
     case 'week':
       return span(startOfWeek(d, weekStart), 7);
+    case 'workWeek': {
+      const start = startOfWeek(d, weekStart);
+      const wanted = new Set(workWeekDays.length > 0 ? workWeekDays : DEFAULT_WORK_WEEK_DAYS);
+      const days = Array.from({ length: 7 }, (_, i) => addDays(start, i)).filter((day) => wanted.has(day.getUTCDay()));
+      const first = days[0] ?? start;
+      const last = days.at(-1) ?? first;
+      return { from: first, to: addDays(last, 1), days };
+    }
     case 'month': {
       const days = monthGrid(d, weekStart);
       return { from: days[0] ?? d, to: addDays(days.at(-1) ?? d, 1), days };
@@ -85,6 +98,7 @@ export function step(view: View, date: Date, dir: 1 | -1): Date {
     case 'day':
       return addDays(date, dir);
     case 'week':
+    case 'workWeek':
       return addDays(date, 7 * dir);
     case 'month':
       return firstOfMonth(date.getUTCFullYear(), date.getUTCMonth() + dir);

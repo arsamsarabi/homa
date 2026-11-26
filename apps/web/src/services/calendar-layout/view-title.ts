@@ -17,6 +17,7 @@ export function viewTitle(view: View, date: Date, range: DayRange, f: TitleForma
     case 'day':
       return f.fullDate.format(date);
     case 'week':
+    case 'workWeek':
       return f.monthYear.format(range.from);
     case 'month':
       return f.monthYear.format(date);

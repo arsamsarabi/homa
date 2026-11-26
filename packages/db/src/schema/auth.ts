@@ -25,6 +25,11 @@ export const users = pgTable('users', {
   secondaryCalendar: text('secondary_calendar').notNull().default('none'),
   /** First day of the week, 0 = Sunday … 6 = Saturday; null follows the UI language. */
   weekStart: smallint('week_start'),
+  /**
+   * Days shown in the work-week view, 0 = Sunday … 6 = Saturday; null means Monday–Friday.
+   * Length 1–7, unique values.
+   */
+  workWeekDays: smallint('work_week_days').array(),
   /** The reminder the event form adds to new timed events, in minutes before; null for none. */
   defaultReminderMinutes: integer('default_reminder_minutes').default(10),
   ...timestamps,

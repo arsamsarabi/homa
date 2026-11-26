@@ -10,6 +10,7 @@ test('calendar shortcuts leave out the app-wide ones', () => {
   const commands: string[] = CALENDAR_SHORTCUTS.map((s) => s.command);
   expect(commands.includes('palette') || commands.includes('help')).toBe(false);
   expect(CALENDAR_SHORTCUTS.map((s) => s.command)).toContain('view.agenda');
+  expect(CALENDAR_SHORTCUTS.map((s) => s.command)).toContain('view.workWeek');
 });
 
 test('arrows follow the reading direction', () => {

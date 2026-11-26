@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { isTimeZone } from '@/services/zones';
 
-export const VIEWS = ['day', 'week', 'month', 'year', 'agenda'] as const;
+export const VIEWS = ['day', 'week', 'workWeek', 'month', 'year', 'agenda'] as const;
 export type View = (typeof VIEWS)[number];
 export const DEFAULT_VIEW: View = 'week';
 

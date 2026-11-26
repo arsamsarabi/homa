@@ -82,6 +82,7 @@
     "views": {
       "day": "Day",
       "week": "Week",
+      "workWeek": "Work week",
       "month": "Month",
       "year": "Year",
       "agenda": "Agenda"
@@ -148,6 +149,8 @@
     "homeZoneHint": "Your calendar is shown in this zone. You can view another one from the calendar.",
     "browserZone": "This device's zone ({{tz}})",
     "weekStart": "First day of the week",
+    "workWeekDays": "Work week",
+    "workWeekDaysHint": "Which days the Work week calendar view shows. Pick between one and seven days.",
     "secondaryCalendar": "Second calendar",
     "secondary": {
       "none": "None",

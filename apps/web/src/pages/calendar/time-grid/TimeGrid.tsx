@@ -52,6 +52,11 @@ export function TimeGrid(): JSX.Element {
         </div>
         {grid.days.map((d, i) => (
           <div key={d.toISOString()} className={classes.allDayCell}>
+            {grid.allDayDraft === i && (
+              <div className={classes.allDayDraft} data-draft aria-hidden="true">
+                {t('editor.draft')}
+              </div>
+            )}
             {grid.allDay[i]?.map((o) => (
               <EventChip
                 key={`${o.eventId}${o.recurrenceId}`}

@@ -16,6 +16,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { hotkey: 'Q', label: 'Q', command: 'quickAdd' },
   { hotkey: 'D', label: 'D', command: 'view.day' },
   { hotkey: 'W', label: 'W', command: 'view.week' },
+  { hotkey: 'X', label: 'X', command: 'view.workWeek' },
   { hotkey: 'M', label: 'M', command: 'view.month' },
   { hotkey: 'Y', label: 'Y', command: 'view.year' },
   { hotkey: 'A', label: 'A', command: 'view.agenda' },

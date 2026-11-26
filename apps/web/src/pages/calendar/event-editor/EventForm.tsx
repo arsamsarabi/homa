@@ -92,7 +92,8 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             name="start"
             type={input}
             label={t('editor.start')}
-            defaultValue={f.times.start}
+            value={f.times.start}
+            onChange={(e: ChangeEvent<HTMLInputElement>): void => f.setStart(e.currentTarget.value)}
             size="xs"
             required
           />
@@ -101,7 +102,8 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             name="end"
             type={input}
             label={t('editor.end')}
-            defaultValue={f.times.end}
+            value={f.times.end}
+            onChange={(e: ChangeEvent<HTMLInputElement>): void => f.setEnd(e.currentTarget.value)}
             size="xs"
             required
           />

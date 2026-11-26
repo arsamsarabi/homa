@@ -113,6 +113,7 @@ describe.skipIf(!testDatabaseUrl)('instance', () => {
       homeTz: 'Asia/Tehran',
       secondaryCalendar: 'jalali',
       weekStart: null,
+      workWeekDays: null,
       defaultReminderMinutes: 10,
     });
   });

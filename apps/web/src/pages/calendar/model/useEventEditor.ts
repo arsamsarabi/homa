@@ -13,6 +13,8 @@ export type EventEditorState = {
   anchor: Box | undefined;
   openCreate: (start: Date, end: Date, allDay: boolean, prefill?: DraftPrefill) => void;
   openEdit: (o: Occurrence) => void;
+  /** Keep the calendar draft/preview in sync with the form's times. */
+  setTimes: (start: Date, end: Date, allDay: boolean) => void;
   close: () => void;
 };
 
@@ -55,7 +57,18 @@ export function useEventEditor(): EventEditorState {
       setAnchor(
         lastPress.current ?? (focused instanceof HTMLElement ? toBox(focused.getBoundingClientRect()) : undefined),
       );
-      setDraft({ kind: 'edit', occurrence });
+      setDraft({
+        kind: 'edit',
+        occurrence,
+        preview: { start: new Date(occurrence.start), end: new Date(occurrence.end), allDay: occurrence.allDay },
+      });
+    },
+    setTimes: (start: Date, end: Date, allDay: boolean): void => {
+      setDraft((d) => {
+        if (!d) return d;
+        if (d.kind === 'create') return { ...d, start, end, allDay };
+        return { ...d, preview: { start, end, allDay } };
+      });
     },
     close: (): void => setDraft(undefined),
   };

@@ -1165,6 +1165,17 @@ export interface components {
              */
             weekStart: number | null;
             /**
+             * @description Days in the work-week view: 0 = Sunday … 6 = Saturday; 1–7 unique days; null is Monday–Friday
+             * @example [
+             *       1,
+             *       2,
+             *       3,
+             *       4,
+             *       5
+             *     ]
+             */
+            workWeekDays: number[] | null;
+            /**
              * @description The reminder the event form adds to new timed events, in minutes before; null for none
              * @example 10
              */
@@ -1186,6 +1197,17 @@ export interface components {
              * @example 1
              */
             weekStart?: number | null;
+            /**
+             * @description Days in the work-week view: 0 = Sunday … 6 = Saturday; 1–7 unique days; null is Monday–Friday
+             * @example [
+             *       1,
+             *       2,
+             *       3,
+             *       4,
+             *       5
+             *     ]
+             */
+            workWeekDays?: number[] | null;
             /**
              * @description The reminder the event form adds to new timed events, in minutes before; null for none
              * @example 10
@@ -1304,6 +1326,7 @@ export interface components {
                 homeTz: string | null;
                 secondaryCalendar: string;
                 weekStart: number | null;
+                workWeekDays: number[] | null;
                 defaultReminderMinutes: number | null;
             };
             calendars: components["schemas"]["Calendar"][];

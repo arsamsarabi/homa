@@ -1,7 +1,7 @@
-import { NativeSelect, Radio, Select, Stack } from '@mantine/core';
+import { Checkbox, NativeSelect, Radio, Select, Stack } from '@mantine/core';
 import { type ChangeEvent, type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SECONDARY_CALENDARS, type SecondaryCalendar, type Settings } from '@/schemas';
+import { DEFAULT_WORK_WEEK_DAYS, SECONDARY_CALENDARS, type SecondaryCalendar, type Settings } from '@/schemas';
 import { calendarLocale } from '@/services/locale';
 import { DEFAULT_REMINDER, offsetLabel, REMINDER_PRESETS } from '@/services/reminders';
 import { timeZones } from '@/services/zones';
@@ -19,7 +19,7 @@ const NO_REMINDER = 'none';
 const weekdayOf = (d: number, locale: string): string =>
   new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(2026, 10, 15 + d));
 
-/** The home time zone, the week start, the second calendar and the default reminder. */
+/** The home time zone, the week start, work-week days, the second calendar and the default reminder. */
 export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsProps): JSX.Element {
   const { t, i18n } = useTranslation();
   const zones = useMemo(
@@ -49,6 +49,7 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
     [t],
   );
   const reminder = value.defaultReminderMinutes === undefined ? DEFAULT_REMINDER : value.defaultReminderMinutes;
+  const workWeekDays = value.workWeekDays ?? [...DEFAULT_WORK_WEEK_DAYS];
   return (
     <Stack>
       <Select
@@ -70,6 +71,28 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
         allowDeselect={false}
         maxDropdownHeight={300}
       />
+      <Checkbox.Group
+        label={t('settings.workWeekDays')}
+        description={t('settings.workWeekDaysHint')}
+        value={workWeekDays.map(String)}
+        onChange={(picked: string[]): void => {
+          if (picked.length < 1 || picked.length > 7) return;
+          const days = picked.map(Number).filter((d) => d >= 0 && d <= 6);
+          if (days.length < 1) return;
+          onChange({ workWeekDays: days });
+        }}
+      >
+        <Stack mt="xs" gap="xs">
+          {weekDays.map((d) => (
+            <Checkbox
+              key={d.value}
+              value={d.value}
+              label={d.label}
+              disabled={workWeekDays.length === 1 && workWeekDays[0] === Number(d.value)}
+            />
+          ))}
+        </Stack>
+      </Checkbox.Group>
       <Radio.Group
         label={t('settings.secondaryCalendar')}
         value={value.secondaryCalendar}

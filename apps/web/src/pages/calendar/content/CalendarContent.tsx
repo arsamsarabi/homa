@@ -35,7 +35,7 @@ export function CalendarContent(): JSX.Element {
           {t('calendar.moveFailed', { message: actions.error })}
         </Alert>
       )}
-      {(view === 'day' || view === 'week') && <TimeGrid />}
+      {(view === 'day' || view === 'week' || view === 'workWeek') && <TimeGrid />}
       {view === 'month' && <MonthView />}
       {view === 'year' && <YearView />}
       {view === 'agenda' && <AgendaView />}
