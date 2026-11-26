@@ -55,12 +55,13 @@ export function emailLanguage(request: Request | undefined, fallback: string): E
   return fallback === 'fa' ? 'fa' : 'en';
 }
 
-/** The email to `to`, greeting `name`, with the link `url`. */
+/** The email to `to`, greeting `name`, with the link `url`. `appUrl` is HOMA_URL (logo and deep links). */
 export function accountEmail(
   kind: AccountEmail,
   language: EmailLanguage,
   to: { email: string; name: string },
   url: string,
+  appUrl: string,
 ): Mail {
   const w = TEXT[language];
   const m = w[kind];
@@ -68,6 +69,7 @@ export function accountEmail(
   const text = `${hi}\n\n${m.body}\n\n${m.button}: ${url}\n\n${m.note}\n`;
   const html = emailHtml({
     language,
+    appUrl,
     title: m.subject,
     heading: m.heading,
     paragraphs: [hi, m.body],

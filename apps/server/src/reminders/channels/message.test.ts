@@ -34,6 +34,7 @@ test('an event reminder opens its day in the home zone, with the title as headin
     'Dentist\nMonday, 23 November 2026 at 03:00\n\nOpen Homa: https://app.homa.day/?view=day&date=2026-11-23\n',
   );
   expect(mail.html).toContain('href="https://app.homa.day/?view=day&amp;date=2026-11-23"');
+  expect(mail.html).toContain('src="https://app.homa.day/icon-192.png"');
   expect(mail.html).toContain('>Dentist</h1>');
   expect(mail.html).toContain('Settings → Notification channels');
   expect(mail.html).toContain('dir="ltr"');
@@ -50,6 +51,7 @@ test('Farsi goes right to left with the Farsi subject and note', () => {
   const mail = reminderMail(reminderMessage(row({ eventId: 'e1' }), fa), 'https://app.homa.day', fa);
   expect(mail.subject).toBe('یادآوری: Dentist');
   expect(mail.html).toContain('<html lang="fa" dir="rtl">');
+  expect(mail.html).toContain('src="https://app.homa.day/icon-192.png"');
   expect(mail.html).toContain('کانال‌های اعلان');
   expect(mail.text).toContain('باز کردن هما: https://app.homa.day/?view=day&date=2026-11-23');
 });

@@ -66,7 +66,7 @@ export async function createInvite(
     const url = new URL(`/sign-up?invite=${token}`, mail.appUrl).href;
     try {
       const inviter = (await view()).createdByName;
-      await mail.send(inviteEmail(mail.language, email, { inviter, instance: name }, url));
+      await mail.send(inviteEmail(mail.language, email, { inviter, instance: name }, url, mail.appUrl));
       await repo.setInviteEmailed(db, row.id);
     } catch (err: unknown) {
       log.warn('invite email failed', { inviteId: row.id, error: err instanceof Error ? err.message : 'unknown' });
