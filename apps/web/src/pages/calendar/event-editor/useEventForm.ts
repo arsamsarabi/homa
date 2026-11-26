@@ -5,6 +5,7 @@ import { useSeries } from '@/hooks/calendar';
 import { useSettings } from '@/hooks/settings';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
+import { writableCalendarPickerGroups } from '@/services/calendar-sharing';
 import {
   buildEditorResult,
   type Draft,
@@ -26,7 +27,9 @@ export type EventFormModel = {
   setSummary: (v: string) => void;
   /** The occurrence is in a read-only calendar: show its details, not a form. */
   readOnly: boolean;
-  calendarOptions: { value: string; label: string }[];
+  /** Free/busy shared occurrence: show the small Busy card (no event fetch). */
+  freeBusy: boolean;
+  calendarOptions: { group: string; items: { value: string; label: string }[] }[];
   repeatOptions: { value: Repeat; label: string }[];
   zones: string[];
   /** The event's zone; timed values in the form are in it. */
@@ -63,17 +66,20 @@ const message = (err: unknown): string => (err instanceof Error ? err.message : 
 export function useEventForm(draft: Draft): EventFormModel {
   const { t } = useTranslation();
   const {
-    writableCalendars,
+    calendars,
     defaultCalendarId,
     isReadOnly,
+    accessOf,
     colors,
     actions,
     editor,
     tz: viewTz,
   } = useCalendarPageModel();
   const occurrence = draft.kind === 'edit' ? draft.occurrence : undefined;
+  const freeBusy = occurrence !== undefined && accessOf(occurrence.calendarId) === 'freebusy';
   // The event behind the occurrence: its rule, for recurring ones, and its reminders.
-  const series = useSeries(occurrence?.eventId);
+  // Free/busy has no event detail (404); skip the fetch.
+  const series = useSeries(freeBusy ? undefined : occurrence?.eventId);
   const defaultReminder = useSettings().data?.defaultReminderMinutes;
 
   const [allDay, setAllDayState] = useState(draftAllDay(draft));
@@ -100,8 +106,9 @@ export function useEventForm(draft: Draft): EventFormModel {
   const repeat = shownRepeat(draft, picked, seriesRrule);
   const zones = useMemo((): string[] => timeZones(), []);
   const calendarOptions = useMemo(
-    () => writableCalendars.map((c) => ({ value: c.id, label: c.name })),
-    [writableCalendars],
+    () =>
+      writableCalendarPickerGroups(calendars, t('calendars.mine'), (name: string) => t('calendars.sharedBy', { name })),
+    [calendars, t],
   );
   const repeatOptions = useMemo(
     () =>
@@ -189,6 +196,7 @@ export function useEventForm(draft: Draft): EventFormModel {
       editor.setSummary(v);
     },
     readOnly: occurrence !== undefined && isReadOnly(occurrence.calendarId),
+    freeBusy,
     calendarOptions,
     repeatOptions,
     zones,

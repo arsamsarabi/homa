@@ -37,6 +37,27 @@
   outline-offset: 1px;
 }
 
+/* Free/busy: same color, diagonal stripes so it reads as opaque busy time. */
+.chip[data-freebusy] {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 28%, var(--mantine-color-body)),
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 28%, var(--mantine-color-body)) 4px,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 12%, var(--mantine-color-body)) 4px,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 12%, var(--mantine-color-body)) 8px
+  );
+}
+
+.line[data-freebusy]::before {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--c, var(--mantine-primary-color-filled)),
+    var(--c, var(--mantine-primary-color-filled)) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
 .time {
   margin-inline-end: 4px;
   color: var(--mantine-color-dimmed);

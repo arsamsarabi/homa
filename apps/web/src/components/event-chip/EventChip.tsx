@@ -10,16 +10,28 @@ export type EventChipProps = {
   time?: string;
   /** A finished task's time block: struck through, with `done` read out. */
   done?: string;
+  /** Free/busy shared occurrence: striped fill in the calendar color. */
+  freeBusy?: boolean;
   onClick?: MouseEventHandler<HTMLButtonElement>;
   onPointerDown?: PointerEventHandler<HTMLButtonElement>;
 };
 
 /** One event as a small button in a list or cell. */
-export function EventChip({ title, color, variant, time, done, onClick, onPointerDown }: EventChipProps): JSX.Element {
+export function EventChip({
+  title,
+  color,
+  variant,
+  time,
+  done,
+  freeBusy,
+  onClick,
+  onPointerDown,
+}: EventChipProps): JSX.Element {
   return (
     <UnstyledButton
       className={variant === 'chip' ? classes.chip : classes.line}
       style={{ '--c': color } as CSSProperties}
+      data-freebusy={freeBusy || undefined}
       onClick={onClick}
       onPointerDown={onPointerDown}
     >

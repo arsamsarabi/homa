@@ -1,7 +1,14 @@
 import { Checkbox, NativeSelect, Radio, Select, Stack } from '@mantine/core';
 import { type ChangeEvent, type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DEFAULT_WORK_WEEK_DAYS, SECONDARY_CALENDARS, type SecondaryCalendar, type Settings } from '@/schemas';
+import {
+  DEFAULT_WORK_WEEK_DAYS,
+  SECONDARY_CALENDARS,
+  type SecondaryCalendar,
+  type Settings,
+  SHARING_PRESETS,
+  type SharingPreset,
+} from '@/schemas';
 import { calendarLocale } from '@/services/locale';
 import { DEFAULT_REMINDER, offsetLabel, REMINDER_PRESETS } from '@/services/reminders';
 import { timeZones } from '@/services/zones';
@@ -11,6 +18,8 @@ export type SettingsFieldsProps = {
   /** The browser's zone, used when no home zone is set. */
   browserTz: string;
   onChange: (patch: Partial<Settings>) => void;
+  /** Onboarding asks with its own visibility radios; hide the Settings sharing preset there. */
+  hideSharing?: boolean;
 };
 
 const BROWSER = 'browser';
@@ -20,7 +29,7 @@ const weekdayOf = (d: number, locale: string): string =>
   new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(2026, 10, 15 + d));
 
 /** The home time zone, the week start, work-week days, the second calendar and the default reminder. */
-export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsProps): JSX.Element {
+export function SettingsFields({ value, browserTz, onChange, hideSharing }: SettingsFieldsProps): JSX.Element {
   const { t, i18n } = useTranslation();
   const zones = useMemo(
     (): { value: string; label: string }[] => [
@@ -114,6 +123,20 @@ export function SettingsFields({ value, browserTz, onChange }: SettingsFieldsPro
           onChange({ defaultReminderMinutes: v === NO_REMINDER ? null : Number(v) });
         }}
       />
+      {!hideSharing && (
+        <Radio.Group
+          label={t('sharing.preset')}
+          description={t('sharing.presetHint')}
+          value={value.sharingPreset}
+          onChange={(v: string): void => onChange({ sharingPreset: v as SharingPreset })}
+        >
+          <Stack mt="xs" gap="xs">
+            {SHARING_PRESETS.map((p) => (
+              <Radio key={p} value={p} label={t(`sharing.presetOption.${p}`)} />
+            ))}
+          </Stack>
+        </Radio.Group>
+      )}
     </Stack>
   );
 }

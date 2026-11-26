@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { ReminderChips } from '@/components';
 import type { Draft, Repeat } from '@/services/event-form';
 import classes from './EventEditor.module.css';
+import { FreeBusyDetails } from './FreeBusyDetails';
 import { ReadOnlyDetails } from './ReadOnlyDetails';
 import { useEventForm } from './useEventForm';
 
@@ -27,6 +28,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
   const { t } = useTranslation();
   const f = useEventForm(draft);
   const input = f.allDay ? 'date' : 'datetime-local';
+  if (f.freeBusy && f.occurrence) return <FreeBusyDetails occurrence={f.occurrence} onClose={f.close} />;
   if (f.readOnly && f.occurrence) return <ReadOnlyDetails occurrence={f.occurrence} onClose={f.close} />;
 
   return (

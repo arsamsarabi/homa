@@ -1,16 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { ownCalendar, sharedCalendar } from '@/testing/calendars';
 import { type FakeApi, json, renderApp, signedIn, signedInWith } from '@/testing/renderApp';
 
 const calendars = [
-  {
-    id: 'c1',
-    name: 'Personal',
-    color: '#4a4e69',
-    createdAt: '2026-11-01T00:00:00Z',
-    updatedAt: '2026-11-01T00:00:00Z',
-  },
-  {
+  ownCalendar({ id: 'c1', name: 'Personal', color: '#4a4e69' }),
+  ownCalendar({
     id: 'c2',
     name: 'UK holidays',
     color: '#336699',
@@ -18,7 +13,7 @@ const calendars = [
     readOnly: true,
     createdAt: '2026-11-02T00:00:00Z',
     updatedAt: '2026-11-02T00:00:00Z',
-  },
+  }),
 ];
 const today = new Date();
 const at = (h: number): string => new Date(today.getFullYear(), today.getMonth(), today.getDate(), h).toISOString();
@@ -106,14 +101,16 @@ describe('calendar page', () => {
       { id: 'k5', label: 'ada on calendar.zoho.eu', service: 'Zoho Calendar' },
     ];
     const stamp = '2026-11-02T00:00:00Z';
-    const mine = hosts.map((h) => ({
-      id: `c-${h.id}`,
-      name: `${h.service} calendar`,
-      color: '#336699',
-      connectionId: h.id,
-      createdAt: stamp,
-      updatedAt: stamp,
-    }));
+    const mine = hosts.map((h) =>
+      ownCalendar({
+        id: `c-${h.id}`,
+        name: `${h.service} calendar`,
+        color: '#336699',
+        connectionId: h.id,
+        createdAt: stamp,
+        updatedAt: stamp,
+      }),
+    );
     const accounts = hosts.map((h) => ({
       id: h.id,
       provider: 'caldav',
@@ -146,6 +143,43 @@ describe('calendar page', () => {
       api(() => json([{ eventId: 'e1' }])),
     );
     expect(await screen.findByText("Couldn't load your events")).toBeTruthy();
+  });
+
+  test('the calendar filter groups shared calendars by owner', async () => {
+    const bob = sharedCalendar({
+      id: 'c-bob',
+      name: 'Bob home',
+      access: 'read',
+      owner: { id: 'u2', name: 'Bob' },
+    });
+    const busy = {
+      ...dentist,
+      eventId: 'e-busy',
+      calendarId: 'c-busy',
+      summary: '',
+      description: null,
+      location: null,
+    };
+    const busyCal = sharedCalendar({
+      id: 'c-busy',
+      name: 'Bob work',
+      access: 'freebusy',
+      owner: { id: 'u2', name: 'Bob' },
+      color: '#aa5500',
+    });
+    renderApp('/?view=agenda', async (url, req) => {
+      if (url.pathname === '/api/calendars') return json([calendars[0], bob, busyCal]);
+      if (url.pathname === '/api/occurrences') return json([busy]);
+      if (url.pathname === '/api/connections') return json([]);
+      return signedIn(url, req);
+    });
+    expect(await screen.findByText('Busy')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Calendars' }));
+    expect(
+      await screen.findByRole('group', { name: (name) => name.includes('Shared by Bob'), hidden: true }),
+    ).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Bob home', hidden: true })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Bob work', hidden: true })).toBeTruthy();
   });
 
   test('the toolbar has no time zone control', async () => {

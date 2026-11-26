@@ -1,16 +1,17 @@
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { ownCalendar } from '@/testing/calendars';
 import { type FakeApi, json, renderApp, signedIn } from '@/testing/renderApp';
 
 const calendars = [
-  {
-    id: 'c1',
-    name: 'Personal',
-    color: '#4a4e69',
-    createdAt: '2026-11-01T00:00:00Z',
-    updatedAt: '2026-11-01T00:00:00Z',
-  },
-  { id: 'c2', name: 'Work', color: '#22223b', createdAt: '2026-11-02T00:00:00Z', updatedAt: '2026-11-02T00:00:00Z' },
+  ownCalendar({ id: 'c1', name: 'Personal', color: '#4a4e69' }),
+  ownCalendar({
+    id: 'c2',
+    name: 'Work',
+    color: '#22223b',
+    createdAt: '2026-11-02T00:00:00Z',
+    updatedAt: '2026-11-02T00:00:00Z',
+  }),
 ];
 const ics = 'BEGIN:VCALENDAR\r\nEND:VCALENDAR';
 
