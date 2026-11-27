@@ -61,7 +61,7 @@ describe('sign-up with an invite', () => {
 });
 
 describe('sign-in on a demo instance', () => {
-  test('fills in the shared account and shows the demo note', async () => {
+  test('fills in the shared account, with no welcome until signed in', async () => {
     const demo = { email: 'demo@example.com', password: 'homa-demo' };
     renderApp(
       '/sign-in',
@@ -74,13 +74,13 @@ describe('sign-in on a demo instance', () => {
     );
     expect(((await screen.findByLabelText(/Email/)) as HTMLInputElement).value).toBe(demo.email);
     expect((screen.getByLabelText(/Password/) as HTMLInputElement).value).toBe(demo.password);
-    expect(screen.getByRole('note').textContent).toContain('resets every night');
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  test('a regular instance shows no demo note', async () => {
+  test('a regular instance shows no demo welcome', async () => {
     renderApp('/sign-in', signedOut(true));
     expect(await screen.findByText('Family')).toBeTruthy();
-    expect(screen.queryByRole('note')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
 

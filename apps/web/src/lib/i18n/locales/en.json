@@ -760,7 +760,9 @@
   },
   "demo": {
     "banner": "This is the Homa demo. Everyone shares this account, and it resets every night.",
-    "signIn": "This is the Homa demo. Sign in with the shared account ({{email}}): it's filled in for you."
+    "signIn": "This is the Homa demo. Sign in with the shared account ({{email}}): it's filled in for you.",
+    "welcomeTitle": "Welcome to the Homa demo",
+    "gotIt": "Got it"
   },
   "errors": {
     "runtimeTitle": "Something went wrong",

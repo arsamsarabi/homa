@@ -6,7 +6,7 @@
 
 - On first start, with no accounts yet, the server seeds a demo account (`demo@example.com`, password `homa-demo`) instead of waiting for an admin. It's the admin, so visitors can see the admin pages too.
 - The seed is laid out around today, in `Europe/London`, with the Jalali calendar shown second: three calendars, recurring and one-off events, an all-day trip, projects with tasks and subtasks, a time-blocked task, a repeating task and standalone reminders. A few titles are in Farsi.
-- The sign-in page fills in the shared account and says so. Every page shows a note that this is a demo that resets every night.
+- The sign-in page fills in the shared account and says so. After signing in, a welcome dialog says the account is shared and resets every night; it comes back on the next sign-in.
 - Visitors can sign in and out and use the calendar, tasks, reminders, settings and imports. Everything else answers `403`:
   - sign-up, password and email changes, deleting the account, revoking sessions, and Better Auth's admin actions (`/api/auth/*` except signing in and out);
   - connected calendars, ICS subscriptions and holiday calendars (`/api/connections`), including the Google and Microsoft sign-in redirects;
