@@ -2,7 +2,7 @@ export * from './account-fields';
 export * from './app-header';
 export * from './command-palette';
 export * from './confirm-close';
-export * from './demo-banner';
+export * from './demo-welcome';
 export * from './error-boundary';
 export * from './event-chip';
 export * from './instance-fields';
