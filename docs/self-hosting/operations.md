@@ -19,7 +19,7 @@ Migrations apply when `api` starts, so there is no separate migration step. Ther
 1. Read the `### Breaking` entries in the [changelog](../CHANGELOG.md) (or the [release notes](https://github.com/arsamsarabi/homa/releases)) for every version since yours. They list the steps an upgrade needs.
 2. Take a [backup](#backup).
 
-Then set `HOMA_VERSION` in `deploy/docker/.env` to the new version, such as `HOMA_VERSION=0.2.0`, and run:
+Then set `HOMA_VERSION` in `deploy/docker/.env` to the new version, such as `HOMA_VERSION=0.3.0`, and run:
 
 ```sh
 git pull
