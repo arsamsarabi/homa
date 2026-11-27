@@ -92,7 +92,7 @@ git clone https://github.com/arsamsarabi/homa.git
 cd homa
 echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" > deploy/docker/.env
 echo "HOMA_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> deploy/docker/.env
-echo "HOMA_VERSION=0.1.0" >> deploy/docker/.env
+echo "HOMA_VERSION=0.3.0" >> deploy/docker/.env
 docker compose -f deploy/docker/compose.yaml up -d --wait
 ```
 

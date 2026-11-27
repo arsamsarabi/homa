@@ -4,6 +4,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-27
+
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".
 
 OIDC single sign-on and passkeys (phase 6d). Set `HOMA_OIDC_ISSUER`, `HOMA_OIDC_CLIENT_ID` and `HOMA_OIDC_CLIENT_SECRET` together (or none) for one OpenID Connect provider; optional `HOMA_OIDC_NAME` labels the sign-in button (default SSO). The redirect URI is `${HOMA_URL}/api/auth/callback/oidc`. `GET /api/instance` includes `oidc: { name, redirectUri } | null`; the admin page shows status and the URI read-only. Passkeys use `@better-auth/passkey` (no new env vars): Settings → Security lists, adds and removes them, and sign-in offers a passkey when WebAuthn is available. Migration `0019_passkeys` adds the `passkeys` table. See `docs/self-hosting/sign-in.md`.
