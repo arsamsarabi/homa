@@ -9,7 +9,7 @@ name = "Homa"
 description.en = "Self-hosted calendar and task app, in English and Farsi"
 description.fr = "Agenda et gestionnaire de tâches auto-hébergé, en anglais et en persan"
 
-version = "0.2.0~ynh1"
+version = "0.3.0~ynh1"
 
 maintainers = []
 
@@ -43,8 +43,8 @@ ram.runtime = "300M"
     [resources.sources]
 
         [resources.sources.main]
-        url = "https://github.com/arsamsarabi/homa/archive/refs/tags/v0.2.0.tar.gz"
-        sha256 = "f972de5b87d94d031bd14ae01e826c4a9538208ec7c6c1cbd9064632029b2473"
+        url = "https://github.com/arsamsarabi/homa/archive/refs/tags/v0.3.0.tar.gz"
+        sha256 = "a56b0827f55143ff5b32ca0abf409bb2d844f8e38f765252822c87018318e0b4"
 
         # The Bun version in deploy/docker/Dockerfile.
         [resources.sources.bun]

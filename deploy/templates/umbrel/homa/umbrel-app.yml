@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: productivity
 name: Homa
-version: "0.2.0"
+version: "0.3.0"
 tagline: A self-hosted calendar and task app, in English and Farsi
 description: >-
   ⚠️ First start: Homa asks for a 4-digit setup code before it creates the admin account. Find it in the app's logs (look for "first-run setup code").
