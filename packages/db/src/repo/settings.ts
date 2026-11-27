@@ -12,6 +12,7 @@ export type SettingsRow = {
   defaultReminderMinutes: number | null;
   /** Sharing preset for calendars with null default_access: private | freebusy | read. */
   sharingPreset: 'private' | 'freebusy' | 'read';
+  showShortcutHints: boolean;
 };
 
 // biome-ignore lint/nursery/useExplicitType: Drizzle infers the selected row type from these columns.
@@ -22,6 +23,7 @@ const columns = {
   workWeekDays: users.workWeekDays,
   defaultReminderMinutes: users.defaultReminderMinutes,
   sharingPreset: users.sharingPreset,
+  showShortcutHints: users.showShortcutHints,
 };
 
 /** The user's settings, or undefined if there is no such user. */

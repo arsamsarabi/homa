@@ -30,6 +30,8 @@ export const users = pgTable('users', {
    * Length 1–7, unique values.
    */
   workWeekDays: smallint('work_week_days').array(),
+  /** Show keyboard shortcut hints (key caps beside buttons) in the web app. */
+  showShortcutHints: boolean('show_shortcut_hints').notNull().default(true),
   /** The reminder the event form adds to new timed events, in minutes before; null for none. */
   defaultReminderMinutes: integer('default_reminder_minutes').default(10),
   /**

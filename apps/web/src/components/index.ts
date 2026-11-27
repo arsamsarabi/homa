@@ -11,5 +11,6 @@ export * from './notification-bell';
 export * from './query-error-alert';
 export * from './reminder-chips';
 export * from './settings-fields';
+export * from './shortcut-hint';
 export * from './shortcuts-help';
 export * from './status-card';

@@ -2,6 +2,7 @@ import { Badge, Button, Group, Text, TextInput } from '@mantine/core';
 import { IconBolt } from '@tabler/icons-react';
 import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ShortcutHint } from '@/components';
 import classes from './QuickAdd.module.css';
 import { QUICK_ADD_INPUT_ID, useQuickAdd } from './useQuickAdd';
 
@@ -55,6 +56,7 @@ export function QuickAdd(): JSX.Element {
         aria-label={t('quickAdd.label')}
         placeholder={t('quickAdd.placeholder')}
         leftSection={<IconBolt size={16} aria-hidden />}
+        rightSection={q.text ? undefined : <ShortcutHint command="quickAdd" />}
         value={q.text}
         onChange={(e: ChangeEvent<HTMLInputElement>): void => q.setText(e.currentTarget.value)}
         onKeyDown={q.onKeyDown}

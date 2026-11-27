@@ -12,6 +12,8 @@ Settings is split into tabs: **General**, **Calendars**, **Notifications**, **Pe
 
 The Settings tabs run down the side on wider screens, and pages other than the calendar are wider. The instance settings moved from Settings to their own **Admin** page, reached from the account menu, with tabs for **General**, **Sign-ups and invites** and **Single sign-on** (`/admin?tab=…`). First-run setup has a **Back** button on the steps after the admin account is created.
 
+Keyboard shortcut hints: the calendar toolbar shows each button's key, such as **C** beside **New event**, **T** beside **Today**, **Q** in quick add and a key for each view, plus tooltips on the arrows. Turn them off with **Show keyboard shortcut hints** in Settings → General. They don't show on touch-only devices. Migration `0021_shortcut_hints` adds `users.show_shortcut_hints` (default on), and `Settings` gains `showShortcutHints`.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".

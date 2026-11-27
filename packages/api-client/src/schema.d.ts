@@ -1278,6 +1278,8 @@ export interface components {
              * @enum {string}
              */
             sharingPreset: "private" | "freebusy" | "read";
+            /** @description Show keyboard shortcut hints beside buttons */
+            showShortcutHints: boolean;
         };
         SettingsPatch: {
             /**
@@ -1316,6 +1318,8 @@ export interface components {
              * @enum {string}
              */
             sharingPreset?: "private" | "freebusy" | "read";
+            /** @description Show keyboard shortcut hints beside buttons */
+            showShortcutHints?: boolean;
         };
         PublicInstance: {
             /**

@@ -13,7 +13,13 @@ export type SettingsDraft = {
   error: string | undefined;
 };
 
-const DEFAULTS: Settings = { homeTz: null, secondaryCalendar: 'none', weekStart: null, sharingPreset: 'private' };
+const DEFAULTS: Settings = {
+  homeTz: null,
+  secondaryCalendar: 'none',
+  weekStart: null,
+  sharingPreset: 'private',
+  showShortcutHints: true,
+};
 
 export function useSettingsDraft(): SettingsDraft {
   const saved = useSettings().data ?? DEFAULTS;

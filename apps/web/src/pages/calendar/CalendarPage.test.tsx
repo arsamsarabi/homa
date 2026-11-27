@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { ownCalendar, sharedCalendar } from '@/testing/calendars';
 import { type FakeApi, json, renderApp, signedIn, signedInWith } from '@/testing/renderApp';
 
@@ -255,6 +255,25 @@ describe('calendar page', () => {
     expect(await screen.findByRole('region', { name: 'Week' })).toBeTruthy();
     fireEvent.keyDown(document.documentElement, { key: 'm', code: 'KeyM' });
     expect(await screen.findByRole('region', { name: 'Month' })).toBeTruthy();
+  });
+
+  test('shortcut hints sit beside the buttons, unless turned off in settings', async () => {
+    renderApp(
+      '/?view=week',
+      api(() => json([])),
+    );
+    const newEvent = await screen.findByRole('button', { name: /New event/ });
+    await waitFor(() => expect(newEvent.querySelector('kbd')?.textContent).toBe('C'));
+    expect(screen.getByRole('button', { name: /Today/ }).querySelector('kbd')?.textContent).toBe('T');
+    cleanup();
+
+    const off = signedInWith({ homeTz: 'Europe/London', secondaryCalendar: 'none', showShortcutHints: false });
+    renderApp(
+      '/?view=week',
+      api(() => json([]), off),
+    );
+    const plain = await screen.findByRole('button', { name: /New event/ });
+    expect(plain.querySelector('kbd')).toBeNull();
   });
 
   test('work week shows five weekdays and is in the view menu', async () => {

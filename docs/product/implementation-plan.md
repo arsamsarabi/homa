@@ -106,7 +106,7 @@ Status: done (#125). These finish phase 6, so they came first.
 
 - **Tabbed Settings page.** Done (#126): General, Calendars, Notifications, People, Security, and Import and export, with the open tab in the URL (`?tab=`). Tabs run vertically on wider screens, and the instance settings moved to a tabbed Admin page in the account menu.
 - **Onboarding back buttons.** Done: first-run setup has Back on the Personal and Done steps (not back to the admin account, which already exists). User onboarding is a single page, so it needs none.
-- **Keyboard shortcut hints.** Show hints next to buttons, such as C for a new event. A setting hides them; they show by default. Size S.
+- **Keyboard shortcut hints.** Done: key caps on the calendar toolbar, quick add and view menu, and arrow tooltips. "Show keyboard shortcut hints" in Settings → General is on by default, and hints are hidden on touch-only devices.
 - **Breadcrumbs.** Add breadcrumbs on nested screens, such as Settings → Calendars → one calendar. Do this after the Settings tabs. Size S.
 - **Tidier calendar connection flow.** Rework adding and fixing a connection (CalDAV, Google, Microsoft, ICS) into one clear flow. Audit it first. Size M.
 - **Notifications and panel redesign.** Redesign the notification panel and how notifications look. Size M, design first.

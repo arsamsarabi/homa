@@ -168,6 +168,8 @@
       "none": "None",
       "jalali": "Jalali (Solar Hijri), with Persian occasions"
     },
+    "shortcutHints": "Show keyboard shortcut hints",
+    "shortcutHintsHint": "Key caps beside buttons, like C for New event. Press ? for every shortcut.",
     "save": "Save",
     "saved": "Settings saved",
     "saveFailed": "Couldn't save your settings: {{message}}",

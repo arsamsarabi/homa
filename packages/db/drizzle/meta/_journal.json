@@ -148,6 +148,13 @@
       "when": 1795787788874,
       "tag": "0020_shared_calendar_followups",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795791427464,
+      "tag": "0021_shortcut_hints",
+      "breakpoints": true
     }
   ]
 }
