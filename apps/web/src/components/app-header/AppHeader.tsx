@@ -7,6 +7,7 @@ import {
   IconMoon,
   IconSearch,
   IconSettings,
+  IconShieldCog,
   IconSun,
 } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
@@ -17,6 +18,8 @@ import classes from './AppHeader.module.css';
 
 export type AppHeaderProps = {
   userName: string;
+  /** Admins also get a link to the instance's Admin page. */
+  isAdmin?: boolean;
   dark: boolean;
   language: Language;
   onToggleColorScheme: () => void;
@@ -81,6 +84,11 @@ export function AppHeader(props: AppHeaderProps): JSX.Element {
             <Menu.Item leftSection={<IconSettings size={16} aria-hidden />} component={Link} to="/settings">
               {t('nav.settings')}
             </Menu.Item>
+            {props.isAdmin && (
+              <Menu.Item leftSection={<IconShieldCog size={16} aria-hidden />} component={Link} to="/admin">
+                {t('nav.admin')}
+              </Menu.Item>
+            )}
             <Menu.Item
               leftSection={<IconKeyboard size={16} aria-hidden />}
               onClick={props.onShowShortcuts}

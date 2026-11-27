@@ -35,9 +35,9 @@ test('set up a new instance as its admin @smoke', async ({ page, request }) => {
   await page.getByRole('link', { name: 'Go to my calendar' }).click();
   await expect(page.locator('[aria-current=date]')).toBeVisible();
 
-  // The admin finds the instance settings again from their own settings.
-  await page.goto('/settings');
-  await page.getByRole('link', { name: 'Change the instance settings' }).click();
+  // The admin finds the instance settings again from the account menu.
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await page.getByRole('menuitem', { name: 'Admin' }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole('textbox', { name: 'Instance name' })).toHaveValue('E2E Homa');
 });

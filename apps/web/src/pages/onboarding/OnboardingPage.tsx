@@ -26,7 +26,7 @@ export function OnboardingPage(): JSX.Element {
   };
 
   return (
-    <Container size="sm" py="xl">
+    <Container size="lg" py="xl">
       <Stack>
         <Title order={1}>{t('onboarding.title', { name: session?.user.name })}</Title>
         <Text c="dimmed">{t('onboarding.intro')}</Text>

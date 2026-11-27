@@ -41,7 +41,9 @@ describe('admin page', () => {
     expect((screen.getByRole('combobox', { name: /Default home time zone/ }) as HTMLInputElement).value).toBe(
       'Asia/Tehran',
     );
-    fireEvent.click(screen.getByLabelText('Only people with an invite'));
+    // Sign-ups live on their own tab; the name edit there and here share one draft.
+    fireEvent.click(screen.getByRole('tab', { name: 'Sign-ups and invites' }));
+    fireEvent.click(await screen.findByLabelText('Only people with an invite'));
     const save = screen.getByRole('button', { name: 'Save' });
     fireEvent.click(save);
     await waitFor(() => expect((save as HTMLButtonElement).disabled).toBe(true));
@@ -70,7 +72,7 @@ describe('admin page', () => {
   });
 
   test('a failed save shows why', async () => {
-    renderApp('/admin', (url, req) =>
+    renderApp('/admin?tab=access', (url, req) =>
       url.pathname !== '/api/admin/instance'
         ? admin(url, req)
         : req.method === 'PATCH'
@@ -93,14 +95,22 @@ describe('admin page', () => {
     expect(screen.queryByRole('heading', { name: 'Instance settings' })).toBeNull();
   });
 
-  test('the settings page links admins to it', async () => {
+  test('the account menu links admins to it', async () => {
     renderApp('/settings', admin);
-    expect(await screen.findByRole('link', { name: 'Change the instance settings' })).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Account menu' }));
+    expect(await screen.findByRole('menuitem', { name: 'Admin' })).toBeTruthy();
   });
 
-  test('the settings page has no such link for everyone else', async () => {
+  test('the account menu has no Admin item for everyone else', async () => {
     renderApp('/settings', signedInWith({ homeTz: null, secondaryCalendar: 'none' }));
-    await screen.findByRole('button', { name: 'Save' });
-    expect(screen.queryByRole('link', { name: 'Change the instance settings' })).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Account menu' }));
+    await screen.findByRole('menuitem', { name: 'Settings' });
+    expect(screen.queryByRole('menuitem', { name: 'Admin' })).toBeNull();
+  });
+
+  test('single sign-on has its own tab', async () => {
+    renderApp('/admin?tab=sso', (url, req) => (url.pathname !== '/api/admin/instance' ? admin(url, req) : json(saved)));
+    expect(await screen.findByRole('heading', { name: 'Single sign-on' })).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: /Instance name/ })).toBeNull();
   });
 });

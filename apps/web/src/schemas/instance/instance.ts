@@ -44,3 +44,8 @@ export const InstanceSettingsSchema = z.object({
   defaultSecondaryCalendar: z.enum(SECONDARY_CALENDARS),
 });
 export type InstanceSettings = z.infer<typeof InstanceSettingsSchema>;
+
+/** The Admin page's tabs, in order. */
+export const ADMIN_TABS = ['general', 'access', 'sso'] as const;
+export type AdminTab = (typeof ADMIN_TABS)[number];
+export const AdminSearchSchema = z.object({ tab: z.enum(ADMIN_TABS).optional().catch(undefined) });

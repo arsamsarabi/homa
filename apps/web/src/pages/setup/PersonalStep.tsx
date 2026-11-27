@@ -1,4 +1,4 @@
-import { Alert, Button, Loader, Stack, Text } from '@mantine/core';
+import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert, SettingsFields } from '@/components';
@@ -6,7 +6,7 @@ import { useSettings, useSettingsDraft } from '@/hooks/settings';
 import { browserTimeZone } from '@/services/zones';
 
 /** Step three: the admin's own settings, as every new account sees them in onboarding. */
-export function PersonalStep({ onDone }: { onDone: () => void }): JSX.Element {
+export function PersonalStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }): JSX.Element {
   const { t } = useTranslation();
   const settings = useSettings();
   const draft = useSettingsDraft();
@@ -35,9 +35,14 @@ export function PersonalStep({ onDone }: { onDone: () => void }): JSX.Element {
           {t('settings.saveFailed', { message: draft.error })}
         </Alert>
       )}
-      <Button onClick={save} loading={draft.busy} w="fit-content">
-        {t('setup.continue')}
-      </Button>
+      <Group>
+        <Button variant="default" onClick={onBack} disabled={draft.busy}>
+          {t('setup.back')}
+        </Button>
+        <Button onClick={save} loading={draft.busy}>
+          {t('setup.continue')}
+        </Button>
+      </Group>
     </Stack>
   );
 }

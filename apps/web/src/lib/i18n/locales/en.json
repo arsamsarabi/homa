@@ -8,6 +8,7 @@
     "signOut": "Sign out",
     "language": "Language",
     "signOutFailed": "Couldn't sign out: {{message}}",
+    "admin": "Admin",
     "settings": "Settings",
     "home": "Homa, go to the calendar",
     "account": "Account menu",
@@ -226,6 +227,7 @@
     "personalIntro": "Now your own settings. Everyone who joins later chooses theirs too.",
     "loadingSettings": "Loading your settings",
     "settingsLoadFailed": "Couldn't load your settings",
+    "back": "Back",
     "continue": "Continue",
     "done": "All set. Your Homa is ready.",
     "code": "Setup code",
@@ -233,8 +235,6 @@
   },
   "instance": {
     "title": "Instance settings",
-    "settingsLinkHint": "You're this Homa's admin.",
-    "settingsLink": "Change the instance settings",
     "name": "Instance name",
     "nameHint": "Shown on the sign-in page.",
     "nameRequired": "Give the instance a name.",
@@ -267,7 +267,12 @@
     "oidcOn": "On — people can sign in with {{name}}.",
     "oidcOff": "Off — set HOMA_OIDC_ISSUER, HOMA_OIDC_CLIENT_ID and HOMA_OIDC_CLIENT_SECRET to turn it on.",
     "oidcRedirect": "Redirect URI",
-    "oidcRedirectHint": "Register this exact URI with your identity provider."
+    "oidcRedirectHint": "Register this exact URI with your identity provider.",
+    "tabs": {
+      "general": "General",
+      "access": "Sign-ups and invites",
+      "sso": "Single sign-on"
+    }
   },
   "importExport": {
     "title": "Import and export",
