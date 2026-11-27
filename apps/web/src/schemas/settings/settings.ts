@@ -25,5 +25,7 @@ export const SettingsSchema = z.object({
   defaultReminderMinutes: z.number().int().min(0).nullable().optional(),
   /** Default for calendars with no per-calendar default; absent parses as private. */
   sharingPreset: z.enum(SHARING_PRESETS).default('private'),
+  /** Key caps beside buttons; absent shows them. */
+  showShortcutHints: z.boolean().default(true),
 });
 export type Settings = z.infer<typeof SettingsSchema>;

@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "show_shortcut_hints" boolean DEFAULT true NOT NULL;

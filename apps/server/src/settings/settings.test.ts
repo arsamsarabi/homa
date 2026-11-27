@@ -35,6 +35,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       workWeekDays: null,
       defaultReminderMinutes: 10,
       sharingPreset: 'private',
+      showShortcutHints: true,
     });
   });
 
@@ -49,6 +50,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       workWeekDays: null,
       defaultReminderMinutes: 10,
       sharingPreset: 'private',
+      showShortcutHints: true,
     });
     expect(await (await get(a)).json()).toEqual({
       homeTz: 'Asia/Tehran',
@@ -57,6 +59,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       workWeekDays: null,
       defaultReminderMinutes: 10,
       sharingPreset: 'private',
+      showShortcutHints: true,
     });
     expect(await (await get(b)).json()).toEqual({
       homeTz: null,
@@ -65,6 +68,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       workWeekDays: null,
       defaultReminderMinutes: 10,
       sharingPreset: 'private',
+      showShortcutHints: true,
     });
 
     // A partial change keeps the rest; null goes back to the browser's zone.
@@ -75,6 +79,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       workWeekDays: null,
       defaultReminderMinutes: 10,
       sharingPreset: 'private',
+      showShortcutHints: true,
     });
   });
 
@@ -88,6 +93,7 @@ describe.skipIf(!testDatabaseUrl)('settings', () => {
       workWeekDays: null,
       defaultReminderMinutes: 10,
       sharingPreset: 'private',
+      showShortcutHints: true,
     });
   });
 

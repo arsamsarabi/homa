@@ -1,4 +1,4 @@
-import { Checkbox, NativeSelect, Radio, Select, Stack } from '@mantine/core';
+import { Checkbox, NativeSelect, Radio, Select, Stack, Switch } from '@mantine/core';
 import { type ChangeEvent, type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -122,6 +122,12 @@ export function SettingsFields({ value, browserTz, onChange, hideSharing }: Sett
           const v = e.currentTarget.value;
           onChange({ defaultReminderMinutes: v === NO_REMINDER ? null : Number(v) });
         }}
+      />
+      <Switch
+        label={t('settings.shortcutHints')}
+        description={t('settings.shortcutHintsHint')}
+        checked={value.showShortcutHints}
+        onChange={(e: ChangeEvent<HTMLInputElement>): void => onChange({ showShortcutHints: e.currentTarget.checked })}
       />
       {!hideSharing && (
         <Radio.Group

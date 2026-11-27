@@ -779,6 +779,10 @@
               "read"
             ],
             "description": "Default for calendars with no per-calendar default: private shares nothing"
+          },
+          "showShortcutHints": {
+            "type": "boolean",
+            "description": "Show keyboard shortcut hints beside buttons"
           }
         },
         "required": [
@@ -787,7 +791,8 @@
           "weekStart",
           "workWeekDays",
           "defaultReminderMinutes",
-          "sharingPreset"
+          "sharingPreset",
+          "showShortcutHints"
         ]
       },
       "SettingsPatch": {
@@ -858,6 +863,10 @@
               "read"
             ],
             "description": "Default for calendars with no per-calendar default: private shares nothing"
+          },
+          "showShortcutHints": {
+            "type": "boolean",
+            "description": "Show keyboard shortcut hints beside buttons"
           }
         }
       },

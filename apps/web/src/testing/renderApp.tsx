@@ -50,7 +50,15 @@ export const sessionBody = (role = 'user'): unknown => ({
 
 /** Signed in as Ada, with `settings` (default: the browser's zone, no second calendar). */
 export const signedInWith =
-  (settings: { homeTz: string | null; secondaryCalendar: string; weekStart?: number | null }, role = 'user'): FakeApi =>
+  (
+    settings: {
+      homeTz: string | null;
+      secondaryCalendar: string;
+      weekStart?: number | null;
+      showShortcutHints?: boolean;
+    },
+    role = 'user',
+  ): FakeApi =>
   (url) =>
     url.pathname === '/api/settings'
       ? json(settings)

@@ -51,6 +51,7 @@ export const Settings = z
     workWeekDays: WorkWeekDays,
     defaultReminderMinutes: DefaultReminderMinutes,
     sharingPreset: SharingPreset,
+    showShortcutHints: z.boolean().openapi({ description: 'Show keyboard shortcut hints beside buttons' }),
   })
   .openapi('Settings');
 
