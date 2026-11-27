@@ -5,8 +5,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageBreadcrumbs, SettingsFields } from '@/components';
 import { useSettingsDraft } from '@/hooks/settings';
-import { CalendarsSection } from '@/pages/settings/calendars';
-import { ConnectedCalendarsSection } from '@/pages/settings/connections';
+import { CalendarsTab } from '@/pages/settings/calendars';
 import { ImportExportSection, TodoistImportSection } from '@/pages/settings/import-export';
 import { ChannelsSection, NotificationsSection } from '@/pages/settings/notifications';
 import { PeopleSection } from '@/pages/settings/people';
@@ -69,8 +68,7 @@ export function SettingsPage(): JSX.Element {
           </Tabs.Panel>
           <Tabs.Panel value="calendars">
             <Stack gap="xl">
-              <CalendarsSection />
-              <ConnectedCalendarsSection />
+              <CalendarsTab />
             </Stack>
           </Tabs.Panel>
           <Tabs.Panel value="notifications">
