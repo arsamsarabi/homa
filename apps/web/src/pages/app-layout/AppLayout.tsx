@@ -39,6 +39,7 @@ export function AppLayout(): JSX.Element {
       <AppShell.Header>
         <AppHeader
           userName={session?.user.name ?? ''}
+          isAdmin={session?.user.role === 'admin'}
           dark={dark}
           language={i18n.language as Language}
           onToggleColorScheme={toggleColorScheme}

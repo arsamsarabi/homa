@@ -16,14 +16,22 @@ export function SetupPage(): JSX.Element {
   const { data: session } = useSession();
   const [active, setActive] = useState(session ? 1 : 0);
   const next = (): void => setActive((a) => a + 1);
+  // The admin account exists after step one, so going back stops at the instance step.
+  const back = (): void => setActive((a) => Math.max(1, a - 1));
 
   return (
-    <Container size="sm" py="xl">
+    <Container size="lg" py="xl">
       <Stack>
         <Image src="/homa-capital-320.webp" alt="" w={96} />
         <Title order={1}>{t('setup.title')}</Title>
         <Text c="dimmed">{t('setup.intro')}</Text>
-        <Stepper active={active} size="sm">
+        <Stepper
+          active={active}
+          size="sm"
+          onStepClick={(step: number): void => {
+            if (step >= 1 && step < active) setActive(step);
+          }}
+        >
           <Stepper.Step label={t('setup.steps.account')}>
             <AdminAccountStep onDone={next} />
           </Stepper.Step>
@@ -31,10 +39,10 @@ export function SetupPage(): JSX.Element {
             <InstanceStep onDone={next} />
           </Stepper.Step>
           <Stepper.Step label={t('setup.steps.personal')}>
-            <PersonalStep onDone={next} />
+            <PersonalStep onDone={next} onBack={back} />
           </Stepper.Step>
           <Stepper.Completed>
-            <DoneStep />
+            <DoneStep onBack={back} />
           </Stepper.Completed>
         </Stepper>
       </Stack>

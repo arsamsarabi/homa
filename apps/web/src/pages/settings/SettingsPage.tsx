@@ -1,10 +1,10 @@
-import { Alert, Anchor, Button, Container, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Container, Group, Stack, Tabs, Title } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SettingsFields } from '@/components';
-import { useSession } from '@/hooks/session';
 import { useSettingsDraft } from '@/hooks/settings';
 import { CalendarsSection } from '@/pages/settings/calendars';
 import { ConnectedCalendarsSection } from '@/pages/settings/connections';
@@ -22,9 +22,10 @@ export function SettingsPage(): JSX.Element {
   const { t } = useTranslation();
   const draft = useSettingsDraft();
   const announce = useAnnouncer((s) => s.announce);
-  const isAdmin = useSession().data?.user.role === 'admin';
   const search = useSearch({ from: '/_app/settings' });
   const navigate = useNavigate();
+  // Tabs run down the side, except on phones where they'd squeeze the content.
+  const phone = useMediaQuery('(max-width: 48em)');
   // A Google or Microsoft callback lands on Calendars, where its picker opens.
   const fromCallback = Boolean(search.google || search.googleError || search.microsoft || search.microsoftError);
   const tab: SettingsTab = search.tab ?? (fromCallback ? 'calendars' : 'general');
@@ -39,15 +40,15 @@ export function SettingsPage(): JSX.Element {
       .catch(() => undefined); // the error shows in the form through draft.error
   };
   return (
-    <Container size="sm" py="xl">
+    <Container size="lg" py="xl">
       <Stack>
         <Anchor component={Link} to="/" size="sm" className={classes.back}>
           <IconArrowLeft size={16} aria-hidden className={classes.arrow} />
           {t('settings.back')}
         </Anchor>
         <Title order={1}>{t('settings.title')}</Title>
-        <Tabs value={tab} onChange={pick} keepMounted={false}>
-          <Tabs.List mb="md">
+        <Tabs value={tab} onChange={pick} keepMounted={false} orientation={phone ? 'horizontal' : 'vertical'}>
+          <Tabs.List mb={phone ? 'md' : undefined} me={phone ? undefined : 'xl'}>
             {SETTINGS_TABS.map((x) => (
               <Tabs.Tab key={x} value={x}>
                 {t(`settings.tabs.${x}`)}
@@ -67,19 +68,6 @@ export function SettingsPage(): JSX.Element {
                   {t('settings.save')}
                 </Button>
               </Group>
-              {isAdmin && (
-                <Stack component="section" gap="xs" aria-labelledby="instance-settings">
-                  <Title order={2} size="h4" id="instance-settings">
-                    {t('instance.title')}
-                  </Title>
-                  <Text size="sm" c="dimmed">
-                    {t('instance.settingsLinkHint')}{' '}
-                    <Anchor component={Link} to="/admin">
-                      {t('instance.settingsLink')}
-                    </Anchor>
-                  </Text>
-                </Stack>
-              )}
             </Stack>
           </Tabs.Panel>
           <Tabs.Panel value="calendars">

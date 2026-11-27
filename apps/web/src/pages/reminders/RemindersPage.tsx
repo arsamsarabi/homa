@@ -33,7 +33,7 @@ export function RemindersPage(): JSX.Element {
     });
 
   return (
-    <Container size="sm" py="xl">
+    <Container size="lg" py="xl">
       <Stack>
         <Anchor component={Link} to="/" size="sm" className={classes.back}>
           <IconArrowLeft size={16} aria-hidden className={classes.arrow} />

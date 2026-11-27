@@ -78,6 +78,13 @@ describe('setup journey', () => {
       { path: '/api/admin/instance', body: { name: 'Family', signUps: 'closed' } },
       { path: '/api/settings', body: { secondaryCalendar: 'jalali' } },
     ]);
+
+    // Back goes to the previous step, but never to the admin account, which already exists.
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByText(/Now your own settings/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('textbox', { name: /Instance name/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
     expect(codes).toEqual(['4321']);
   });
 

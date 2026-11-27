@@ -1,4 +1,7 @@
 export {
+  ADMIN_TABS,
+  AdminSearchSchema,
+  type AdminTab,
   type InstanceSettings,
   InstanceSettingsSchema,
   LANGUAGES,

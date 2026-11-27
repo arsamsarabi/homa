@@ -10,6 +10,8 @@ Sharing follow-ups. Events show who added them, as "Added by {name}" on the even
 
 Settings is split into tabs: **General**, **Calendars**, **Notifications**, **People**, **Security** and **Import and export**. The open tab is in the address (`/settings?tab=calendars`), so links and the Google and Microsoft connect flows land on the right one.
 
+The Settings tabs run down the side on wider screens, and pages other than the calendar are wider. The instance settings moved from Settings to their own **Admin** page, reached from the account menu, with tabs for **General**, **Sign-ups and invites** and **Single sign-on** (`/admin?tab=…`). First-run setup has a **Back** button on the steps after the admin account is created.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".
