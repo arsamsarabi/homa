@@ -8,6 +8,7 @@ export * from './event-chip';
 export * from './instance-fields';
 export * from './live-region';
 export * from './notification-bell';
+export * from './page-breadcrumbs';
 export * from './query-error-alert';
 export * from './reminder-chips';
 export * from './settings-fields';

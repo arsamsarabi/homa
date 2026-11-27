@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { json, renderApp, signedInWith } from '@/testing/renderApp';
 
 const saved = { homeTz: 'Asia/Tehran', secondaryCalendar: 'none' };
@@ -59,5 +59,13 @@ describe('settings page: reminders', () => {
     // happy-dom has no PushManager.
     fireEvent.click(screen.getByRole('tab', { name: 'Notifications' }));
     expect(await screen.findByText(/This browser can't receive push notifications/)).toBeTruthy();
+  });
+
+  test('breadcrumbs lead back to the calendar and name the open tab', async () => {
+    renderApp('/settings?tab=people', signedInWith(saved));
+    const trail = await screen.findByRole('navigation', { name: 'Breadcrumb' });
+    expect(within(trail).getByRole('link', { name: 'Calendar' }).getAttribute('href')).toBe('/');
+    expect(within(trail).getByRole('link', { name: 'Settings' }).getAttribute('href')).toBe('/settings');
+    expect(within(trail).getByText('People').getAttribute('aria-current')).toBe('page');
   });
 });

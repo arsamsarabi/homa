@@ -3,7 +3,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InstanceFields, QueryErrorAlert } from '@/components';
+import { InstanceFields, PageBreadcrumbs, QueryErrorAlert } from '@/components';
 import { useInstance, useInstanceSettingsDraft } from '@/hooks/instance';
 import { isolate } from '@/lib/i18n';
 import { ADMIN_TABS } from '@/schemas';
@@ -54,6 +54,7 @@ export function AdminPage(): JSX.Element {
   return (
     <Container size="lg" py="xl">
       <Stack>
+        <PageBreadcrumbs trail={[{ label: t('nav.admin'), href: '/admin' }, { label: t(`instance.tabs.${tab}`) }]} />
         <Title order={1}>{t('instance.title')}</Title>
         <Tabs value={tab} onChange={pick} keepMounted={false} orientation={phone ? 'horizontal' : 'vertical'}>
           <Tabs.List mb={phone ? 'md' : undefined} me={phone ? undefined : 'xl'}>
