@@ -58,24 +58,24 @@ export async function setCalendarDefaultAccess(
   return rows.length > 0;
 }
 
-/** The viewer's hidden prefs for shared calendars; missing means shown. */
+/** The viewer's prefs for shared calendars; missing means shown in the owner's color. */
 export function listSharedCalendarPrefs(db: Executor, userId: string): Promise<SharedCalendarPrefRow[]> {
   return db.select().from(sharedCalendarPrefs).where(eq(sharedCalendarPrefs.userId, userId));
 }
 
-/** Upserts the viewer's hidden flag for a shared calendar. */
-export async function setSharedCalendarHidden(
+/** Upserts the viewer's prefs for a shared calendar; fields left out keep their value. */
+export async function setSharedCalendarPrefs(
   db: Executor,
   userId: string,
   calendarId: string,
-  hidden: boolean,
+  prefs: { hidden?: boolean; color?: string | null },
 ): Promise<SharedCalendarPrefRow> {
   const [row] = await db
     .insert(sharedCalendarPrefs)
-    .values({ userId, calendarId, hidden })
+    .values({ userId, calendarId, ...prefs })
     .onConflictDoUpdate({
       target: [sharedCalendarPrefs.userId, sharedCalendarPrefs.calendarId],
-      set: { hidden },
+      set: prefs,
     })
     .returning();
   if (!row) throw new Error('upsert into shared_calendar_prefs returned no row');

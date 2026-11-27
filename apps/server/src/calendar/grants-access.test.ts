@@ -102,6 +102,54 @@ describe.skipIf(!testDatabaseUrl)('calendar grant path rules', () => {
     expect((await call('GET', '/calendars', ada)).body[0]?.hidden).toBe(false);
   });
 
+  test('a grantee picks their own color for a shared calendar; the owner keeps theirs', async () => {
+    await call('PUT', `/calendars/${adaCalendar}/grants`, ada, {
+      defaultAccess: null,
+      grants: [{ userId: bobId, level: 'read' }],
+    });
+    const ownColor = (await call('GET', '/calendars', ada)).body[0]?.color;
+    const set = await call('PATCH', `/calendars/${adaCalendar}`, bob, { color: '#3b9492' });
+    expect(set.status).toBe(200);
+    expect(set.body).toMatchObject({ color: '#3b9492', access: 'read' });
+    expect((await call('GET', '/calendars', bob)).body.find((c) => c.id === adaCalendar)?.color).toBe('#3b9492');
+    expect((await call('GET', '/calendars', ada)).body[0]?.color).toBe(ownColor);
+    // Changing the color alone leaves the hidden pref as it was.
+    await call('PATCH', `/calendars/${adaCalendar}`, bob, { hidden: true });
+    const both = await call('PATCH', `/calendars/${adaCalendar}`, bob, { color: '#4f8fc0' });
+    expect(both.body).toMatchObject({ color: '#4f8fc0', hidden: true });
+    await call('PATCH', `/calendars/${adaCalendar}`, bob, { hidden: false });
+  });
+
+  test('occurrences name who added the event; free/busy hides it', async () => {
+    await t.db.delete(schema.events);
+    await call('PUT', `/calendars/${adaCalendar}/grants`, ada, {
+      defaultAccess: null,
+      grants: [{ userId: bobId, level: 'edit' }],
+    });
+    const event = (summary: string, start: string) => ({
+      calendarId: adaCalendar,
+      summary,
+      start,
+      end: start.replace('T10', 'T11'),
+      tz: 'UTC',
+    });
+    expect((await call('POST', '/events', ada, event('By Ada', '2026-07-01T10:00:00Z'))).status).toBe(201);
+    expect((await call('POST', '/events', bob, event('By Bob', '2026-07-02T10:00:00Z'))).status).toBe(201);
+    const range = '/occurrences?from=2026-07-01T00:00:00Z&to=2026-07-03T00:00:00Z';
+    const seen = (await call('GET', range, ada)).body as unknown as Json[];
+    expect(seen.map((o) => [o.summary, o.createdBy])).toEqual([
+      ['By Ada', { id: adaId, name: 'Ada' }],
+      ['By Bob', { id: bobId, name: 'Bob' }],
+    ]);
+
+    await call('PUT', `/calendars/${adaCalendar}/grants`, ada, {
+      defaultAccess: null,
+      grants: [{ userId: bobId, level: 'freebusy' }],
+    });
+    const busy = (await call('GET', range, bob)).body as unknown as Json[];
+    expect(busy.map((o) => o.createdBy)).toEqual([null, null]);
+  });
+
   test('occurrences: freebusy strips titles; none yields nothing; read keeps details without taskId', async () => {
     await t.db.delete(schema.events);
     await call('PUT', `/calendars/${adaCalendar}/grants`, ada, {

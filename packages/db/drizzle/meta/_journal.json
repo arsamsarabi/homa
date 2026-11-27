@@ -141,6 +141,13 @@
       "when": 1795719537834,
       "tag": "0019_passkeys",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795787788874,
+      "tag": "0020_shared_calendar_followups",
+      "breakpoints": true
     }
   ]
 }

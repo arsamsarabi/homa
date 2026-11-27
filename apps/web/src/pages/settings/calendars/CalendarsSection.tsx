@@ -34,20 +34,8 @@ export function CalendarsSection(): JSX.Element {
     <Paper key={c.id} withBorder p="xs" radius="md" component="li" aria-label={c.name}>
       <Group justify="space-between" wrap="nowrap">
         <Group gap="xs" wrap="nowrap" miw={0}>
-          {opts.canEdit ? (
-            <CalendarColorButton name={c.name} color={c.color} onPick={(color: string): void => recolor(c, color)} />
-          ) : (
-            <span
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: 4,
-                background: c.color,
-                flexShrink: 0,
-              }}
-              aria-hidden
-            />
-          )}
+          {/* Recoloring a shared calendar changes only your own view of it. */}
+          <CalendarColorButton name={c.name} color={c.color} onPick={(color: string): void => recolor(c, color)} />
           <Stack gap={0} miw={0}>
             <Text truncate c={c.hidden ? 'dimmed' : undefined}>
               {c.name}

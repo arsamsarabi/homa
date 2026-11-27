@@ -1,7 +1,7 @@
 import { VisuallyHidden } from '@mantine/core';
 import type { CSSProperties, JSX, MouseEvent, PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCalendarPageModel } from '@/pages/calendar/model';
+import { addedByName, useCalendarPageModel, useMyId } from '@/pages/calendar/model';
 import type { Placed, TimedItem } from '@/services/calendar-layout';
 import { occurrenceTitle } from '@/services/calendar-sharing';
 import { minutesFrom, sameDay } from '@/services/dates';
@@ -26,6 +26,7 @@ type Props = {
 export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, colors, time }: Props): JSX.Element {
   const { t } = useTranslation();
   const { accessOf, isReadOnly } = useCalendarPageModel();
+  const me = useMyId();
   const drag = grid.drag;
   const labels = { busy: t('calendar.busy'), untitled: t('calendar.untitled') };
   return (
@@ -35,6 +36,7 @@ export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, c
         const dragging = drag !== undefined && drag.kind !== 'create' && drag.moved && drag.o === p.o;
         const access = accessOf(p.o.calendarId);
         const readOnly = isReadOnly(p.o.calendarId);
+        const by = addedByName(p.o, me);
         const style = {
           '--c': colors[p.o.calendarId],
           top: box.top,
@@ -70,6 +72,7 @@ export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, c
               {time.format(p.start)}
               <span className={classes.end}> – {time.format(p.end)}</span>
             </span>
+            {by && <span className={classes.end}>{t('editor.addedBy', { name: by })}</span>}
             {!readOnly && (
               <span
                 aria-hidden="true"

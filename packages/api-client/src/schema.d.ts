@@ -1049,6 +1049,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            /** @description For a shared calendar, your own color when you picked one */
             color: string;
             /**
              * Format: uuid
@@ -1212,6 +1213,7 @@ export interface components {
             taskId: string | null;
             /** @description That task is completed */
             taskDone: boolean;
+            createdBy: components["schemas"]["CalendarOwner"] & (Record<string, never> | null);
         };
         Availability: {
             /** Format: date-time */

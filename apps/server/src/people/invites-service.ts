@@ -6,6 +6,7 @@ import { type Db, type Executor, repo } from '@homa/db';
 import { getInstanceSettings } from '@/instance/instance-service';
 import { log } from '@/log';
 import type { Mail } from '@/reminders';
+import { createCircle } from './circles-service';
 import { inviteEmail } from './invite-email';
 import { PEOPLE_LIMITS } from './schemas';
 
@@ -112,7 +113,26 @@ export async function claimInviteForSignUp(db: Db, token: string, email: string)
   return { emailProven: claimed.emailed && claimed.email === email.toLowerCase() };
 }
 
-/** Records who signed up with the (already claimed) invite. */
+/** The circle each inviter's new people join, so they're ready to share with. */
+export const INVITED_CIRCLE = 'Invited';
+
+/**
+ * Records who signed up with the (already claimed) invite and adds them to the inviter's
+ * "Invited" circle, creating it when missing. A failed circle step is logged, never fatal.
+ */
 export async function recordInviteUse(db: Db, token: string, userId: string): Promise<void> {
-  await repo.setInviteUsedByToken(db, hashToken(token), userId);
+  const invite = await repo.setInviteUsedByToken(db, hashToken(token), userId);
+  if (!invite) return;
+  try {
+    await addToInvitedCircle(db, invite.createdBy, userId);
+  } catch (err: unknown) {
+    log.warn('adding to the invited circle failed', { error: err instanceof Error ? err.message : 'unknown' });
+  }
+}
+
+async function addToInvitedCircle(db: Db, inviterId: string, userId: string): Promise<void> {
+  const existing = await repo.findCircleByName(db, inviterId, INVITED_CIRCLE);
+  if (existing) await repo.addCircleMember(db, existing.id, userId);
+  // At the circle limit this throws, and the caller logs it.
+  else await createCircle(db, inviterId, { name: INVITED_CIRCLE, memberIds: [userId] });
 }

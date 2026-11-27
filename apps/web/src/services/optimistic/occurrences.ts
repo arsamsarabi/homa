@@ -63,6 +63,7 @@ export function tempOccurrence(body: EventInput, tempId: string): Occurrence {
     overridden: false,
     taskId: null,
     taskDone: false,
+    createdBy: null,
   };
 }
 

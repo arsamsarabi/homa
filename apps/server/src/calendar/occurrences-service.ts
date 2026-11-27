@@ -9,6 +9,8 @@ export type OccurrenceView = ResolvedOccurrence<repo.EventRow> & {
   task?: { id: string; done: boolean };
   /** Effective access on this occurrence's calendar for the viewer. */
   access: Exclude<AccessLevel, 'none'>;
+  /** Who added the event in Homa, when known. */
+  createdBy?: { id: string; name: string };
 };
 
 /** Every accessible occurrence overlapping [from, to), sorted by start. */
@@ -33,6 +35,12 @@ export async function listOccurrences(
     repo.listOverrides(db, eventIds),
     repo.tasksByBlock(db, eventIds),
   ]);
+  const creatorIds = [...new Set(events.flatMap((e) => (e.createdByUserId ? [e.createdByUserId] : [])))];
+  const names = await repo.userNames(db, creatorIds);
+  const creatorOf = (e: repo.EventRow): OccurrenceView['createdBy'] => {
+    const id = e.createdByUserId;
+    return id ? { id, name: names.get(id) ?? '' } : undefined;
+  };
   return resolveOccurrences({ cached, late, events, overrides, from, to }).map((o) => {
     const level = byAccess.get(o.event.calendarId) ?? 'none';
     if (level === 'none') {
@@ -41,6 +49,6 @@ export async function listOccurrences(
     }
     // Task blocks are owner-only (path rules table).
     const task = level === 'owner' ? blocks.get(o.event.id) : undefined;
-    return { ...o, access: level, task };
+    return { ...o, access: level, task, createdBy: creatorOf(o.event) };
   });
 }

@@ -38,6 +38,7 @@ export async function exportData(db: Db, userId: string, now = new Date()): Prom
         access: 'owner',
         owner: { id: userId, name: ownerName },
         hidden: c.hidden,
+        color: c.color,
       }),
     ),
     events: events.map((e) => ({

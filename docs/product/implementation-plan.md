@@ -90,8 +90,42 @@ Status: done. Designed in [phase-6-sharing.md](../design/phase-6-sharing.md). 6a
 - Availability API (permission-aware free/busy).
 - OIDC single sign-on (one provider from the environment) and passkeys.
 
+## Feature requests backlog (triaged 2026-11-27)
+
+Open requests from QA ([qa-feedback.md](../qa/qa-feedback.md)) and Arsam's Homa notes, grouped and ordered. Size: S is about a day, M is a few days, L needs a design first.
+
+### 1. Sharing follow-ups (next: 0.3.1)
+
+These finish phase 6, so they come first.
+
+- **Show who created an event on shared calendars.** Shared events name their creator in the views and the event card. Needs a creator column on events. Size M.
+- **Your own color for a shared calendar.** Each person picks a color for a calendar shared with them, saved only for them, next to the per-person hide setting. Size S.
+- **Invited people join an "Invited" circle.** Accepting an invite adds the person to a default circle that belongs to whoever invited them, so it's ready for sharing. Size S.
+
+### 2. App UX polish (0.3.x)
+
+- **Tabbed Settings page.** Split Settings into tabs, for example General, Calendars, Reminders, People and Security. Size M.
+- **Onboarding back buttons.** Every onboarding step after the first has a Back button. Size S.
+- **Keyboard shortcut hints.** Show hints next to buttons, such as C for a new event. A setting hides them; they show by default. Size S.
+- **Breadcrumbs.** Add breadcrumbs on nested screens, such as Settings → Calendars → one calendar. Do this after the Settings tabs. Size S.
+- **Tidier calendar connection flow.** Rework adding and fixing a connection (CalDAV, Google, Microsoft, ICS) into one clear flow. Audit it first. Size M.
+- **Notifications and panel redesign.** Redesign the notification panel and how notifications look. Size M, design first.
+
+### 3. Calendar features (0.4)
+
+- **Travel time on events.** An optional travel time before an event, as in Apple Calendar: a block above the event with a car icon and "1 hr travel time". It counts as busy for availability and in polls. It doesn't sync to Google or CalDAV yet, since neither has a standard field for it. Size M.
+
+### 4. Scheduling (with phase 7)
+
+- **Subscribe to a person's availability.** A wishlist item to explore: following someone's free/busy as a calendar overlay, or as an ICS feed for other apps. Builds on the availability API (6c) and their grants. Explore it alongside phase 7. Size L.
+
+### Done from the same lists
+
+Resizing events, the toolbar and date navigator redesign, editing an event moving it live, the custom reminder repeat, Esc and dirty-form guards, optimistic saves with toasts, the Work week view, and one scrollbar in the calendar.
+
 ## Phase 7: group date-finding
 
+- Subscribe to a person's availability (see the backlog above), explored here.
 - Polls: slots, ranges and window modes; constraints; required and optional people; quorum.
 - Link guests with scoped tokens.
 - Auto-suggest from availability.

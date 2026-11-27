@@ -135,7 +135,8 @@
     "more": "More actions",
     "readOnly": "This event is from a read-only calendar and can't be changed here.",
     "sharedBy": "Shared by {{name}}",
-    "readOnlyShared": "This event is shared with you and can't be changed here."
+    "readOnlyShared": "This event is shared with you and can't be changed here.",
+    "addedBy": "Added by {{name}}"
   },
   "repeat": {
     "none": "Does not repeat",

@@ -196,6 +196,7 @@ const connectionOut = ({ connection: c, calendars }: service.ConnectionView): z.
       access: 'owner',
       owner: { id: c.ownerUserId, name: '' },
       hidden: cal.hidden,
+      color: cal.color,
     }),
   ),
 });
