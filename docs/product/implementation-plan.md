@@ -108,7 +108,7 @@ Status: done (#125). These finish phase 6, so they came first.
 - **Onboarding back buttons.** Done: first-run setup has Back on the Personal and Done steps (not back to the admin account, which already exists). User onboarding is a single page, so it needs none.
 - **Keyboard shortcut hints.** Done: key caps on the calendar toolbar, quick add and view menu, and arrow tooltips. "Show keyboard shortcut hints" in Settings → General is on by default, and hints are hidden on touch-only devices.
 - **Breadcrumbs.** Done: Calendar › Settings › {tab}, Calendar › Admin › {tab} and Calendar › Reminders replace the back links. Drawers (such as one calendar's) don't get their own step, and Tasks keeps its sidebar.
-- **Tidier calendar connection flow.** Rework adding and fixing a connection (CalDAV, Google, Microsoft, ICS) into one clear flow. Audit it first. Size M.
+- **Tidier calendar connection flow.** Done: Settings → Calendars is one list of cards (Homa calendars, one per connection, one per person sharing with you), and one **Add calendar** button asks where the calendar is, then opens its form. Connection actions sit in each card's ⋯ menu, with errors shown in the card.
 - **Notifications and panel redesign.** Redesign the notification panel and how notifications look. Size M, design first.
 
 ### 3. Calendar features (0.4)

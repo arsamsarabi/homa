@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { QueryErrorAlert } from '@/components';
 import { useConnectionMutations, useConnections, useRemoteCalendars } from '@/hooks/connections';
 import { useAnnouncer } from '@/stores';
-import { providerName } from './ConnectionItem';
+import { providerName } from './providerName';
 
 export type RemoteCalendarPickerProps = { connectionId: string; onDone: () => void };
 

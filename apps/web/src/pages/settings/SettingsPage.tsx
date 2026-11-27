@@ -5,8 +5,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageBreadcrumbs, SettingsFields } from '@/components';
 import { useSettingsDraft } from '@/hooks/settings';
-import { CalendarsSection } from '@/pages/settings/calendars';
-import { ConnectedCalendarsSection } from '@/pages/settings/connections';
+import { CalendarsTab } from '@/pages/settings/calendars';
 import { ImportExportSection, TodoistImportSection } from '@/pages/settings/import-export';
 import { ChannelsSection, NotificationsSection } from '@/pages/settings/notifications';
 import { PeopleSection } from '@/pages/settings/people';
@@ -14,6 +13,7 @@ import { SecuritySection } from '@/pages/settings/security';
 import { SETTINGS_TABS, type SettingsTab } from '@/schemas';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
+import classes from './SettingsPage.module.css';
 
 /** Your settings, in tabs kept in the URL (`?tab=`). Language and theme are in the header. */
 export function SettingsPage(): JSX.Element {
@@ -44,7 +44,13 @@ export function SettingsPage(): JSX.Element {
           trail={[{ label: t('settings.title'), href: '/settings' }, { label: t(`settings.tabs.${tab}`) }]}
         />
         <Title order={1}>{t('settings.title')}</Title>
-        <Tabs value={tab} onChange={pick} keepMounted={false} orientation={phone ? 'horizontal' : 'vertical'}>
+        <Tabs
+          value={tab}
+          onChange={pick}
+          keepMounted={false}
+          orientation={phone ? 'horizontal' : 'vertical'}
+          classNames={{ tab: classes.tab }}
+        >
           <Tabs.List mb={phone ? 'md' : undefined} me={phone ? undefined : 'xl'}>
             {SETTINGS_TABS.map((x) => (
               <Tabs.Tab key={x} value={x}>
@@ -69,8 +75,7 @@ export function SettingsPage(): JSX.Element {
           </Tabs.Panel>
           <Tabs.Panel value="calendars">
             <Stack gap="xl">
-              <CalendarsSection />
-              <ConnectedCalendarsSection />
+              <CalendarsTab />
             </Stack>
           </Tabs.Panel>
           <Tabs.Panel value="notifications">

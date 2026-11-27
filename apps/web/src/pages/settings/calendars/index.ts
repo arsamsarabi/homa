@@ -1,3 +1,3 @@
 export { CalendarEditDrawer } from './CalendarEditDrawer';
-export { CalendarsSection } from './CalendarsSection';
+export { CalendarsTab } from './CalendarsTab';
 export { SWATCHES } from './swatches';

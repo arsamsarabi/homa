@@ -293,12 +293,6 @@
     "export": "Download my data (JSON)"
   },
   "connections": {
-    "title": "Connected calendars",
-    "hint": "Subscribe to a calendar feed (an .ics or webcal address from Google Calendar, Outlook, Apple Calendar, a sports team or a school), add public holidays, or connect a CalDAV account (iCloud, Fastmail, Nextcloud), a Google account or a Microsoft account (Outlook.com, Microsoft 365) to sync both ways.",
-    "add": "Add calendar",
-    "addTitle": "Add a calendar",
-    "byAddress": "By address",
-    "holidays": "Public holidays",
     "url": "Calendar address",
     "urlHint": "An https or webcal link ending in .ics. Private links are stored encrypted.",
     "holidayCalendar": "Holiday calendar",
@@ -311,9 +305,6 @@
     "subscribe": "Subscribe",
     "fetching": "Fetching the calendar…",
     "added": "Calendar added",
-    "loading": "Loading connected calendars",
-    "loadFailed": "Couldn't load your connected calendars",
-    "empty": "No connected calendars yet.",
     "untitled": "Untitled calendar",
     "readOnly": "Read-only",
     "lastChecked": "Last checked {{time}}",
@@ -342,10 +333,11 @@
     "missing": "\"{{name}}\" was deleted on {{provider}}, or is no longer shared with this account.",
     "deletedOn": "Deleted on {{provider}}",
     "removeFromHoma": "Remove from Homa",
-    "removeMissingBody": "Remove \"{{name}}\" and its events from Homa?"
+    "removeMissingBody": "Remove \"{{name}}\" and its events from Homa?",
+    "linkTitle": "Subscribe to a calendar link",
+    "holidaysTitle": "Add public holidays"
   },
   "caldav": {
-    "add": "Connect account",
     "title": "Connect a CalDAV account",
     "provider": "Provider",
     "presets": {
@@ -388,14 +380,12 @@
   },
   "calendars": {
     "title": "Calendars",
-    "hint": "Pick a color for each calendar, and choose which ones show in the calendar views. Hidden calendars keep syncing.",
+    "hint": "Every calendar you see in Homa: your own, the ones you've connected, and the ones people share with you. Pick a color for each and choose which ones show in the calendar views. Hidden calendars keep syncing.",
     "loading": "Loading calendars",
     "loadFailed": "Couldn't load your calendars",
     "saveFailed": "Couldn't save the calendar: {{message}}",
     "colorOf": "Color of {{name}}",
     "suggested": "The swatches above stay readable in light and dark themes.",
-    "yours": "Your calendar",
-    "connected": "Connected",
     "hiddenLabel": "Hidden",
     "hide": "Hide {{name}}",
     "show": "Show {{name}}",
@@ -414,10 +404,14 @@
       "ics": "Subscriptions",
       "feeds": "Subscriptions"
     },
-    "sharedBy": "Shared by {{name}}"
+    "sharedBy": "Shared by {{name}}",
+    "add": "Add calendar",
+    "actions": "More actions for {{name}}",
+    "homaTitle": "Homa calendars",
+    "homaHint": "Stored in Homa. Share one with people from its settings.",
+    "sharedHint": "Your color and whether it shows are yours alone."
   },
   "google": {
-    "add": "Connect Google",
     "provider": "Google",
     "errors": {
       "denied": "Google wasn't connected: access wasn't granted.",
@@ -426,7 +420,6 @@
     }
   },
   "microsoft": {
-    "add": "Connect Outlook",
     "provider": "Microsoft",
     "errors": {
       "denied": "Outlook wasn't connected: access wasn't granted.",
@@ -838,5 +831,29 @@
     "staleTitle": "Please sign in again",
     "stale": "For your security, changing passkeys needs a recent sign-in. Sign out, sign back in, then try again.",
     "signInAgain": "Sign out and sign in again"
+  },
+  "addCalendar": {
+    "title": "Add a calendar",
+    "question": "Where is the calendar you want to see in Homa?",
+    "options": {
+      "google": "Google Calendar",
+      "microsoft": "Outlook or Microsoft 365",
+      "icloud": "iCloud",
+      "fastmail": "Fastmail",
+      "nextcloud": "Nextcloud",
+      "caldav": "Another CalDAV server",
+      "link": "A calendar link",
+      "holidays": "Public holidays"
+    },
+    "hints": {
+      "google": "Sign in with Google. Changes sync both ways.",
+      "microsoft": "Sign in with Microsoft. Changes sync both ways.",
+      "icloud": "Use an app-specific password. Changes sync both ways.",
+      "fastmail": "Use an app password. Changes sync both ways.",
+      "nextcloud": "Your Nextcloud server and an app password. Changes sync both ways.",
+      "caldav": "mailbox.org, Posteo, Zoho Calendar or your own server.",
+      "link": "An .ics or webcal address, from a school, a team or another app. Read-only.",
+      "holidays": "Holidays for your country. Read-only."
+    }
   }
 }

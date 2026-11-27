@@ -1,0 +1,4 @@
+/* Tab labels start at the reading edge in the vertical list (Mantine centers them). */
+.tab {
+  justify-content: flex-start;
+}

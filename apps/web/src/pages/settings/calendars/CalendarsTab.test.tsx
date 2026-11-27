@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { ownCalendar } from '@/testing/calendars';
+import { ownCalendar, sharedCalendar } from '@/testing/calendars';
 import { type FakeApi, json, renderApp, setUpInstance, signedIn } from '@/testing/renderApp';
 
 const calendar = ownCalendar({
@@ -89,27 +89,82 @@ function submit(drawer: HTMLElement): void {
   fireEvent.submit(form);
 }
 
-const section = (): Promise<HTMLElement> => screen.findByRole('region', { name: 'Connected calendars' });
+const section = (): Promise<HTMLElement> => screen.findByRole('region', { name: 'Calendars' });
 
-describe('connected calendars section', () => {
+/** A card in the tab (the first list item by that name: a feed's card and its one calendar share it). */
+async function card(name: string): Promise<HTMLElement> {
+  const [found] = await within(await section()).findAllByRole('listitem', { name });
+  if (!found) throw new Error(`no card ${name}`);
+  return found;
+}
+
+/** Picks an action from a card's ⋯ menu. */
+async function menu(item: HTMLElement, name: string, action: string): Promise<void> {
+  fireEvent.click(within(item).getByRole('button', { name: `More actions for ${name}` }));
+  fireEvent.click(await within(item).findByRole('menuitem', { name: action }));
+}
+
+/** Opens Add calendar and picks where the calendar is. */
+async function addFrom(option: string): Promise<void> {
+  fireEvent.click(within(await section()).getByRole('button', { name: 'Add calendar' }));
+  const picker = await screen.findByRole('dialog', { name: 'Add a calendar' });
+  fireEvent.click(within(picker).getByRole('button', { name: new RegExp(`^${option}`) }));
+}
+
+describe('settings: calendars tab', () => {
+  test('cards: Homa calendars first, then connections, then one per person sharing with you', async () => {
+    const sent: Sent[] = [];
+    const personal = ownCalendar({ id: 'p1', name: 'Personal' });
+    const bea = { id: 'u2', name: 'Bea' };
+    const cyrus = { id: 'u3', name: 'Cyrus' };
+    const list = [
+      personal,
+      calendar,
+      sharedCalendar({ id: 's1', name: 'Bea work', access: 'read', owner: bea }),
+      sharedCalendar({ id: 's2', name: 'Cyrus gym', access: 'edit', owner: cyrus }),
+      sharedCalendar({ id: 's3', name: 'Bea home', access: 'freebusy', owner: bea }),
+    ];
+    const base = api(() => json([ok]), sent);
+    renderApp('/settings?tab=calendars', (url, req) =>
+      url.pathname === '/api/calendars' ? json(list) : base(url, req),
+    );
+    const s = await section();
+    await card('Homa calendars');
+    const cards = [...(s.querySelector(':scope > ul')?.children ?? [])].map((li) => li.getAttribute('aria-label'));
+    expect(cards).toEqual(['Homa calendars', 'UK holidays', 'Shared by Bea', 'Shared by Cyrus']);
+
+    // A connected calendar shows in its connection's card only.
+    const homa = await card('Homa calendars');
+    expect(within(homa).getByRole('listitem', { name: 'Personal' })).toBeTruthy();
+    expect(within(homa).queryByRole('listitem', { name: 'UK holidays' })).toBeNull();
+
+    // Shared calendars: their access level, your color and hiding, no editing.
+    const shared = await card('Shared by Bea');
+    const work = within(shared).getByRole('listitem', { name: 'Bea work' });
+    expect(within(work).getByText('Details')).toBeTruthy();
+    expect(within(work).getByRole('button', { name: 'Color of Bea work' })).toBeTruthy();
+    expect(within(work).queryByRole('button', { name: 'Rename or recolor Bea work' })).toBeNull();
+    fireEvent.click(within(work).getByRole('button', { name: 'Hide Bea work' }));
+    await waitFor(() => expect(sent).toEqual([{ method: 'PATCH', path: '/api/calendars/s1', body: { hidden: true } }]));
+  });
+
   test('lists connections with their status and last error; sync now and remove call the API', async () => {
     const sent: Sent[] = [];
     renderApp(
       '/settings?tab=calendars',
       api(() => json([ok, failing]), sent),
     );
-    const s = await section();
-    const school = await within(s).findByRole('listitem', { name: 'School' });
+    const school = await card('School');
     expect(within(school).getByText('Error')).toBeTruthy();
     expect(within(school).getByText("Last sync failed: The feed's server answered 404")).toBeTruthy();
-    const uk = within(s).getByRole('listitem', { name: 'UK holidays' });
+    const uk = await card('UK holidays');
     expect(within(uk).getByText('Up to date')).toBeTruthy();
     expect(within(uk).getByText(/Last checked/)).toBeTruthy();
 
-    fireEvent.click(within(school).getByRole('button', { name: 'Sync now' }));
+    await menu(school, 'School', 'Sync now');
     await waitFor(() => expect(sent).toEqual([{ method: 'POST', path: '/api/connections/k2/sync', body: undefined }]));
 
-    fireEvent.click(within(uk).getByRole('button', { name: 'Remove' }));
+    await menu(uk, 'UK holidays', 'Remove');
     const dialog = await screen.findByRole('dialog', { name: 'Remove this calendar?' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
     await waitFor(() =>
@@ -128,10 +183,9 @@ describe('connected calendars section', () => {
       }
       return base(url, req);
     });
-    const s = await section();
-    expect(await within(s).findByText('No connected calendars yet.')).toBeTruthy();
-    fireEvent.click(within(s).getByRole('button', { name: 'Add calendar' }));
-    const drawer = await screen.findByRole('dialog', { name: 'Add a calendar' });
+    await card('Homa calendars');
+    await addFrom('A calendar link');
+    const drawer = await screen.findByRole('dialog', { name: 'Subscribe to a calendar link' });
     fireEvent.change(within(drawer).getByLabelText(/Calendar address/), {
       target: { value: 'webcal://example.com/school.ics' },
     });
@@ -151,9 +205,9 @@ describe('connected calendars section', () => {
       '/settings?tab=calendars',
       api(() => json([]), sent),
     );
-    fireEvent.click(within(await section()).getByRole('button', { name: 'Add calendar' }));
-    const drawer = await screen.findByRole('dialog', { name: 'Add a calendar' });
-    fireEvent.click(within(drawer).getByText('Public holidays'));
+    await card('Homa calendars');
+    await addFrom('Public holidays');
+    const drawer = await screen.findByRole('dialog', { name: 'Add public holidays' });
     const select = await within(drawer).findByRole('combobox', { name: /Holiday calendar/ });
     await waitFor(() => expect(select.hasAttribute('disabled')).toBe(false));
     fireEvent.click(select);
@@ -173,10 +227,11 @@ describe('connected calendars section', () => {
       '/settings?tab=calendars',
       api(() => json([]), sent),
     );
-    fireEvent.click(within(await section()).getByRole('button', { name: 'Connect account' }));
+    await card('Homa calendars');
+    await addFrom('iCloud');
     const drawer = await screen.findByRole('dialog', { name: 'Connect a CalDAV account' });
     const server = within(drawer).getByLabelText(/Server address/) as HTMLInputElement;
-    expect(server.value).toBe('https://caldav.icloud.com');
+    await waitFor(() => expect(server.value).toBe('https://caldav.icloud.com'));
     fireEvent.click(within(drawer).getByRole('combobox', { name: 'Provider' }));
     fireEvent.click(await screen.findByRole('option', { name: 'Fastmail', hidden: true }));
     await waitFor(() => expect(server.value).toBe('https://caldav.fastmail.com'));
@@ -207,7 +262,8 @@ describe('connected calendars section', () => {
       '/settings?tab=calendars',
       api(() => json([])),
     );
-    fireEvent.click(within(await section()).getByRole('button', { name: 'Connect account' }));
+    await card('Homa calendars');
+    await addFrom('Another CalDAV server');
     const drawer = await screen.findByRole('dialog', { name: 'Connect a CalDAV account' });
     const server = within(drawer).getByLabelText(/Server address/) as HTMLInputElement;
     const choose = async (name: string): Promise<void> => {
@@ -233,7 +289,7 @@ describe('connected calendars section', () => {
       '/settings?tab=calendars',
       api(() => json([account]), sent),
     );
-    const item = await within(await section()).findByRole('listitem', { name: 'ada on caldav.fastmail.com' });
+    const item = await card('ada on caldav.fastmail.com');
     expect(within(item).getByText('Syncs both ways', { exact: false })).toBeTruthy();
     expect(within(item).getByText(/"Lunch" conflicted/)).toBeTruthy();
     fireEvent.click(within(item).getByRole('button', { name: 'Dismiss' }));
@@ -253,7 +309,7 @@ describe('connected calendars section', () => {
       }),
     );
 
-    fireEvent.click(within(item).getByRole('button', { name: 'Choose calendars' }));
+    await menu(item, 'ada on caldav.fastmail.com', 'Choose calendars');
     expect(await screen.findByRole('dialog', { name: 'Choose calendars' })).toBeTruthy();
   });
 
@@ -264,18 +320,36 @@ describe('connected calendars section', () => {
       api(() => (fail ? json({ error: 'database is down' }, 500) : json([ok]))),
     );
     const s = await section();
-    expect(await within(s).findByText("Couldn't load your connected calendars")).toBeTruthy();
+    expect(await within(s).findByText("Couldn't load your calendars")).toBeTruthy();
     fail = false;
     fireEvent.click(within(s).getByRole('button', { name: 'Try again' }));
-    expect(await within(s).findByRole('listitem', { name: 'UK holidays' })).toBeTruthy();
+    expect(await card('UK holidays')).toBeTruthy();
   });
-  test('Google is offered only when the server is set up for it, as a link to the start endpoint', async () => {
+  test('Google and Outlook are offered only when the server is set up for them', async () => {
     renderApp(
       '/settings?tab=calendars',
       api(() => json([])),
     );
-    await within(await section()).findByText('No connected calendars yet.');
-    expect(screen.queryByRole('link', { name: 'Connect Google' })).toBeNull();
+    await card('Homa calendars');
+    fireEvent.click(within(await section()).getByRole('button', { name: 'Add calendar' }));
+    const picker = await screen.findByRole('dialog', { name: 'Add a calendar' });
+    expect(within(picker).getByRole('button', { name: /^iCloud/ })).toBeTruthy();
+    expect(within(picker).queryByRole('button', { name: /^Google Calendar/ })).toBeNull();
+    expect(within(picker).queryByRole('button', { name: /^Outlook or Microsoft 365/ })).toBeNull();
+  });
+
+  test('with Google and Outlook set up, Add calendar offers both', async () => {
+    const base = api(() => json([]));
+    renderApp('/settings?tab=calendars', (url, req) =>
+      url.pathname === '/api/instance'
+        ? json({ ...setUpInstance, googleCalendar: true, microsoftCalendar: true })
+        : base(url, req),
+    );
+    await card('Homa calendars');
+    fireEvent.click(within(await section()).getByRole('button', { name: 'Add calendar' }));
+    const picker = await screen.findByRole('dialog', { name: 'Add a calendar' });
+    expect(await within(picker).findByRole('button', { name: /^Google Calendar/ })).toBeTruthy();
+    expect(within(picker).getByRole('button', { name: /^Outlook or Microsoft 365/ })).toBeTruthy();
   });
 
   test("back from Google: the new account's calendar picker opens", async () => {
@@ -283,11 +357,9 @@ describe('connected calendars section', () => {
     renderApp('/settings?google=0b6f6f8e-3a35-4c1e-9d55-7c1e2a8c6f10', (url, req) =>
       url.pathname === '/api/instance' ? json({ ...setUpInstance, googleCalendar: true }) : base(url, req),
     );
-    const link = await screen.findByRole('link', { name: 'Connect Google' });
-    expect(link.getAttribute('href')).toBe('/api/connections/google/start');
     const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
     expect(await within(picker).findByRole('checkbox', { name: /Work/ })).toBeTruthy();
-    const item = await within(await section()).findByRole('listitem', { name: 'ada@gmail.com' });
+    const item = await card('ada@gmail.com');
     expect(within(item).getByText('Syncs both ways', { exact: false })).toBeTruthy();
   });
 
@@ -299,26 +371,14 @@ describe('connected calendars section', () => {
     expect(await screen.findByText("Google wasn't connected: access wasn't granted.")).toBeTruthy();
   });
 
-  test('Outlook is offered only when the server is set up for it', async () => {
-    renderApp(
-      '/settings?tab=calendars',
-      api(() => json([])),
-    );
-    await within(await section()).findByText('No connected calendars yet.');
-    expect(screen.queryByRole('link', { name: 'Connect Outlook' })).toBeNull();
-  });
-
   test("back from Microsoft: the new account's calendar picker opens", async () => {
     const base = api(() => json([{ ...account, provider: 'microsoft', label: 'ada@outlook.com', notice: null }]));
     renderApp('/settings?microsoft=0b6f6f8e-3a35-4c1e-9d55-7c1e2a8c6f10', (url, req) =>
       url.pathname === '/api/instance' ? json({ ...setUpInstance, microsoftCalendar: true }) : base(url, req),
     );
-    const link = await screen.findByRole('link', { name: 'Connect Outlook' });
-    expect(link.getAttribute('href')).toBe('/api/connections/microsoft/start');
-    expect(screen.queryByRole('link', { name: 'Connect Google' })).toBeNull();
     const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
     expect(await within(picker).findByRole('checkbox', { name: /Work/ })).toBeTruthy();
-    const item = await within(await section()).findByRole('listitem', { name: 'ada@outlook.com' });
+    const item = await card('ada@outlook.com');
     expect(within(item).getByText('Microsoft')).toBeTruthy();
   });
 
@@ -345,12 +405,12 @@ describe('connected calendars section', () => {
         ? json([...remote, { ...gone, readOnly: false, selected: true, missing: true }])
         : base(url, req),
     );
-    const item = await within(await section()).findByRole('listitem', { name: 'ada@gmail.com' });
+    const item = await card('ada@gmail.com');
     expect(
       within(item).getByText('"TTRPG" was deleted on Google, or is no longer shared with this account.'),
     ).toBeTruthy();
 
-    fireEvent.click(within(item).getByRole('button', { name: 'Choose calendars' }));
+    await menu(item, 'ada@gmail.com', 'Choose calendars');
     const picker = await screen.findByRole('dialog', { name: 'Choose calendars' });
     expect(await within(picker).findByRole('checkbox', { name: /TTRPG/ })).toBeTruthy();
     expect(within(picker).getByText('Deleted on Google')).toBeTruthy();

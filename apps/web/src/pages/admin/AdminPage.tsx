@@ -8,6 +8,7 @@ import { useInstance, useInstanceSettingsDraft } from '@/hooks/instance';
 import { isolate } from '@/lib/i18n';
 import { ADMIN_TABS } from '@/schemas';
 import { useAnnouncer } from '@/stores';
+import classes from './AdminPage.module.css';
 
 /** The instance's settings, for its admins, in tabs kept in the URL (`?tab=`) like Settings. */
 export function AdminPage(): JSX.Element {
@@ -56,7 +57,13 @@ export function AdminPage(): JSX.Element {
       <Stack>
         <PageBreadcrumbs trail={[{ label: t('nav.admin'), href: '/admin' }, { label: t(`instance.tabs.${tab}`) }]} />
         <Title order={1}>{t('instance.title')}</Title>
-        <Tabs value={tab} onChange={pick} keepMounted={false} orientation={phone ? 'horizontal' : 'vertical'}>
+        <Tabs
+          value={tab}
+          onChange={pick}
+          keepMounted={false}
+          orientation={phone ? 'horizontal' : 'vertical'}
+          classNames={{ tab: classes.tab }}
+        >
           <Tabs.List mb={phone ? 'md' : undefined} me={phone ? undefined : 'xl'}>
             {ADMIN_TABS.map((x) => (
               <Tabs.Tab key={x} value={x}>

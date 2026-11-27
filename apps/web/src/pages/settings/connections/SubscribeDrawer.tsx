@@ -1,35 +1,23 @@
-import {
-  Alert,
-  Button,
-  ColorInput,
-  Drawer,
-  Group,
-  SegmentedControl,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { Alert, Button, ColorInput, Drawer, Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { type FormEvent, type JSX, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmCloseModal, QueryErrorAlert } from '@/components';
 import { useConfirmClose } from '@/hooks/confirm-close';
 import { type SubscribeVars, useConnectionMutations, useHolidayCalendars } from '@/hooks/connections';
-import { SWATCHES } from '@/pages/settings/calendars';
+import { SWATCHES } from '@/pages/settings/calendars/swatches';
 import { useAnnouncer } from '@/stores';
 
-export type SubscribeDrawerProps = { opened: boolean; onClose: () => void };
-
-type Mode = 'url' | 'holidays';
+/** A calendar link (an .ics or webcal address) or a public-holiday calendar; closed when undefined. */
+export type SubscribeDrawerProps = { mode: 'link' | 'holidays' | undefined; onClose: () => void };
 
 /** Subscribe to an ICS feed by its address, or pick a public-holiday calendar. */
-export function SubscribeDrawer({ opened, onClose }: SubscribeDrawerProps): JSX.Element {
+export function SubscribeDrawer({ mode, onClose }: SubscribeDrawerProps): JSX.Element {
   const { t, i18n } = useTranslation();
   const lang = i18n.language === 'fa' ? 'fa' : 'en';
   const { subscribe } = useConnectionMutations();
   const holidays = useHolidayCalendars();
   const announce = useAnnouncer((s) => s.announce);
-  const [mode, setMode] = useState<Mode>('url');
+  const opened = mode !== undefined;
   const [holidayId, setHolidayId] = useState<string | null>(null);
   const [color, setColor] = useState('');
   const feed = holidays.data?.find((h) => h.id === holidayId);
@@ -45,7 +33,7 @@ export function SubscribeDrawer({ opened, onClose }: SubscribeDrawerProps): JSX.
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const name = String(form.get('name') ?? '').trim() || (feed ? feed.names[lang] : undefined);
-    const source = mode === 'url' ? { url: String(form.get('url') ?? '') } : { holidayId: feed?.id ?? '' };
+    const source = mode === 'link' ? { url: String(form.get('url') ?? '') } : { holidayId: feed?.id ?? '' };
     const vars: SubscribeVars = { ...source, ...(name && { name }), ...(color && { color }) };
     subscribe.mutate(vars, {
       onSuccess: () => {
@@ -63,22 +51,11 @@ export function SubscribeDrawer({ opened, onClose }: SubscribeDrawerProps): JSX.
         position="right"
         size="md"
         padding="lg"
-        title={t('connections.addTitle')}
+        title={t(mode === 'holidays' ? 'connections.holidaysTitle' : 'connections.linkTitle')}
       >
         <form onSubmit={submit} onInput={guard.markDirty} onChange={guard.markDirty}>
           <Stack>
-            <SegmentedControl
-              value={mode}
-              onChange={(v: string): void => {
-                guard.markDirty();
-                setMode(v as Mode);
-              }}
-              data={[
-                { value: 'url', label: t('connections.byAddress') },
-                { value: 'holidays', label: t('connections.holidays') },
-              ]}
-            />
-            {mode === 'url' ? (
+            {mode === 'link' ? (
               <TextInput
                 name="url"
                 type="url"

@@ -12,6 +12,8 @@ export type CaldavDrawerProps = {
   opened: boolean;
   /** An existing CalDAV connection: open straight on choosing its calendars. */
   connectionId?: string;
+  /** The server picked in the Add calendar drawer; the form starts on it. */
+  preset?: string;
   onClose: () => void;
 };
 
@@ -26,9 +28,10 @@ const PRESETS = {
   other: '',
 } as const;
 type Preset = keyof typeof PRESETS;
+const isPreset = (p: string | undefined): p is Preset => p !== undefined && p in PRESETS;
 
 /** Connect a CalDAV account with an app password, then choose which of its calendars sync. */
-export function CaldavDrawer({ opened, connectionId, onClose }: CaldavDrawerProps): JSX.Element {
+export function CaldavDrawer({ opened, connectionId, preset: initial, onClose }: CaldavDrawerProps): JSX.Element {
   const { t } = useTranslation();
   const { addCaldav } = useConnectionMutations();
   const announce = useAnnouncer((s) => s.announce);
@@ -44,7 +47,11 @@ export function CaldavDrawer({ opened, connectionId, onClose }: CaldavDrawerProp
   });
   useEffect(() => {
     if (!opened) guard.resetDirty();
-  }, [opened]);
+    else if (isPreset(initial)) {
+      setPreset(initial);
+      setServerUrl(PRESETS[initial]);
+    }
+  }, [opened, initial]);
 
   const pick = (value: string | null): void => {
     const next = (value ?? 'other') as Preset;
