@@ -5,7 +5,7 @@ name: homa
 
 services:
   homa:
-    image: ghcr.io/arsamsarabi/homa:0.2.0
+    image: ghcr.io/arsamsarabi/homa:0.3.0
     restart: unless-stopped
     depends_on:
       postgres:

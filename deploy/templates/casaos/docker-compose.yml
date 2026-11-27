@@ -4,7 +4,7 @@ name: homa
 
 services:
   homa:
-    image: ghcr.io/arsamsarabi/homa:0.2.0
+    image: ghcr.io/arsamsarabi/homa:0.3.0
     restart: unless-stopped
     depends_on:
       postgres:
@@ -76,7 +76,7 @@ x-casaos:
   architectures:
     - amd64
     - arm64
-  version: "0.2.0"
+  version: "0.3.0"
   update_at: "2026-11-22"
   release_notes:
     en_US: Email confirmation and password reset, a readiness endpoint, and branded reminder emails.

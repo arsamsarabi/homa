@@ -7,7 +7,7 @@ services:
       APP_PORT: 3000
 
   web:
-    image: ghcr.io/arsamsarabi/homa:0.2.0@sha256:eae8dd372b490ee14f7bd6365f2ee16240dc844f778e700aceae646befdfbb19
+    image: ghcr.io/arsamsarabi/homa:0.3.0@sha256:e2366b14981eae0480509a536997e27685f913343256077cff748b74c82ba29e
     restart: on-failure
     depends_on:
       postgres:
