@@ -2,7 +2,13 @@ import { Alert, Button, Group, Stack, Text, TextInput, Title } from '@mantine/co
 import { type ChangeEvent, type JSX, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { authClient } from '@/api';
+import { useSignOut } from '@/hooks/session/useSignOut';
 import { isolate } from '@/lib/i18n';
+
+/** Better Auth's error code when a sensitive change needs a recent sign-in. */
+const SESSION_NOT_FRESH = 'SESSION_NOT_FRESH';
+
+type AuthError = { code?: string; message?: string; statusText: string };
 
 type PasskeyRow = {
   id: string;
@@ -15,6 +21,8 @@ export function SecuritySection(): JSX.Element {
   const { t } = useTranslation();
   const [passkeys, setPasskeys] = useState<PasskeyRow[] | undefined>();
   const [error, setError] = useState<string>();
+  const [stale, setStale] = useState(false);
+  const signOut = useSignOut();
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
   const supported = typeof globalThis.PublicKeyCredential !== 'undefined';
@@ -38,13 +46,23 @@ export function SecuritySection(): JSX.Element {
     void reload();
   }, [reload, supported]);
 
-  async function add(): Promise<void> {
+  const start = (): void => {
     setBusy(true);
     setError(undefined);
+    setStale(false);
+  };
+
+  const fail = (err: AuthError): void => {
+    if (err.code === SESSION_NOT_FRESH) setStale(true);
+    else setError(err.message ?? err.statusText);
+  };
+
+  async function add(): Promise<void> {
+    start();
     const res = await authClient.passkey.addPasskey({
       ...(name.trim() !== '' && { name: name.trim() }),
     });
-    if (res.error) setError(res.error.message ?? res.error.statusText);
+    if (res.error) fail(res.error);
     else {
       setName('');
       await reload();
@@ -53,10 +71,9 @@ export function SecuritySection(): JSX.Element {
   }
 
   async function remove(id: string): Promise<void> {
-    setBusy(true);
-    setError(undefined);
+    start();
     const res = await authClient.passkey.deletePasskey({ id });
-    if (res.error) setError(res.error.message ?? res.error.statusText);
+    if (res.error) fail(res.error);
     else await reload();
     setBusy(false);
   }
@@ -78,6 +95,16 @@ export function SecuritySection(): JSX.Element {
         </Text>
       </Stack>
       {!supported && <Text size="sm">{t('security.unsupported')}</Text>}
+      {stale && (
+        <Alert color="yellow" role="alert" title={t('security.staleTitle')}>
+          <Stack gap="xs" align="flex-start">
+            <Text size="sm">{t('security.stale')}</Text>
+            <Button size="xs" variant="light" onClick={(): void => void signOut()}>
+              {t('security.signInAgain')}
+            </Button>
+          </Stack>
+        </Alert>
+      )}
       {error && (
         <Alert color="red" role="alert">
           {t('security.failed', { message: error })}

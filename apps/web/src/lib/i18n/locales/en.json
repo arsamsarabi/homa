@@ -816,6 +816,9 @@
     "nameHint": "Optional label, such as “Laptop” or “Phone”.",
     "add": "Add a passkey",
     "remove": "Remove",
-    "failed": "Couldn't update passkeys: {{message}}"
+    "failed": "Couldn't update passkeys: {{message}}",
+    "staleTitle": "Please sign in again",
+    "stale": "For your security, changing passkeys needs a recent sign-in. Sign out, sign back in, then try again.",
+    "signInAgain": "Sign out and sign in again"
   }
 }

@@ -15,6 +15,13 @@ const pickView = async (page: Page, name: string): Promise<void> => {
 const eventsIn = (page: Page, view: string, text: string) =>
   page.getByRole('region', { name: view, exact: true }).getByRole('button').filter({ hasText: text });
 
+/**
+ * Waits for the bottom-right toasts to close. The grid scrolls "now" to mid-viewport, so in the
+ * morning a toast can cover the event a test is about to drag.
+ */
+const toastsGone = (page: Page) =>
+  expect(page.locator('.mantine-Notification-root')).toHaveCount(0, { timeout: 10_000 });
+
 async function newEvent(page: Page, title: string, start: string, end: string, repeat?: string) {
   await page.getByRole('button', { name: 'New event' }).click();
   await page.getByPlaceholder('Add a title').fill(title);
@@ -45,6 +52,7 @@ test('create, drag, edit a repeating event and switch views @smoke', async ({ pa
   await newEvent(page, 'Dentist', `${today}T10:00`, `${today}T11:00`);
   const block = eventsIn(page, 'Week', 'Dentist');
   await expect(block).toContainText('10:00');
+  await toastsGone(page);
   await block.scrollIntoViewIfNeeded();
   const box = await block.boundingBox();
   if (!box) throw new Error('no event block');
@@ -54,6 +62,7 @@ test('create, drag, edit a repeating event and switch views @smoke', async ({ pa
   await page.mouse.up();
   await expect(block).toContainText('12:00');
 
+  await toastsGone(page);
   await block.scrollIntoViewIfNeeded();
   const moved = await block.boundingBox();
   if (!moved) throw new Error('no event block');
