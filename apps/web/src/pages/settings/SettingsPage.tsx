@@ -13,6 +13,7 @@ import { SecuritySection } from '@/pages/settings/security';
 import { SETTINGS_TABS, type SettingsTab } from '@/schemas';
 import { browserTimeZone } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
+import classes from './SettingsPage.module.css';
 
 /** Your settings, in tabs kept in the URL (`?tab=`). Language and theme are in the header. */
 export function SettingsPage(): JSX.Element {
@@ -43,7 +44,13 @@ export function SettingsPage(): JSX.Element {
           trail={[{ label: t('settings.title'), href: '/settings' }, { label: t(`settings.tabs.${tab}`) }]}
         />
         <Title order={1}>{t('settings.title')}</Title>
-        <Tabs value={tab} onChange={pick} keepMounted={false} orientation={phone ? 'horizontal' : 'vertical'}>
+        <Tabs
+          value={tab}
+          onChange={pick}
+          keepMounted={false}
+          orientation={phone ? 'horizontal' : 'vertical'}
+          classNames={{ tab: classes.tab }}
+        >
           <Tabs.List mb={phone ? 'md' : undefined} me={phone ? undefined : 'xl'}>
             {SETTINGS_TABS.map((x) => (
               <Tabs.Tab key={x} value={x}>

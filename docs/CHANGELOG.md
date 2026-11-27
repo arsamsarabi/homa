@@ -18,6 +18,8 @@ Breadcrumbs replace the "Back to the calendar" link: Settings, Admin and Reminde
 
 Settings → Calendars is one list of cards: **Homa calendars** first, then one card per connected account or calendar link, then one per person sharing calendars with you (**Shared by {name}**), each with its calendars' colors, show or hide, and editing for your own. A single **Add calendar** button asks where the calendar is (Google Calendar, Outlook or Microsoft 365, iCloud, Fastmail, Nextcloud, another CalDAV server, a calendar link or public holidays) and opens the right form. **Choose calendars**, **Sync now** and **Remove** moved into each connection's ⋯ menu, and a failed action shows its error in that card.
 
+The tab names down the side of Settings and Admin line up at the start instead of being centered.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".
