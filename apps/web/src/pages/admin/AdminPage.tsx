@@ -1,14 +1,12 @@
 import { Alert, Button, Container, Group, Loader, Stack, Tabs, Text, TextInput, Title } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { InstanceFields, PageBreadcrumbs, QueryErrorAlert } from '@/components';
+import { InstanceFields, PageBreadcrumbs, PageTabs, QueryErrorAlert } from '@/components';
 import { useInstance, useInstanceSettingsDraft } from '@/hooks/instance';
 import { isolate } from '@/lib/i18n';
-import { ADMIN_TABS } from '@/schemas';
+import { ADMIN_TABS, type AdminTab } from '@/schemas';
 import { useAnnouncer } from '@/stores';
-import classes from './AdminPage.module.css';
 
 /** The instance's settings, for its admins, in tabs kept in the URL (`?tab=`) like Settings. */
 export function AdminPage(): JSX.Element {
@@ -18,11 +16,7 @@ export function AdminPage(): JSX.Element {
   const oidc = useInstance().data?.oidc ?? null;
   const tab = useSearch({ from: '/_app/admin' }).tab ?? 'general';
   const navigate = useNavigate();
-  const phone = useMediaQuery('(max-width: 48em)');
-  const pick = (next: string | null): void => {
-    const found = ADMIN_TABS.find((x) => x === next);
-    if (found) void navigate({ to: '/admin', search: { tab: found }, replace: true });
-  };
+  const pick = (next: AdminTab): void => void navigate({ to: '/admin', search: { tab: next }, replace: true });
 
   // One draft across the General and Sign-ups tabs, so switching tabs keeps unsaved edits.
   const form = (part: 'general' | 'access'): JSX.Element => {
@@ -57,20 +51,12 @@ export function AdminPage(): JSX.Element {
       <Stack>
         <PageBreadcrumbs trail={[{ label: t('nav.admin'), href: '/admin' }, { label: t(`instance.tabs.${tab}`) }]} />
         <Title order={1}>{t('instance.title')}</Title>
-        <Tabs
+        <PageTabs
+          tabs={ADMIN_TABS}
           value={tab}
           onChange={pick}
-          keepMounted={false}
-          orientation={phone ? 'horizontal' : 'vertical'}
-          classNames={{ tab: classes.tab }}
+          label={(x: AdminTab): string => t(`instance.tabs.${x}`)}
         >
-          <Tabs.List mb={phone ? 'md' : undefined} me={phone ? undefined : 'xl'}>
-            {ADMIN_TABS.map((x) => (
-              <Tabs.Tab key={x} value={x}>
-                {t(`instance.tabs.${x}`)}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
           <Tabs.Panel value="general">{form('general')}</Tabs.Panel>
           <Tabs.Panel value="access">{form('access')}</Tabs.Panel>
           <Tabs.Panel value="sso">
@@ -92,7 +78,7 @@ export function AdminPage(): JSX.Element {
               )}
             </Stack>
           </Tabs.Panel>
-        </Tabs>
+        </PageTabs>
       </Stack>
     </Container>
   );
