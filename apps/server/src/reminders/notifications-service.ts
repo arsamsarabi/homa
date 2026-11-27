@@ -1,4 +1,4 @@
-// The bell: a user's open notifications, and snooze, done and mark-read on them.
+// The bell: a user's open notifications, and snooze, done, clear and mark-read on them.
 import { NotFoundError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 import { completeTask } from '@/tasks/tasks-service';
@@ -47,5 +47,20 @@ function doneRow(db: Db, userId: string, id: string, now: Date): Promise<repo.No
       if (r && !r.rrule) await repo.updateStandalone(tx, userId, r.id, { doneAt: now });
     }
     return row;
+  });
+}
+
+/**
+ * Clear all: every open notification leaves the bell, and a one-off standalone reminder that fired
+ * is done with it, as with done. Tasks are left open: clearing the bell isn't finishing the work.
+ */
+export function clearAll(db: Db, userId: string, now = new Date()): Promise<void> {
+  return db.transaction(async (tx) => {
+    const rows = await repo.clearOpenNotifications(tx, userId, now);
+    for (const row of rows) {
+      if (!row.reminderId || row.eventId) continue;
+      const r = await repo.findOwnedStandalone(tx, userId, row.reminderId);
+      if (r && !r.rrule) await repo.updateStandalone(tx, userId, r.id, { doneAt: now });
+    }
   });
 }

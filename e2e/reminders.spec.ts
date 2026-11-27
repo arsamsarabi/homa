@@ -48,7 +48,7 @@ test('event reminders, standalone reminders and the bell @smoke', async ({ page 
 
   // The bell starts empty and links to the reminders page.
   await page.getByRole('button', { name: 'Notifications' }).click();
-  await expect(page.getByText('Nothing to remind you of right now.')).toBeVisible();
+  await expect(page.getByText("You're all caught up")).toBeVisible();
   await page.getByRole('link', { name: 'Manage reminders' }).click();
   await expect(page.getByRole('heading', { name: 'Reminders', level: 1 })).toBeVisible();
 

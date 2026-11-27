@@ -5220,6 +5220,30 @@
         }
       }
     },
+    "/notifications/clear": {
+      "post": {
+        "operationId": "clearNotifications",
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Clear every open notification (one-off standalone reminders are done with them; tasks stay open)",
+        "responses": {
+          "204": {
+            "description": "Cleared"
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/notifications/{id}/snooze": {
       "post": {
         "operationId": "snoozeNotification",

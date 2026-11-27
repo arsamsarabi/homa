@@ -55,6 +55,14 @@ export async function markAllRead(db: Executor, ownerUserId: string, now: Date):
     .where(and(open(ownerUserId, now), isNull(notifications.readAt)));
 }
 
+/** Clears every open notification (done and read) and returns the cleared rows. */
+export const clearOpenNotifications = (db: Executor, ownerUserId: string, now: Date): Promise<NotificationRow[]> =>
+  db
+    .update(notifications)
+    .set({ doneAt: now, snoozedUntil: null, readAt: sql`coalesce(${notifications.readAt}, ${now})` })
+    .where(open(ownerUserId, now))
+    .returning();
+
 /** Returns the changed row, or undefined if it isn't the owner's. */
 export async function updateOwnedNotification(
   db: Executor,

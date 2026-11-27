@@ -1,5 +1,5 @@
 // The bell: open notifications, polled every 30 seconds and on focus (and refreshed when a push
-// arrives), with mark-read, snooze and done.
+// arrives), with mark-read, snooze, done and clear all.
 import {
   type UseMutationResult,
   type UseQueryResult,
@@ -46,6 +46,7 @@ export type NotificationActions = {
   readAll: UseMutationResult<void, Error, void>;
   snooze: UseMutationResult<Notification, Error, SnoozeVars>;
   done: UseMutationResult<Notification, Error, string>;
+  clearAll: UseMutationResult<void, Error, void>;
 };
 
 export function useNotificationActions(): NotificationActions {
@@ -75,6 +76,12 @@ export function useNotificationActions(): NotificationActions {
         NotificationSchema.parse(
           await unwrap(homaClient.POST('/notifications/{id}/done', { params: { path: { id } } })),
         ),
+      onSettled: refresh,
+    }),
+    clearAll: useMutation({
+      mutationFn: async (): Promise<void> => {
+        await unwrap(homaClient.POST('/notifications/clear'));
+      },
       onSettled: refresh,
     }),
   };

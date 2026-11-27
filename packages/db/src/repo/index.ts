@@ -105,6 +105,7 @@ export { findInstanceSettings, type InstanceSettingsRow, updateInstanceSettings 
 export {
   type ClaimedDelivery,
   claimDueDeliveries,
+  clearOpenNotifications,
   countUnread,
   deletePushSubscription,
   deletePushSubscriptionById,

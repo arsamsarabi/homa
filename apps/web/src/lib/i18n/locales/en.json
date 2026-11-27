@@ -493,9 +493,8 @@
     "bellUnread_other": "Notifications, {{count}} unread",
     "title": "Notifications",
     "loadFailed": "Couldn't load notifications: {{message}}",
-    "empty": "Nothing to remind you of right now.",
     "untitled": "(No title)",
-    "snooze": "Snooze…",
+    "snooze": "Snooze",
     "snoozeLabel": "Snooze \"{{title}}\"",
     "snoozeFor": {
       "5": "5 minutes",
@@ -509,7 +508,28 @@
     "manage": "Manage reminders",
     "actionFailed": "Couldn't change the notification: {{message}}",
     "snoozed": "Snoozed",
-    "markedDone": "Marked done"
+    "markedDone": "Marked done",
+    "snoozeMenu": "Snooze for",
+    "completeTask": "Complete task",
+    "completeLabel": "Complete \"{{title}}\"",
+    "clearAll": "Clear all",
+    "cleared": "Notifications cleared",
+    "settings": "Notification settings",
+    "new": "New",
+    "earlier": "Earlier",
+    "emptyTitle": "You're all caught up",
+    "emptyHint": "Reminders for your events, tasks and your own reminders show up here.",
+    "kind": {
+      "event": "Event",
+      "task": "Task",
+      "standalone": "Reminder"
+    },
+    "when": {
+      "event": "Starts {{relative}} · {{time}}",
+      "task": "Due {{relative}} · {{time}}",
+      "standalone": "{{relative}} · {{time}}"
+    },
+    "arrived": "Reminder: {{title}}, {{when}}"
   },
   "push": {
     "title": "Notifications on this device",
