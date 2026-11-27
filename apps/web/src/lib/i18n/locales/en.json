@@ -4,6 +4,7 @@
     "tagline": "Find the day that works for everyone."
   },
   "nav": {
+    "breadcrumb": "Breadcrumb",
     "calendar": "Calendar",
     "signOut": "Sign out",
     "language": "Language",
@@ -173,7 +174,6 @@
     "save": "Save",
     "saved": "Settings saved",
     "saveFailed": "Couldn't save your settings: {{message}}",
-    "back": "Back to the calendar",
     "tabs": {
       "general": "General",
       "calendars": "Calendars",

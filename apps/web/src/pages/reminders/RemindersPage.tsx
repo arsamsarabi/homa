@@ -1,9 +1,8 @@
-import { Anchor, Button, Container, Group, Loader, Stack, Text, Title } from '@mantine/core';
-import { IconArrowLeft, IconPlus } from '@tabler/icons-react';
-import { Link } from '@tanstack/react-router';
+import { Button, Container, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { QueryErrorAlert } from '@/components';
+import { PageBreadcrumbs, QueryErrorAlert } from '@/components';
 import { useReminderMutations, useReminders } from '@/hooks/reminders';
 import { useHomeZone } from '@/hooks/settings';
 import type { Reminder } from '@/schemas';
@@ -35,10 +34,7 @@ export function RemindersPage(): JSX.Element {
   return (
     <Container size="lg" py="xl">
       <Stack>
-        <Anchor component={Link} to="/" size="sm" className={classes.back}>
-          <IconArrowLeft size={16} aria-hidden className={classes.arrow} />
-          {t('settings.back')}
-        </Anchor>
+        <PageBreadcrumbs trail={[{ label: t('reminders.pageTitle') }]} />
         <Group justify="space-between">
           <Title order={1}>{t('reminders.pageTitle')}</Title>
           <Button

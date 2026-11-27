@@ -18,14 +18,14 @@ test('sign up, onboard, see the calendar, switch to Farsi, sign out @smoke', asy
   await page.getByRole('button', { name: 'Go to my calendar' }).click();
   await expect(page.locator('[aria-current=date]')).toBeVisible();
 
-  // Keyboard: M shows the month, the palette opens settings, and the back link returns.
+  // Keyboard: M shows the month, the palette opens settings, and the breadcrumb returns.
   await page.keyboard.press('m');
   await expect(page.getByRole('region', { name: 'Month', exact: true })).toBeVisible();
   await page.keyboard.press('ControlOrMeta+k');
   await page.getByPlaceholder('Type a command…').fill('settings');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/settings$/);
-  await page.getByRole('link', { name: 'Back to the calendar' }).click();
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Calendar' }).click();
   await expect(page.getByRole('region', { name: 'Week', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Account menu' }).click();

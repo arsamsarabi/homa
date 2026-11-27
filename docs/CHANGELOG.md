@@ -14,6 +14,8 @@ The Settings tabs run down the side on wider screens, and pages other than the c
 
 Keyboard shortcut hints: the calendar toolbar shows each button's key, such as **C** beside **New event**, **T** beside **Today**, **Q** in quick add and a key for each view, plus tooltips on the arrows. Turn them off with **Show keyboard shortcut hints** in Settings → General. They don't show on touch-only devices. Migration `0021_shortcut_hints` adds `users.show_shortcut_hints` (default on), and `Settings` gains `showShortcutHints`.
 
+Breadcrumbs replace the "Back to the calendar" link: Settings, Admin and Reminders show a trail such as **Calendar › Settings › People**, and each step but the last is a link.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".
