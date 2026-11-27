@@ -1,0 +1,4 @@
+/* Mantine centers tab names; in a side list they line up at the reading edge instead. */
+.label {
+  text-align: start;
+}
