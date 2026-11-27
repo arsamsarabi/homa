@@ -43,7 +43,7 @@ export function ConnectedCalendarsSection(): JSX.Element {
   );
   const fromCallback = Boolean(search.google || search.googleError || search.microsoft || search.microsoftError);
   useEffect(() => {
-    if (fromCallback) void navigate({ to: '/settings', search: {}, replace: true });
+    if (fromCallback) void navigate({ to: '/settings', search: { tab: 'calendars' }, replace: true });
   }, [fromCallback, navigate]);
   const [editing, setEditing] = useState<Calendar>();
   const [removing, setRemoving] = useState<Connection>();
@@ -78,7 +78,7 @@ export function ConnectedCalendarsSection(): JSX.Element {
   };
 
   return (
-    <Stack component="section" aria-labelledby={headingId} mt="xl">
+    <Stack component="section" aria-labelledby={headingId}>
       <Title order={2} size="h3" id={headingId}>
         {t('connections.title')}
       </Title>

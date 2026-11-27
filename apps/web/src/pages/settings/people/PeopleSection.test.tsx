@@ -23,7 +23,7 @@ const people = [
 describe('people settings', () => {
   test('an admin sees invites with their state, and circles with their members', async () => {
     const admin = signedInWith(settings, 'admin');
-    renderApp('/settings', (url, req) => {
+    renderApp('/settings?tab=people', (url, req) => {
       if (url.pathname === '/api/invites')
         return json([
           invite({ id: 'i1', email: 'dan@example.com' }),
@@ -56,7 +56,7 @@ describe('people settings', () => {
   });
 
   test('someone who may not invite sees only their circles', async () => {
-    renderApp('/settings', signedInWith(settings));
+    renderApp('/settings?tab=people', signedInWith(settings));
     expect(await screen.findByRole('heading', { name: 'Circles' })).toBeTruthy();
     expect(await screen.findByText('No circles yet.')).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Invites' })).toBeNull();

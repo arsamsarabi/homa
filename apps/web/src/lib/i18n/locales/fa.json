@@ -170,7 +170,15 @@
     "save": "ذخیره",
     "saved": "تنظیمات ذخیره شد",
     "saveFailed": "تنظیمات ذخیره نشد: {{message}}",
-    "back": "بازگشت به تقویم"
+    "back": "بازگشت به تقویم",
+    "tabs": {
+      "general": "عمومی",
+      "calendars": "تقویم‌ها",
+      "notifications": "اعلان‌ها",
+      "people": "افراد",
+      "security": "امنیت",
+      "data": "درون‌ریزی و برون‌بری"
+    }
   },
   "occasions": {
     "nowruz": "نوروز",

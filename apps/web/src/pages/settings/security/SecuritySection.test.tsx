@@ -14,7 +14,7 @@ afterEach(() => {
 
 describe('settings: security', () => {
   test('a stale session asks to sign in again instead of showing the raw error', async () => {
-    renderApp('/settings', (url, req) => {
+    renderApp('/settings?tab=security', (url, req) => {
       if (url.pathname === '/api/auth/passkey/list-user-passkeys') return json([{ id: 'p1', name: 'Laptop' }]);
       if (url.pathname === '/api/auth/passkey/delete-passkey')
         return json({ code: 'SESSION_NOT_FRESH', message: 'Session is not fresh' }, 403);

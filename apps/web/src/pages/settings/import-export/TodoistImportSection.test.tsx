@@ -7,7 +7,7 @@ const csv = 'TYPE,CONTENT,PRIORITY,INDENT\ntask,Plant bulbs,1,1\n';
 describe('Todoist import section', () => {
   test('sends the chosen files with the home zone and shows the summary', async () => {
     const sent: unknown[] = [];
-    renderApp('/settings', async (url, req) => {
+    renderApp('/settings?tab=data', async (url, req) => {
       if (url.pathname === '/api/tasks/import/todoist') {
         sent.push(await req.json());
         return json({ createdProjects: 2, imported: 7, skipped: 1, unreadDates: 1, sections: 0 });
@@ -39,7 +39,7 @@ describe('Todoist import section', () => {
   });
 
   test('shows why an import was refused', async () => {
-    renderApp('/settings', (url, req) =>
+    renderApp('/settings?tab=data', (url, req) =>
       url.pathname === '/api/tasks/import/todoist'
         ? json({ error: 'notes.csv: This is not a Todoist CSV export (no TYPE and CONTENT columns)' }, 400)
         : signedIn(url, req),

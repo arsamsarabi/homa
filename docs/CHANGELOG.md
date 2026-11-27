@@ -8,6 +8,8 @@ On a demo instance, the note about the shared account and nightly reset is now a
 
 Sharing follow-ups. Events show who added them, as "Added by {name}" on the event block, the read-only card and the editor, when that's someone other than you (older, synced and imported events don't say). You can pick your own color for a calendar shared with you under Settings → Calendars, and only you see it. People who sign up from your invite join your "Invited" circle, which is created when needed. Migration `0020_shared_calendar_followups` adds `events.created_by_user_id` and `shared_calendar_prefs.color`; `Occurrence` gains `createdBy`.
 
+Settings is split into tabs: **General**, **Calendars**, **Notifications**, **People**, **Security** and **Import and export**. The open tab is in the address (`/settings?tab=calendars`), so links and the Google and Microsoft connect flows land on the right one.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".

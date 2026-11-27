@@ -10,6 +10,8 @@ export {
   type RemoteCalendar,
   RemoteCalendarListSchema,
   RemoteCalendarSchema,
+  SETTINGS_TABS,
   type SettingsSearch,
   SettingsSearchSchema,
+  type SettingsTab,
 } from './connections';

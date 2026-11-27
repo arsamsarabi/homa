@@ -37,7 +37,7 @@ describe('import and export section', () => {
   test('imports into the first calendar and shows the summary with its notes', async () => {
     const sent: { path: string; type: string | null; body: string }[] = [];
     renderApp(
-      '/settings',
+      '/settings?tab=data',
       api(async (url, req) => {
         sent.push({ path: url.pathname, type: req.headers.get('content-type'), body: await req.text() });
         return json({ imported: 2, updated: 1, skipped: 1, warnings: ['Event "x" skipped: no DTSTART'] });
@@ -61,7 +61,7 @@ describe('import and export section', () => {
   test('shows progress while importing, then the error', async () => {
     let answer: (r: Response) => void = () => undefined;
     renderApp(
-      '/settings',
+      '/settings?tab=data',
       api(() => new Promise<Response>((resolve) => (answer = resolve))),
     );
     const s = await section();
@@ -79,7 +79,7 @@ describe('import and export section', () => {
 
   test('a failed calendar load can be retried; the export is a download link', async () => {
     let fail = true;
-    renderApp('/settings', (url, req) =>
+    renderApp('/settings?tab=data', (url, req) =>
       url.pathname === '/api/calendars'
         ? fail
           ? json({ error: 'database is down' }, 500)

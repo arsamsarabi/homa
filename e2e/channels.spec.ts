@@ -10,7 +10,7 @@ test('add, test, edit and delete a webhook channel @smoke', async ({ page }) => 
   await page.locator('input[name=password]').fill('correct horse battery');
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.getByRole('button', { name: 'Go to my calendar' }).click();
-  await page.goto('/settings');
+  await page.goto('/settings?tab=notifications');
 
   // The CI stack has no SMTP and no private networks allowed: email isn't offered, and a
   // loopback address is refused.

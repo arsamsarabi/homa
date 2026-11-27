@@ -95,7 +95,7 @@ describe('connected calendars section', () => {
   test('lists connections with their status and last error; sync now and remove call the API', async () => {
     const sent: Sent[] = [];
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([ok, failing]), sent),
     );
     const s = await section();
@@ -121,7 +121,7 @@ describe('connected calendars section', () => {
     const sent: Sent[] = [];
     let fail = true;
     const base = api(() => json([]), sent);
-    renderApp('/settings', async (url, req) => {
+    renderApp('/settings?tab=calendars', async (url, req) => {
       if (url.pathname === '/api/connections/ics' && fail) {
         fail = false;
         return json({ error: "Couldn't subscribe: The feed's server answered 404" }, 400);
@@ -148,7 +148,7 @@ describe('connected calendars section', () => {
   test('adds a holiday calendar from the catalog, named in the current language', async () => {
     const sent: Sent[] = [];
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([]), sent),
     );
     fireEvent.click(within(await section()).getByRole('button', { name: 'Add calendar' }));
@@ -170,7 +170,7 @@ describe('connected calendars section', () => {
   test('connects a CalDAV account with a provider preset, then chooses its calendars', async () => {
     const sent: Sent[] = [];
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([]), sent),
     );
     fireEvent.click(within(await section()).getByRole('button', { name: 'Connect account' }));
@@ -204,7 +204,7 @@ describe('connected calendars section', () => {
   });
   test('offers mailbox.org, Posteo and Zoho Calendar presets, each with its server address and hint', async () => {
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([])),
     );
     fireEvent.click(within(await section()).getByRole('button', { name: 'Connect account' }));
@@ -230,7 +230,7 @@ describe('connected calendars section', () => {
   test('a CalDAV account shows its notice and calendars; notices dismiss and calendars rename', async () => {
     const sent: Sent[] = [];
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([account]), sent),
     );
     const item = await within(await section()).findByRole('listitem', { name: 'ada on caldav.fastmail.com' });
@@ -260,7 +260,7 @@ describe('connected calendars section', () => {
   test('a failed load can be retried', async () => {
     let fail = true;
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => (fail ? json({ error: 'database is down' }, 500) : json([ok]))),
     );
     const s = await section();
@@ -271,7 +271,7 @@ describe('connected calendars section', () => {
   });
   test('Google is offered only when the server is set up for it, as a link to the start endpoint', async () => {
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([])),
     );
     await within(await section()).findByText('No connected calendars yet.');
@@ -301,7 +301,7 @@ describe('connected calendars section', () => {
 
   test('Outlook is offered only when the server is set up for it', async () => {
     renderApp(
-      '/settings',
+      '/settings?tab=calendars',
       api(() => json([])),
     );
     await within(await section()).findByText('No connected calendars yet.');
@@ -340,7 +340,7 @@ describe('connected calendars section', () => {
     const google = { ...account, provider: 'google', label: 'ada@gmail.com', notice: null, calendars: [work, ttrpg] };
     const gone = { remoteId: 'ttrpg@group.calendar.google.com', name: 'TTRPG', color: '#336699' };
     const base = api(() => json([google]), sent);
-    renderApp('/settings', (url, req) =>
+    renderApp('/settings?tab=calendars', (url, req) =>
       url.pathname.endsWith('/remote-calendars')
         ? json([...remote, { ...gone, readOnly: false, selected: true, missing: true }])
         : base(url, req),
