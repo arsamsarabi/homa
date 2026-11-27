@@ -12,7 +12,7 @@ export const Calendar = z
   .object({
     id: z.uuid(),
     name: z.string(),
-    color: Color,
+    color: Color.openapi({ description: 'For a shared calendar, your own color when you picked one' }),
     connectionId: z.uuid().nullable().openapi({ description: 'The connection it syncs with; null for your own' }),
     readOnly: z.boolean().openapi({ description: 'Events here cannot be created, changed or deleted (subscriptions)' }),
     hidden: z.boolean().openapi({
@@ -144,6 +144,9 @@ export const Occurrence = z
     overridden: z.boolean(),
     taskId: z.uuid().nullable().openapi({ description: 'The task this event is a time block for' }),
     taskDone: z.boolean().openapi({ description: 'That task is completed' }),
+    createdBy: CalendarOwner.nullable().openapi({
+      description: 'Who added the event in Homa; null when unknown (synced, imported or older events, or free/busy)',
+    }),
   })
   .openapi('Occurrence');
 

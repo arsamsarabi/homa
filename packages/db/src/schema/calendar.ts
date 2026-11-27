@@ -76,6 +76,8 @@ export const events = pgTable(
     /** Extra occurrence starts (RDATE) beside the RRULE's. */
     rdates: timestamp('rdates', { withTimezone: true }).array().notNull().default(sql`'{}'`),
     source: text('source').notNull().default('native'),
+    /** Who added the event in Homa (the owner, or a grantee with edit); null for synced, imported or older events. */
+    createdByUserId: text('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
     /** CalDAV: the URL of the remote resource holding this event, and its ETag when last seen. */
     remoteHref: text('remote_href'),
     remoteEtag: text('remote_etag'),

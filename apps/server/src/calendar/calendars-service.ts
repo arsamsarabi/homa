@@ -13,6 +13,7 @@ export async function createCalendar(db: Db, userId: string, input: repo.Calenda
     access: 'owner',
     owner: { id: userId, name: names.get(userId) ?? '' },
     hidden: calendar.hidden,
+    color: calendar.color,
   };
 }
 
@@ -28,14 +29,15 @@ export async function updateCalendar(
   if (access.access === 'owner') {
     const row = await repo.updateCalendar(db, userId, id, input);
     if (!row) throw new NotFoundError();
-    return { ...access, calendar: row, hidden: row.hidden };
+    return { ...access, calendar: row, hidden: row.hidden, color: row.color };
   }
 
-  // Shared calendar: only the viewer's hidden pref (decision 12).
-  const { hidden, ...rest } = input;
-  if (hidden === undefined || Object.values(rest).some((v) => v !== undefined)) throw new NotFoundError();
-  const pref = await repo.setSharedCalendarHidden(db, userId, id, hidden);
-  return { ...access, hidden: pref.hidden };
+  // Shared calendar: only the viewer's own prefs, hidden (decision 12) and color.
+  const { hidden, color, ...rest } = input;
+  if ((hidden === undefined && color === undefined) || Object.values(rest).some((v) => v !== undefined))
+    throw new NotFoundError();
+  const pref = await repo.setSharedCalendarPrefs(db, userId, id, { hidden, color });
+  return { ...access, hidden: pref.hidden, color: pref.color ?? access.calendar.color };
 }
 
 /**

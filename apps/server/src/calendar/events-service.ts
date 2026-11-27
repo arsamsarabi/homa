@@ -80,6 +80,7 @@ export function createEvent(
     const isOwner = ownerId === userId;
     const row = await repo.insertEvent(tx, {
       ownerUserId: ownerId,
+      createdByUserId: userId,
       uid: newUid(),
       calendarId: input.calendarId,
       summary: input.summary,

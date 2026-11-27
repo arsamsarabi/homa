@@ -6,6 +6,8 @@ Changes go under `[Unreleased]`. Every release moves them into a new `## [x.y.z]
 
 On a demo instance, the note about the shared account and nightly reset is now a centered welcome dialog when someone signs in, instead of a box in the corner of every page. It closes with **Got it**, Esc or the close button, and comes back on the next sign-in.
 
+Sharing follow-ups. Events show who added them, as "Added by {name}" on the event block, the read-only card and the editor, when that's someone other than you (older, synced and imported events don't say). You can pick your own color for a calendar shared with you under Settings → Calendars, and only you see it. People who sign up from your invite join your "Invited" circle, which is created when needed. Migration `0020_shared_calendar_followups` adds `events.created_by_user_id` and `shared_calendar_prefs.color`; `Occurrence` gains `createdBy`.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".

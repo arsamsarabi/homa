@@ -17,6 +17,7 @@ import { IconDots, IconTrash } from '@tabler/icons-react';
 import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ReminderChips } from '@/components';
+import { useAddedBy } from '@/pages/calendar/model';
 import type { Draft, Repeat } from '@/services/event-form';
 import classes from './EventEditor.module.css';
 import { FreeBusyDetails } from './FreeBusyDetails';
@@ -28,6 +29,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
   const { t } = useTranslation();
   const f = useEventForm(draft);
   const input = f.allDay ? 'date' : 'datetime-local';
+  const addedBy = useAddedBy(f.occurrence);
   if (f.freeBusy && f.occurrence) return <FreeBusyDetails occurrence={f.occurrence} onClose={f.close} />;
   if (f.readOnly && f.occurrence) return <ReadOnlyDetails occurrence={f.occurrence} onClose={f.close} />;
 
@@ -73,6 +75,11 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           )}
           <CloseButton size="sm" onClick={f.close} aria-label={t('common.close')} />
         </Group>
+        {addedBy && (
+          <Text size="xs" c="dimmed">
+            {t('editor.addedBy', { name: addedBy })}
+          </Text>
+        )}
         <TextInput
           name="summary"
           aria-label={t('editor.title')}

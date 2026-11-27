@@ -10,6 +10,8 @@ export type AccessibleCalendar = {
   owner: { id: string; name: string };
   /** Own calendars use calendars.hidden; shared ones use the viewer's shared_calendar_prefs. */
   hidden: boolean;
+  /** The calendar's color, or for a shared one the viewer's own pick when they made one. */
+  color: string;
 };
 
 export { accessAtLeast };
@@ -31,15 +33,19 @@ export async function calendarAccess(
   });
   if (access === 'none') return undefined;
   let hidden = input.calendar.hidden;
+  let color = input.calendar.color;
   if (!input.isOwner) {
     const prefs = await repo.listSharedCalendarPrefs(db, userId);
-    hidden = prefs.find((p) => p.calendarId === calendarId)?.hidden ?? false;
+    const pref = prefs.find((p) => p.calendarId === calendarId);
+    hidden = pref?.hidden ?? false;
+    color = pref?.color ?? color;
   }
   return {
     calendar: input.calendar,
     access,
     owner: { id: input.calendar.ownerUserId, name: input.ownerName },
     hidden,
+    color,
   };
 }
 
@@ -60,7 +66,7 @@ export async function accessibleCalendars(
     repo.listSharedCalendarPrefs(db, userId),
     repo.userNames(db, [userId]),
   ]);
-  const hiddenShared = new Map(prefs.map((p) => [p.calendarId, p.hidden]));
+  const prefsByCalendar = new Map(prefs.map((p) => [p.calendarId, p]));
   const ownName = names.get(userId) ?? '';
 
   const own = owned
@@ -71,6 +77,7 @@ export async function accessibleCalendars(
         access: 'owner',
         owner: { id: userId, name: ownName },
         hidden: calendar.hidden,
+        color: calendar.color,
       }),
     );
 
@@ -84,11 +91,13 @@ export async function accessibleCalendars(
       ownerPreset: input.ownerPreset,
     });
     if (access === 'none' || !accessAtLeast(access, 'freebusy')) continue;
+    const pref = prefsByCalendar.get(input.calendar.id);
     shared.push({
       calendar: input.calendar,
       access,
       owner: { id: input.calendar.ownerUserId, name: input.ownerName },
-      hidden: hiddenShared.get(input.calendar.id) ?? false,
+      hidden: pref?.hidden ?? false,
+      color: pref?.color ?? input.calendar.color,
     });
   }
 

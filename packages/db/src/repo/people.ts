@@ -99,12 +99,18 @@ export async function claimInvite(db: Executor, tokenHash: string, now: Date): P
   return row;
 }
 
-/** Records who used a claimed invite. */
-export async function setInviteUsedByToken(db: Executor, tokenHash: string, userId: string): Promise<void> {
-  await db
+/** Records who used a claimed invite; returns who created it, or undefined if it was already recorded. */
+export async function setInviteUsedByToken(
+  db: Executor,
+  tokenHash: string,
+  userId: string,
+): Promise<{ createdBy: string } | undefined> {
+  const [row] = await db
     .update(invites)
     .set({ usedBy: userId })
-    .where(and(eq(invites.tokenHash, tokenHash), isNull(invites.usedBy)));
+    .where(and(eq(invites.tokenHash, tokenHash), isNull(invites.usedBy)))
+    .returning({ createdBy: invites.createdBy });
+  return row;
 }
 
 /** True when an account uses this address, ignoring case. */
@@ -224,4 +230,22 @@ export async function deleteOwnedCircle(db: Executor, ownerUserId: string, id: s
 export async function replaceCircleMembers(db: Executor, circleId: string, userIds: readonly string[]): Promise<void> {
   await db.delete(circleMembers).where(eq(circleMembers.circleId, circleId));
   if (userIds.length) await db.insert(circleMembers).values(userIds.map((userId) => ({ circleId, userId })));
+}
+
+/** The owner's circle with this name, ignoring case. */
+export async function findCircleByName(
+  db: Executor,
+  ownerUserId: string,
+  name: string,
+): Promise<CircleRow | undefined> {
+  const [row] = await db
+    .select()
+    .from(circles)
+    .where(and(eq(circles.ownerUserId, ownerUserId), sql`lower(${circles.name}) = ${name.toLowerCase()}`));
+  return row;
+}
+
+/** Adds one member; a no-op when they're already in the circle. */
+export async function addCircleMember(db: Executor, circleId: string, userId: string): Promise<void> {
+  await db.insert(circleMembers).values({ circleId, userId }).onConflictDoNothing();
 }

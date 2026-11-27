@@ -18,6 +18,7 @@ const occ = (summary: string, start: string, end: string, allDay = false): Occur
   overridden: false,
   taskId: null,
   taskDone: false,
+  createdBy: null,
 });
 // Shown in Tehran (UTC+3:30), so a UTC-only bug would put things on the wrong day.
 const TZ = 'Asia/Tehran';

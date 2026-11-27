@@ -99,7 +99,7 @@ export {
   replaceCalendarGrants,
   type SharedCalendarPrefRow,
   setCalendarDefaultAccess,
-  setSharedCalendarHidden,
+  setSharedCalendarPrefs,
 } from './grants';
 export { findInstanceSettings, type InstanceSettingsRow, updateInstanceSettings } from './instance';
 export {
@@ -137,6 +137,7 @@ export {
   pendingOutboxUids,
 } from './outbox';
 export {
+  addCircleMember,
   type CircleRow,
   type CircleValues,
   type CircleWithMembers,
@@ -148,6 +149,7 @@ export {
   deleteUnusedInvite,
   emailTaken,
   existingUserIds,
+  findCircleByName,
   findOwnedCircle,
   findPendingInvite,
   type InviteRow,

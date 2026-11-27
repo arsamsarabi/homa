@@ -46,7 +46,8 @@ export const calendarGrants = pgTable(
 );
 
 /**
- * A viewer's own choice for a shared calendar (hide from views). Missing row means shown.
+ * A viewer's own choices for a shared calendar: hide it from views, and their own color (null means
+ * the owner's). Missing row means shown in the owner's color.
  * Own calendars use `calendars.hidden` instead.
  */
 export const sharedCalendarPrefs = pgTable(
@@ -59,6 +60,7 @@ export const sharedCalendarPrefs = pgTable(
       .notNull()
       .references(() => calendars.id, { onDelete: 'cascade' }),
     hidden: boolean('hidden').notNull().default(false),
+    color: text('color'),
   },
   (t) => [primaryKey({ columns: [t.userId, t.calendarId] })],
 );

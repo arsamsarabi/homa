@@ -9,7 +9,7 @@ import type { Availability, Calendar, CalendarGrants, Event, Occurrence } from '
 export const calendarOut = (c: AccessibleCalendar): z.infer<typeof Calendar> => ({
   id: c.calendar.id,
   name: c.calendar.name,
-  color: c.calendar.color,
+  color: c.color,
   connectionId: c.calendar.connectionId,
   readOnly: c.calendar.readOnly,
   hidden: c.hidden,
@@ -57,6 +57,7 @@ export const occurrenceOut = (o: OccurrenceView): z.infer<typeof Occurrence> => 
   overridden: o.overridden,
   taskId: o.task?.id ?? null,
   taskDone: o.task?.done ?? false,
+  createdBy: o.createdBy ?? null,
 });
 
 /** Free/busy: times only; empty title; no description, location, recurrence flags or task (decision 13). */
@@ -69,6 +70,7 @@ export const freebusyOccurrenceOut = (o: OccurrenceView): z.infer<typeof Occurre
   overridden: false,
   taskId: null,
   taskDone: false,
+  createdBy: null,
 });
 
 export const grantsOut = (

@@ -75,7 +75,8 @@
           },
           "color": {
             "type": "string",
-            "pattern": "^#[0-9a-f]{6}$/i"
+            "pattern": "^#[0-9a-f]{6}$/i",
+            "description": "For a shared calendar, your own color when you picked one"
           },
           "connectionId": {
             "type": [
@@ -585,6 +586,20 @@
           "taskDone": {
             "type": "boolean",
             "description": "That task is completed"
+          },
+          "createdBy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CalendarOwner"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Who added the event in Homa; null when unknown (synced, imported or older events, or free/busy)"
+              }
+            ]
           }
         },
         "required": [
@@ -601,7 +616,8 @@
           "recurring",
           "overridden",
           "taskId",
-          "taskDone"
+          "taskDone",
+          "createdBy"
         ]
       },
       "Availability": {

@@ -92,6 +92,9 @@ describe.skipIf(!testDatabaseUrl)('people', () => {
 
     const listed = (await call('GET', '/invites')).body.find((i) => i.id === invite.body.id);
     expect(listed?.usedBy).toEqual({ id: await userId('carol@example.com'), name: 'carol' });
+    // New people join the inviter's "Invited" circle, ready to share with.
+    const invited = (await call('GET', '/circles')).body.find((c) => c.name === 'Invited');
+    expect(invited?.memberIds).toEqual([await userId('carol@example.com')]);
     await setInstance({ signUps: 'open' });
   });
 
@@ -207,9 +210,9 @@ describe.skipIf(!testDatabaseUrl)('people', () => {
       avatarImage: 'data:image/png;base64,abc',
     });
     expect((await call('PUT', `/circles/${id}/members`, { memberIds: [carolId] })).body.memberIds).toEqual([carolId]);
-    expect((await call('GET', '/circles')).body.map((c) => c.name)).toEqual(['Close family']);
+    expect((await call('GET', '/circles')).body.map((c) => c.name)).toEqual(['Close family', 'Invited']);
     expect((await call('DELETE', `/circles/${id}`)).status).toBe(204);
-    expect(await t.db.$count(schema.circleMembers)).toBe(0);
+    expect(await t.db.$count(schema.circleMembers, eq(schema.circleMembers.circleId, id))).toBe(0);
   });
 
   test('a new circle gets a colour and avatar seed when none are sent', async () => {
