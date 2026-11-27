@@ -31,7 +31,7 @@ test('import an .ics file and download the data export @smoke', async ({ page })
   await page.getByRole('button', { name: 'Go to my calendar' }).click();
   await expect(page.getByRole('region', { name: 'Week', exact: true })).toBeVisible();
 
-  await page.goto('/settings');
+  await page.goto('/settings?tab=data');
   const section = page.getByRole('region', { name: 'Import and export' });
   await expect(section.getByRole('combobox', { name: 'Calendar' })).toHaveValue('Personal');
   await section

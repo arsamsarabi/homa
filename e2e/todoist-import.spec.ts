@@ -16,7 +16,7 @@ test('import a Todoist project CSV into tasks @smoke', async ({ page }) => {
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.getByRole('button', { name: 'Go to my calendar' }).click();
 
-  await page.goto('/settings');
+  await page.goto('/settings?tab=data');
   const section = page.getByRole('region', { name: 'Import from Todoist' });
   await section
     .locator('input[type=file]')

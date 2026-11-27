@@ -128,7 +128,12 @@ export function CalendarFilter(): JSX.Element {
             >
               {t('calendars.showAll')}
             </Button>
-            <Anchor component={Link} to="/settings" size="xs">
+            <Anchor
+              size="xs"
+              renderRoot={(props: Record<string, unknown>): JSX.Element => (
+                <Link {...props} to="/settings" search={{ tab: 'calendars' }} />
+              )}
+            >
               {t('calendars.manage')}
             </Anchor>
           </Group>

@@ -28,7 +28,7 @@ test('recolor a calendar in Settings, then hide and show it with the filter', as
   await expect(swim).toBeVisible();
 
   // Settings → Calendars: pick a suggested color for Personal.
-  await page.goto('/settings');
+  await page.goto('/settings?tab=calendars');
   const section = page.getByRole('region', { name: 'Calendars', exact: true });
   await section.getByRole('button', { name: 'Color of Personal' }).click();
   await page.getByRole('button', { name: '#3b9492' }).click();

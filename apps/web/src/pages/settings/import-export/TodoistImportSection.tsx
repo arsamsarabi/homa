@@ -26,7 +26,7 @@ export function TodoistImportSection(): JSX.Element {
     );
 
   return (
-    <Stack component="section" aria-labelledby={headingId} mt="xl">
+    <Stack component="section" aria-labelledby={headingId}>
       <Title order={2} size="h3" id={headingId}>
         {t('todoist.title')}
       </Title>

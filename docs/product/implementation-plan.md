@@ -92,11 +92,11 @@ Status: done. Designed in [phase-6-sharing.md](../design/phase-6-sharing.md). 6a
 
 ## Feature requests backlog (triaged 2026-11-27)
 
-Open requests from QA ([qa-feedback.md](../qa/qa-feedback.md)) and Arsam's Homa notes, grouped and ordered. Size: S is about a day, M is a few days, L needs a design first.
+Open requests from QA and Arsam's Homa notes, grouped and ordered. Size: S is about a day, M is a few days, L needs a design first.
 
 ### 1. Sharing follow-ups (next: 0.3.1)
 
-These finish phase 6, so they come first.
+Status: done (#125). These finish phase 6, so they came first.
 
 - **Show who created an event on shared calendars.** Shared events name their creator in the views and the event card. Needs a creator column on events. Size M.
 - **Your own color for a shared calendar.** Each person picks a color for a calendar shared with them, saved only for them, next to the per-person hide setting. Size S.
@@ -104,7 +104,7 @@ These finish phase 6, so they come first.
 
 ### 2. App UX polish (0.3.x)
 
-- **Tabbed Settings page.** Split Settings into tabs, for example General, Calendars, Reminders, People and Security. Size M.
+- **Tabbed Settings page.** Done: General, Calendars, Notifications, People, Security, and Import and export, with the open tab in the URL (`?tab=`).
 - **Onboarding back buttons.** Every onboarding step after the first has a Back button. Size S.
 - **Keyboard shortcut hints.** Show hints next to buttons, such as C for a new event. A setting hides them; they show by default. Size S.
 - **Breadcrumbs.** Add breadcrumbs on nested screens, such as Settings → Calendars → one calendar. Do this after the Settings tabs. Size S.

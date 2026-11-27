@@ -57,6 +57,7 @@ describe('settings page: reminders', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(sent[1]).toEqual({ defaultReminderMinutes: null }));
     // happy-dom has no PushManager.
-    expect(screen.getByText(/This browser can't receive push notifications/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Notifications' }));
+    expect(await screen.findByText(/This browser can't receive push notifications/)).toBeTruthy();
   });
 });

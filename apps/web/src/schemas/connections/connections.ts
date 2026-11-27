@@ -44,8 +44,13 @@ export const RemoteCalendarListSchema = z.array(RemoteCalendarSchema);
 /** Why an OAuth connect (Google or Microsoft) failed, as the API's callback says. */
 export const GOOGLE_ERRORS = ['denied', 'state', 'failed'] as const;
 
-/** The settings route's search params: where the API's Google and Microsoft callbacks send the user back. */
+/** The Settings page's tabs, in order. */
+export const SETTINGS_TABS = ['general', 'calendars', 'notifications', 'people', 'security', 'data'] as const;
+export type SettingsTab = (typeof SETTINGS_TABS)[number];
+
+/** The settings route's search params: the open tab, and where the API's Google and Microsoft callbacks send the user back. */
 export const SettingsSearchSchema = z.object({
+  tab: z.enum(SETTINGS_TABS).optional().catch(undefined),
   /** A Google account just connected: open its calendar picker. */
   google: z.uuid().optional().catch(undefined),
   googleError: z.enum(GOOGLE_ERRORS).optional().catch(undefined),

@@ -170,7 +170,15 @@
     "save": "Save",
     "saved": "Settings saved",
     "saveFailed": "Couldn't save your settings: {{message}}",
-    "back": "Back to the calendar"
+    "back": "Back to the calendar",
+    "tabs": {
+      "general": "General",
+      "calendars": "Calendars",
+      "notifications": "Notifications",
+      "people": "People",
+      "security": "Security",
+      "data": "Import and export"
+    }
   },
   "occasions": {
     "nowruz": "Nowruz",

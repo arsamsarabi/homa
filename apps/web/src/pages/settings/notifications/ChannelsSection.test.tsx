@@ -26,7 +26,7 @@ const channel = (over: Record<string, unknown> = {}) => ({
 describe('notification channels', () => {
   test('a failing channel shows its error; send test reports the result', async () => {
     const tested: string[] = [];
-    renderApp('/settings', (url, req) => {
+    renderApp('/settings?tab=notifications', (url, req) => {
       if (url.pathname === '/api/notification-channels')
         return json({ items: [channel({ failing: true, lastError: 'ntfy.sh answered 503' })], email: true });
       if (url.pathname === '/api/notification-channels/ch1/test' && req.method === 'POST') {
@@ -46,7 +46,7 @@ describe('notification channels', () => {
 
   test('toggling a channel on or off announces success', async () => {
     let enabled = true;
-    renderApp('/settings', async (url, req) => {
+    renderApp('/settings?tab=notifications', async (url, req) => {
       if (url.pathname === '/api/notification-channels' && req.method === 'GET')
         return json({ items: [channel({ enabled })], email: true });
       if (url.pathname === '/api/notification-channels/ch1' && req.method === 'PATCH') {
