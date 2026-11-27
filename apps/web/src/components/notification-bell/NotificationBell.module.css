@@ -1,0 +1,61 @@
+.header {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.footer {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding-inline: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  transition: background-color 150ms ease;
+}
+
+.item:hover,
+.item:focus-within {
+  background-color: var(--mantine-color-default-hover);
+}
+
+/* New ones: a dot at the reading edge. */
+.item[data-new]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 6px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background-color: var(--mantine-primary-color-filled);
+}
+
+.open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  min-height: 56px;
+  padding-block: var(--mantine-spacing-xs);
+  padding-inline-start: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.open:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.actions {
+  flex-shrink: 0;
+}

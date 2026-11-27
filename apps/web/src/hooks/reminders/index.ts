@@ -4,6 +4,7 @@ export {
   useChannelMutations,
   useChannels,
 } from './useChannels';
+export { useNotificationArrivals } from './useNotificationArrivals';
 export {
   type NotificationActions,
   notificationKeys,

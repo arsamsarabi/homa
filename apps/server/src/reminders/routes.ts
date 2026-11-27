@@ -76,6 +76,14 @@ const r = {
     summary: 'Mark every open notification read',
     responses: { 204: { description: 'Done' }, 401: errors[401] },
   }),
+  clearNotifications: createRoute({
+    method: 'post',
+    path: '/notifications/clear',
+    operationId: 'clearNotifications',
+    tags: tags.notifications,
+    summary: 'Clear every open notification (one-off standalone reminders are done with them; tasks stay open)',
+    responses: { 204: { description: 'Cleared' }, 401: errors[401] },
+  }),
   snoozeNotification: createRoute({
     method: 'post',
     path: '/notifications/{id}/snooze',
@@ -159,6 +167,10 @@ export function remindersApi(deps?: { db: Db; auth: Auth; push?: PushSettings })
     })
     .openapi(r.readNotifications, async (c) => {
       await notifications.markAllRead(db(), c.var.userId);
+      return c.body(null, 204);
+    })
+    .openapi(r.clearNotifications, async (c) => {
+      await notifications.clearAll(db(), c.var.userId);
       return c.body(null, 204);
     })
     .openapi(r.snoozeNotification, async (c) => {

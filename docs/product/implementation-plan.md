@@ -109,7 +109,7 @@ Status: done (#125). These finish phase 6, so they came first.
 - **Keyboard shortcut hints.** Done: key caps on the calendar toolbar, quick add and view menu, and arrow tooltips. "Show keyboard shortcut hints" in Settings → General is on by default, and hints are hidden on touch-only devices.
 - **Breadcrumbs.** Done: Calendar › Settings › {tab}, Calendar › Admin › {tab} and Calendar › Reminders replace the back links. Drawers (such as one calendar's) don't get their own step, and Tasks keeps its sidebar.
 - **Tidier calendar connection flow.** Done: Settings → Calendars is one list of cards (Homa calendars, one per connection, one per person sharing with you), and one **Add calendar** button asks where the calendar is, then opens its form. Connection actions sit in each card's ⋯ menu, with errors shown in the card.
-- **Notifications and panel redesign.** Redesign the notification panel and how notifications look. Size M, design first.
+- **Notifications and panel redesign.** Done: a popover under the bell (a bottom sheet on phones) with New and Earlier groups, kind icons, relative times, click-through to the event's day, tasks or reminders, a snooze menu, Done, Clear all, and a toast when a reminder fires while Homa is open.
 
 ### 3. Calendar features (0.4)
 

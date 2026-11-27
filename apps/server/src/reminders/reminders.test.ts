@@ -285,6 +285,26 @@ describe.skipIf(!testDatabaseUrl)('reminders', () => {
       expect(((await call('GET', '/reminders')).body as Json[]).map((x) => x.id)).toEqual([daily.body.id]);
     });
 
+    test('clear all empties the bell and finishes one-off reminders, but not repeating ones', async () => {
+      await call('POST', '/events', standup({ reminders: [10] }));
+      await deliverReminders(t.db, fakeSenders, new Date('2026-03-16T08:50:30Z'));
+      const daily = await call('POST', '/reminders', {
+        title: 'Pills',
+        at: '2030-03-30T09:00:00Z',
+        tz: 'UTC',
+        rrule: 'FREQ=DAILY',
+      });
+      await call('POST', '/reminders', { title: 'Call mum', at: '2030-03-30T09:00:00Z', tz: 'UTC' });
+      await deliverReminders(t.db, fakeSenders, new Date('2030-03-30T09:00:10Z'));
+      expect((await call('GET', '/notifications')).body.items).toHaveLength(3);
+
+      expect((await call('POST', '/notifications/clear')).status).toBe(204);
+      expect((await call('GET', '/notifications')).body as unknown).toEqual({ items: [], unread: 0 });
+      expect(((await call('GET', '/reminders')).body as Json[]).map((x) => x.id)).toEqual([daily.body.id]);
+      // Only your own: Bob's call clears nothing of Ada's, and answers the same.
+      expect((await call('POST', '/notifications/clear', undefined, bob)).status).toBe(204);
+    });
+
     test('a channel that keeps failing retries with backoff, then fails', async () => {
       await call('POST', '/push/subscriptions', { endpoint: endpoint('a'), keys: browserKey });
       await call('POST', '/events', standup({ reminders: [10] }));

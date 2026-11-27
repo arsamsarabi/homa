@@ -493,9 +493,8 @@
     "bellUnread_other": "اعلان‌ها، {{count}} خوانده‌نشده",
     "title": "اعلان‌ها",
     "loadFailed": "اعلان‌ها بارگذاری نشدند: {{message}}",
-    "empty": "فعلاً چیزی برای یادآوری نیست.",
     "untitled": "(بدون عنوان)",
-    "snooze": "تعویق…",
+    "snooze": "تعویق",
     "snoozeLabel": "تعویق «{{title}}»",
     "snoozeFor": {
       "5": "۵ دقیقه",
@@ -509,7 +508,28 @@
     "manage": "مدیریت یادآوری‌ها",
     "actionFailed": "اعلان تغییر نکرد: {{message}}",
     "snoozed": "به تعویق افتاد",
-    "markedDone": "انجام‌شده علامت خورد"
+    "markedDone": "انجام‌شده علامت خورد",
+    "snoozeMenu": "تعویق برای",
+    "completeTask": "انجام کار",
+    "completeLabel": "انجام «{{title}}»",
+    "clearAll": "پاک کردن همه",
+    "cleared": "اعلان‌ها پاک شدند",
+    "settings": "تنظیمات اعلان‌ها",
+    "new": "تازه",
+    "earlier": "پیش‌تر",
+    "emptyTitle": "همه را دیده‌اید",
+    "emptyHint": "یادآورهای رویدادها، کارها و یادآورهای خودتان اینجا نشان داده می‌شوند.",
+    "kind": {
+      "event": "رویداد",
+      "task": "کار",
+      "standalone": "یادآور"
+    },
+    "when": {
+      "event": "شروع {{relative}} · {{time}}",
+      "task": "موعد {{relative}} · {{time}}",
+      "standalone": "{{relative}} · {{time}}"
+    },
+    "arrived": "یادآور: {{title}}، {{when}}"
   },
   "push": {
     "title": "اعلان روی این دستگاه",
