@@ -22,6 +22,10 @@
 </p>
 
 <p align="center">
+  <strong><a href="https://demo.homa.day">Try the demo</a></strong>: one shared account with made-up data, reset every night.
+</p>
+
+<p align="center">
   <a href="#features">Features</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#configuration">Configuration</a> ·
