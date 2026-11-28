@@ -1,4 +1,5 @@
 export { type SerializableEvent, type SerializableOverride, type SerializableReminder, serializeEvent } from './export';
+export type { IcsExtension, IcsExtras } from './extension';
 export {
   ICS_LIMITS,
   type IcsEvent,

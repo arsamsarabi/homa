@@ -8,7 +8,7 @@
 // downloaded with calendar-multiget and parsed with the .ics import parser and its limits.
 // Push: PUT with If-Match (or If-None-Match: * to create) and DELETE with If-Match; a 412 is a
 // PushConflict, and the caller lets the remote win.
-import { parseIcs, ValidationError } from '@homa/core';
+import { type IcsExtension, parseIcs, ValidationError } from '@homa/core';
 import type { ChangeOp, PullResult, RemoteCalendar, RemoteResource, SyncAdapter, SyncCursor } from '../adapter';
 import { CalendarGoneError, DEFAULT_FETCH_POLICY, type FetchPolicy, PushConflict, PushError, SyncError } from '../feed';
 import { type DavAnswer, davClient } from './dav-client';
@@ -36,6 +36,8 @@ export type CaldavAdapterOptions = {
   /** IANA zone for floating times: the owner's home zone. */
   floatingTz: string;
   policy?: FetchPolicy;
+  /** The server family's own fields (caldavProvider picks it from the server URL). */
+  provider?: IcsExtension;
 };
 
 /** Hrefs per calendar-multiget request. */
@@ -178,7 +180,7 @@ export function caldavAdapter(credentials: CaldavCredentials, options: CaldavAda
           continue;
         }
         try {
-          const parsed = parseIcs(text(data), { floatingTz: options.floatingTz });
+          const parsed = parseIcs(text(data), { floatingTz: options.floatingTz, extension: options.provider });
           skipped += parsed.skipped;
           warnings.push(...parsed.warnings);
           resources.push({ href, etag: text(prop(r, DAV, 'getetag')) || null, events: parsed.events });
@@ -283,7 +285,15 @@ export function caldavAdapter(credentials: CaldavCredentials, options: CaldavAda
     return got.resources.find((r) => r.href === href) ?? null;
   }
 
-  return { discover, listCalendars, pullChanges, pushChange, fetchResource, newHref: resourceHref };
+  return {
+    discover,
+    listCalendars,
+    pullChanges,
+    pushChange,
+    fetchResource,
+    newHref: resourceHref,
+    extension: options.provider,
+  };
 }
 
 /** The href for a new event in a calendar: the UID made safe for a path segment. */

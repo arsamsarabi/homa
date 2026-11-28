@@ -142,7 +142,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
         {!f.allDay && (
           <Select
             label={t('editor.travel')}
-            description={f.synced ? t('editor.travelLocal') : undefined}
+            description={f.travelLocal ? t('editor.travelLocal') : undefined}
             leftSection={<IconCar size={14} aria-hidden />}
             data={f.travelOptions}
             value={f.travelMinutes ? String(f.travelMinutes) : 'none'}

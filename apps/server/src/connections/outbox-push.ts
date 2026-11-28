@@ -35,7 +35,7 @@ async function pushOne(
   if (!e || e.calendarId !== op.calendarId) return null; // deleted or moved since: a later op covers it
   const planned = e.remoteHref ?? adapter.newHref(calendar.remoteId, e.uid);
   const reminders = (await repo.listEventReminders(db, [e.id])).get(e.id) ?? [];
-  const ics = serializeEvent(e, await repo.listOverrides(db, [e.id]), new Date(), reminders);
+  const ics = serializeEvent(e, await repo.listOverrides(db, [e.id]), new Date(), reminders, adapter.extension);
   const result = await adapter.pushChange({
     kind: 'put',
     href: planned,

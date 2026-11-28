@@ -245,6 +245,54 @@ describe('calendar page', () => {
     expect(within(form).queryByDisplayValue('30 min')).toBeNull();
   });
 
+  test('the travel time hint shows only on calendars whose provider has no travel time', async () => {
+    const stamp = '2026-11-02T00:00:00Z';
+    const accounts = [
+      { id: 'k6', label: 'ada on caldav.icloud.com', syncsTravel: true },
+      { id: 'k7', label: 'ada on caldav.fastmail.com', syncsTravel: false },
+    ].map((a) => ({
+      ...a,
+      provider: 'caldav',
+      status: 'ok',
+      lastError: null,
+      lastSyncedAt: stamp,
+      notice: null,
+      noticeAt: null,
+      createdAt: stamp,
+      calendars: [],
+    }));
+    const synced = accounts.map((a) =>
+      ownCalendar({
+        id: `c-${a.id}`,
+        name: a.label,
+        color: '#336699',
+        connectionId: a.id,
+        createdAt: stamp,
+        updatedAt: stamp,
+      }),
+    );
+    const events = synced.map((c, i) => ({ ...dentist, eventId: `e-${c.id}`, calendarId: c.id, summary: `Trip ${i}` }));
+    const fallback = api(() => json(events));
+    renderApp('/?view=agenda', (url, req) => {
+      if (url.pathname === '/api/calendars') return json(synced);
+      if (url.pathname === '/api/connections') return json(accounts);
+      return fallback(url, req);
+    });
+    fireEvent.click(await screen.findByText('Trip 1'));
+    const fastmail = await screen.findByRole('dialog', { name: 'Edit event' });
+    expect(await within(fastmail).findByText('Only in Homa, not synced')).toBeTruthy();
+    cleanup();
+    renderApp('/?view=agenda', (url, req) => {
+      if (url.pathname === '/api/calendars') return json(synced);
+      if (url.pathname === '/api/connections') return json(accounts);
+      return fallback(url, req);
+    });
+    fireEvent.click(await screen.findByText('Trip 0'));
+    const icloud = await screen.findByRole('dialog', { name: 'Edit event' });
+    await screen.findByText('Travel time');
+    expect(within(icloud).queryByText('Only in Homa, not synced')).toBeNull();
+  });
+
   test('the day view draws travel time above the event', async () => {
     renderApp(
       '/?view=day',

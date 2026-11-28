@@ -8,6 +8,8 @@ export const ConnectionSchema = z.object({
   id: z.string(),
   provider: z.enum(['ics', 'caldav', 'google', 'microsoft']),
   label: z.string().nullable(),
+  /** Travel time syncs with the provider (iCloud); elsewhere it stays in Homa. */
+  syncsTravel: z.boolean().default(false),
   status: z.enum(CONNECTION_STATUSES),
   lastError: z.string().nullable(),
   lastSyncedAt: z.iso.datetime({ offset: true }).nullable(),

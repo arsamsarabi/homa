@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { ICS_LIMITS } from '@homa/core';
+import { ICS_LIMITS, parseIcs } from '@homa/core';
 import { schema } from '@homa/db';
 import { eq } from 'drizzle-orm';
+import { writeIcsEvents } from '@/calendar';
 import { createApp } from '@/http';
 import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
 
@@ -151,6 +152,24 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
     ).toBe(200);
     expect((await t.db.select().from(schema.events).where(byUid))[0]?.travelMinutes).toBeNull();
     await t.db.delete(schema.events).where(byUid);
+  });
+
+  test('a provider that carries travel time sets it and clears it (an iCloud pull)', async () => {
+    const [calendar] = await t.db.select().from(schema.calendars).where(eq(schema.calendars.id, adaCalendar));
+    if (!calendar) throw new Error('no calendar');
+    const [event] = parseIcs(standup(), { floatingTz: 'UTC' }).events;
+    if (!event) throw new Error('no event');
+    const write = (travelMinutes: number | null): Promise<unknown> =>
+      t.db.transaction((tx) =>
+        writeIcsEvents(tx, calendar.ownerUserId, adaCalendar, [{ ...event, uid: 'icloud-trip', travelMinutes }]),
+      );
+    const travel = async (): Promise<number | null | undefined> =>
+      (await t.db.select().from(schema.events).where(eq(schema.events.uid, 'icloud-trip')))[0]?.travelMinutes;
+    await write(25);
+    expect(await travel()).toBe(25);
+    await write(null);
+    expect(await travel()).toBeNull();
+    await t.db.delete(schema.events).where(eq(schema.events.uid, 'icloud-trip'));
   });
 
   test("you can't import into someone else's calendar, or read theirs", async () => {

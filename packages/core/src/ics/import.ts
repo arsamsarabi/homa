@@ -1,5 +1,5 @@
 // Reads an iCalendar (.ics) file into events Homa can store. The file is treated as hostile: it is
-// size- and component-capped, nothing in it is fetched (URLs, ATTACH), X- properties are ignored,
+// size- and component-capped, nothing in it is fetched (URLs, ATTACH), X- properties are ignored (except a provider's own, read by its IcsExtension),
 // only alarms relative to the start are read (as reminders), every string is bounded, and one bad event is skipped with a warning, not fatal.
 //
 // Times: each DATE-TIME is read as wall-clock fields plus its TZID, and placed with Temporal in the
@@ -9,6 +9,7 @@ import ICAL from 'ical.js';
 import { ValidationError } from '../errors';
 import { parseRrule } from '../recurrence';
 import { normalizeReminders, REMINDER_LIMITS } from '../reminders';
+import type { IcsExtension, IcsExtras } from './extension';
 import { zoneForTzid } from './zones';
 
 export const ICS_LIMITS = {
@@ -42,7 +43,7 @@ export type IcsOverride = {
 /** A VALARM relative to the start: `minutes` before it. `email` is kept so a round trip keeps it. */
 export type IcsReminder = { minutes: number; action: 'display' | 'email' };
 
-export type IcsEvent = {
+export type IcsEvent = IcsExtras & {
   uid: string;
   summary: string;
   description: string | null;
@@ -71,6 +72,8 @@ export type IcsImport = {
 export type IcsOptions = {
   /** IANA zone for floating times (no TZID, no Z): the user's home zone. */
   floatingTz: string;
+  /** The provider's own fields to read (its adaptor), if it has any. */
+  extension?: IcsExtension;
 };
 
 const DAY_MS = 86_400_000;
@@ -237,10 +240,17 @@ function readAlarms(e: ICAL.Component): IcsReminder[] {
     .map((minutes) => ({ minutes, action: found.get(minutes) ?? 'display' }));
 }
 
-function readMaster(e: ICAL.Component, uid: string, clock: Clock, warn: (m: string) => void): IcsEvent {
+function readMaster(
+  e: ICAL.Component,
+  uid: string,
+  clock: Clock,
+  warn: (m: string) => void,
+  extension: IcsExtension | undefined,
+): IcsEvent {
   const { start, end, allDay, tz } = span(e, clock);
   const rrule = readRrule(e);
   return {
+    ...extension?.read(e, { allDay }),
     uid,
     summary: clean(e.getFirstPropertyValue('summary'), ICS_LIMITS.summary),
     description: cleanOrNull(e.getFirstPropertyValue('description'), ICS_LIMITS.description),
@@ -321,7 +331,7 @@ export function parseIcs(text: string, options: IcsOptions): IcsImport {
         }
         if (events.has(uid)) throw new SkipEvent('the UID is used twice');
         if (isCancelled(e)) throw new SkipEvent('it is cancelled');
-        events.set(uid, readMaster(e, uid, clock, warn));
+        events.set(uid, readMaster(e, uid, clock, warn, options.extension));
       } catch (err) {
         // A malformed value inside one event (a bad date, say) skips that event, not the file.
         skip(uid.slice(0, 80), err instanceof SkipEvent ? err.message : 'a value Homa cannot read');
