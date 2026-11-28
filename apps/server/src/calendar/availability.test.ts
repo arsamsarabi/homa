@@ -220,4 +220,32 @@ describe.skipIf(!testDatabaseUrl)('POST /api/availability', () => {
       { start: '2026-12-03T09:00:00.000Z', end: '2026-12-03T11:00:00.000Z' },
     ]);
   });
+  test('travel time before an event is busy, also for an event just after the range', async () => {
+    const travel = async (start: string, end: string, travelMinutes: number) =>
+      expect(
+        (
+          await call('POST', '/events', ada, {
+            calendarId: adaCalendar,
+            summary: 'Trip',
+            start,
+            end,
+            tz: 'UTC',
+            travelMinutes,
+          })
+        ).status,
+      ).toBe(201);
+    await travel('2026-12-10T12:00:00Z', '2026-12-10T13:00:00Z', 30);
+    await travel('2026-12-11T00:30:00Z', '2026-12-11T01:00:00Z', 60);
+
+    const res = await call('POST', '/availability', bob, {
+      from: '2026-12-10T00:00:00Z',
+      to: '2026-12-11T00:00:00Z',
+      userIds: [adaId],
+    });
+    expect(res.status).toBe(200);
+    expect((res.body.people as Json[])[0]?.busy).toEqual([
+      { start: '2026-12-10T11:30:00.000Z', end: '2026-12-10T13:00:00.000Z' },
+      { start: '2026-12-10T23:30:00.000Z', end: '2026-12-11T00:00:00.000Z' },
+    ]);
+  });
 });

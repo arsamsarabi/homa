@@ -128,6 +128,31 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
     await t.db.delete(schema.calendars).where(eq(schema.calendars.id, otherId));
   });
 
+  test('updating by UID keeps travel time, and drops it when the event becomes all-day', async () => {
+    const trip = (dates: string[]): string =>
+      [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'BEGIN:VEVENT',
+        'UID:trip@example.com',
+        'SUMMARY:Trip',
+        ...dates,
+        'END:VEVENT',
+        'END:VCALENDAR',
+      ].join('\r\n');
+    const timed = trip(['DTSTART:20260320T090000Z', 'DTEND:20260320T100000Z']);
+    expect((await importInto(adaCalendar, timed)).status).toBe(200);
+    const byUid = eq(schema.events.uid, 'trip@example.com');
+    await t.db.update(schema.events).set({ travelMinutes: 20 }).where(byUid);
+    expect((await importInto(adaCalendar, timed)).status).toBe(200);
+    expect((await t.db.select().from(schema.events).where(byUid))[0]?.travelMinutes).toBe(20);
+    expect(
+      (await importInto(adaCalendar, trip(['DTSTART;VALUE=DATE:20260320', 'DTEND;VALUE=DATE:20260321']))).status,
+    ).toBe(200);
+    expect((await t.db.select().from(schema.events).where(byUid))[0]?.travelMinutes).toBeNull();
+    await t.db.delete(schema.events).where(byUid);
+  });
+
   test("you can't import into someone else's calendar, or read theirs", async () => {
     expect((await importInto(adaCalendar, standup(), bob)).status).toBe(404);
     expect((await importInto('00000000-0000-4000-8000-000000000000', standup(), bob)).status).toBe(404);

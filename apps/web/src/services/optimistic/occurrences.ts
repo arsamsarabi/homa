@@ -42,6 +42,8 @@ export function withPatched(
       ...(patch.allDay !== undefined && { allDay: patch.allDay }),
       ...(patch.tz !== undefined && { tz: patch.tz }),
       ...(patch.rrule !== undefined && { recurring: Boolean(patch.rrule) }),
+      ...(patch.travelMinutes !== undefined && { travelMinutes: patch.travelMinutes }),
+      ...(patch.allDay && { travelMinutes: null }),
     };
   });
 }
@@ -64,6 +66,7 @@ export function tempOccurrence(body: EventInput, tempId: string): Occurrence {
     taskId: null,
     taskDone: false,
     createdBy: null,
+    travelMinutes: body.allDay ? null : (body.travelMinutes ?? null),
   };
 }
 

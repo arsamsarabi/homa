@@ -1,7 +1,19 @@
 // Calendars and events. Times are timestamptz (UTC) plus the IANA zone they were authored in;
 // see docs/product/architecture.md ("Domain model" and "Recurrence and the expansion cache").
 import { sql } from 'drizzle-orm';
-import { boolean, customType, index, pgTable, primaryKey, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  customType,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { connections } from './connections';
 
@@ -70,6 +82,8 @@ export const events = pgTable(
     endAt: timestamp('end_at', { withTimezone: true }).notNull(),
     allDay: boolean('all_day').notNull().default(false),
     tz: text('tz').notNull(),
+    /** Minutes of travel before a timed event; Homa only, never synced. Null for none. */
+    travelMinutes: integer('travel_minutes'),
     /** RRULE value without the "RRULE:" prefix; null for a single event. */
     rrule: text('rrule'),
     exdates: timestamp('exdates', { withTimezone: true }).array().notNull().default(sql`'{}'`),
@@ -91,6 +105,10 @@ export const events = pgTable(
     index('events_calendar_idx').on(t.calendarId),
     index('events_remote_href_idx').on(t.calendarId, t.remoteHref).where(sql`${t.remoteHref} is not null`),
     index('events_recurring_idx').on(t.expandedUntil).where(sql`${t.rrule} is not null`),
+    check(
+      'events_travel_minutes',
+      sql`${t.travelMinutes} is null or (${t.travelMinutes} between 1 and 1440 and not ${t.allDay})`,
+    ),
   ],
 );
 

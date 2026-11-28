@@ -16,6 +16,8 @@ import {
   REPEATS,
   type Repeat,
   shownRepeat,
+  travelChoices,
+  travelDuration,
 } from '@/services/event-form';
 import { DEFAULT_REMINDER } from '@/services/reminders';
 import { timeZones } from '@/services/zones';
@@ -59,12 +61,18 @@ export type EventFormModel = {
   setReminders: (v: number[]) => void;
   /** An edit's reminders can't be shown until the event has loaded. */
   remindersLoading: boolean;
+  /** Minutes of travel before the event, or null for none. */
+  travelMinutes: number | null;
+  setTravelMinutes: (v: number | null) => void;
+  travelOptions: { value: string; label: string }[];
+  /** The chosen calendar syncs with another service, which won't get the travel time. */
+  synced: boolean;
 };
 
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 export function useEventForm(draft: Draft): EventFormModel {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     calendars,
     defaultCalendarId,
@@ -92,6 +100,7 @@ export function useEventForm(draft: Draft): EventFormModel {
   );
   const [picked, setPicked] = useState<Repeat>();
   const [pickedReminders, setReminders] = useState<number[]>();
+  const [travelMinutes, setTravelMinutes] = useState<number | null>(occurrence?.travelMinutes ?? null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -109,6 +118,17 @@ export function useEventForm(draft: Draft): EventFormModel {
     () =>
       writableCalendarPickerGroups(calendars, t('calendars.mine'), (name: string) => t('calendars.sharedBy', { name })),
     [calendars, t],
+  );
+  const locale = i18n.language;
+  const travelOptions = useMemo(
+    () => [
+      { value: 'none', label: t('editor.travelNone') },
+      ...travelChoices(occurrence?.travelMinutes ?? null).map((m) => ({
+        value: String(m),
+        label: travelDuration(m, locale),
+      })),
+    ],
+    [occurrence?.travelMinutes, locale, t],
   );
   const repeatOptions = useMemo(
     () =>
@@ -179,6 +199,7 @@ export function useEventForm(draft: Draft): EventFormModel {
         calendarId,
         repeat: picked,
         reminders: occurrence ? pickedReminders : reminders,
+        travelMinutes,
       },
       { seriesRrule },
     );
@@ -234,5 +255,12 @@ export function useEventForm(draft: Draft): EventFormModel {
       setReminders(v);
     },
     remindersLoading: occurrence !== undefined && series.isPending,
+    travelMinutes,
+    travelOptions,
+    synced: Boolean(calendars.find((c) => c.id === calendarId)?.connectionId),
+    setTravelMinutes: (v: number | null): void => {
+      editor.markDirty();
+      setTravelMinutes(v);
+    },
   };
 }

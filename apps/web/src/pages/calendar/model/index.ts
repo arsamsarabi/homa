@@ -2,3 +2,4 @@ export { CalendarPageProvider, useCalendarPageModel } from './CalendarPageProvid
 export { addedByName, useAddedBy, useMyId } from './useAddedBy';
 export type { CalendarPageModel } from './useCalendarPage';
 export type { ScopeQuestion } from './useScopePrompt';
+export { useTravelLabel } from './useTravelLabel';

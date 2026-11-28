@@ -1,6 +1,6 @@
 // Request and response schemas for calendars, events and occurrences. They drive validation and
 // the OpenAPI document (and so the generated web client).
-import { isTimeZone, parseRrule, REMINDER_LIMITS } from '@homa/core';
+import { isTimeZone, MAX_TRAVEL_MINUTES, parseRrule, REMINDER_LIMITS } from '@homa/core';
 import { z } from '@hono/zod-openapi';
 
 const Color = z.string().regex(/^#[0-9a-f]{6}$/i, 'a hex color like #7d7fa3');
@@ -93,6 +93,10 @@ export const Event = z
     allDay: z.boolean(),
     tz: z.string(),
     rrule: z.string().nullable(),
+    travelMinutes: z
+      .int()
+      .nullable()
+      .openapi({ description: 'Minutes of travel before the event; Homa only, not synced' }),
     exdates: z.array(z.iso.datetime()),
     rdates: z.array(z.iso.datetime()),
     reminders: Reminders,
@@ -111,15 +115,26 @@ const EventFields = z.object({
   allDay: z.boolean(),
   tz: Tz,
   rrule: Rrule.nullable(),
+  travelMinutes: z
+    .int()
+    .min(1)
+    .max(MAX_TRAVEL_MINUTES)
+    .nullable()
+    .openapi({ description: 'Minutes of travel before a timed event, or null for none; kept in Homa only' }),
 });
 export const EventInput = EventFields.extend({
   description: EventFields.shape.description.optional(),
   location: EventFields.shape.location.optional(),
   allDay: EventFields.shape.allDay.default(false),
   rrule: EventFields.shape.rrule.optional(),
+  travelMinutes: EventFields.shape.travelMinutes.optional(),
   reminders: Reminders.optional(),
 })
   .refine((v) => v.end > v.start, { message: 'end must be after start', path: ['end'] })
+  .refine((v) => !(v.allDay && v.travelMinutes), {
+    message: "all-day events can't have travel time",
+    path: ['travelMinutes'],
+  })
   .openapi('EventInput');
 export const EventPatch = EventFields.partial().openapi('EventPatch');
 
@@ -144,6 +159,7 @@ export const Occurrence = z
     overridden: z.boolean(),
     taskId: z.uuid().nullable().openapi({ description: 'The task this event is a time block for' }),
     taskDone: z.boolean().openapi({ description: 'That task is completed' }),
+    travelMinutes: z.int().nullable().openapi({ description: 'Minutes of travel before the event; busy time too' }),
     createdBy: CalendarOwner.nullable().openapi({
       description: 'Who added the event in Homa; null when unknown (synced, imported or older events, or free/busy)',
     }),

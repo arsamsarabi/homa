@@ -35,6 +35,7 @@ export const eventOut = (e: EventWithReminders): z.infer<typeof Event> => ({
   allDay: e.allDay,
   tz: e.tz,
   rrule: e.rrule,
+  travelMinutes: e.travelMinutes,
   exdates: e.exdates.map((d) => d.toISOString()),
   rdates: e.rdates.map((d) => d.toISOString()),
   reminders: e.reminders,
@@ -58,6 +59,7 @@ export const occurrenceOut = (o: OccurrenceView): z.infer<typeof Occurrence> => 
   taskId: o.task?.id ?? null,
   taskDone: o.task?.done ?? false,
   createdBy: o.createdBy ?? null,
+  travelMinutes: o.event.travelMinutes,
 });
 
 /** Free/busy: times only; empty title; no description, location, recurrence flags or task (decision 13). */

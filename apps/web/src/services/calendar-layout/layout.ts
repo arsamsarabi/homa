@@ -4,7 +4,8 @@ import type { Occurrence } from '@/schemas';
 import { addDays, DAY, isoDate, type Span, startOfDay, touchesDay, wallSpan } from '@/services/dates';
 
 export type Placed<T> = T & { col: number; cols: number };
-export type TimedItem = Span & { o: Occurrence };
+/** A timed occurrence as wall times; `travelStart` is where its travel time begins (its start when it has none). */
+export type TimedItem = Span & { o: Occurrence; travelStart: Date };
 export type AgendaGroup = { day: Date; items: Occurrence[] };
 
 /** Long or all-day occurrences go in the all-day row of the time grid; the rest in the grid. */
@@ -15,8 +16,10 @@ export const isAllDayRow = (o: Occurrence): boolean =>
  * Side-by-side columns for overlapping timed events in one day: each cluster of overlapping
  * events shares its width equally, each event in the first column where it fits.
  */
-export function layoutColumns<T extends Span>(items: readonly T[]): Placed<T>[] {
-  const sorted = [...items].sort((a, b) => a.start.getTime() - b.start.getTime() || b.end.getTime() - a.end.getTime());
+export function layoutColumns<T extends Span & { travelStart?: Date }>(items: readonly T[]): Placed<T>[] {
+  // Travel time takes room in the column too, so an event never draws over another one's travel.
+  const from = (i: T): number => (i.travelStart ?? i.start).getTime();
+  const sorted = [...items].sort((a, b) => from(a) - from(b) || b.end.getTime() - a.end.getTime());
   const out: Placed<T>[] = [];
   let cluster: Placed<T>[] = [];
   let colEnds: number[] = [];
@@ -28,8 +31,8 @@ export function layoutColumns<T extends Span>(items: readonly T[]): Placed<T>[] 
     colEnds = [];
   };
   for (const item of sorted) {
-    if (item.start.getTime() >= clusterEnd) flush();
-    let col = colEnds.findIndex((end) => end <= item.start.getTime());
+    if (from(item) >= clusterEnd) flush();
+    let col = colEnds.findIndex((end) => end <= from(item));
     if (col === -1) col = colEnds.length;
     colEnds[col] = item.end.getTime();
     cluster.push({ ...item, col, cols: 0 });
@@ -54,7 +57,12 @@ export const timedColumnItems = (
   occ: readonly Occurrence[],
   tz: string,
 ): Placed<TimedItem>[][] => {
-  const timed = occ.filter((o) => !isAllDayRow(o)).map((o): TimedItem => ({ o, ...wallSpan(o, tz) }));
+  const timed = occ
+    .filter((o) => !isAllDayRow(o))
+    .map((o): TimedItem => {
+      const span = wallSpan(o, tz);
+      return { o, ...span, travelStart: new Date(span.start.getTime() - (o.travelMinutes ?? 0) * 60_000) };
+    });
   return days.map((d) => layoutColumns(timed.filter((x) => touchesDay(x, d))));
 };
 

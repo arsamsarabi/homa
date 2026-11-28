@@ -56,6 +56,9 @@ const patchColumns = (p: EventPatch): repo.EventColumns => ({
   ...(p.allDay !== undefined && { allDay: p.allDay }),
   ...(p.tz !== undefined && { tz: p.tz }),
   ...(p.rrule !== undefined && { rrule: p.rrule }),
+  ...(p.travelMinutes !== undefined && { travelMinutes: p.travelMinutes }),
+  // All-day events have no travel time.
+  ...(p.allDay && { travelMinutes: null }),
 });
 
 /** Owner or read+: freebusy and none are 404. Grantees always see reminders: []. */
@@ -91,6 +94,7 @@ export function createEvent(
       allDay: input.allDay,
       tz: input.tz,
       rrule: input.rrule,
+      travelMinutes: input.allDay ? null : (input.travelMinutes ?? null),
     });
     // Grantees can't set reminders (decision 14).
     await writeReminders(tx, row, isOwner ? reminders : []);
@@ -120,6 +124,8 @@ export function updateEvent(
       if (target.ownerUserId !== e.ownerUserId)
         throw new ValidationError("You can't move an event into another owner's calendar");
     }
+    if (patch.travelMinutes && (patch.allDay ?? e.allDay))
+      throw new ValidationError("All-day events can't have travel time");
     const plan = planChange(e, patch, scope, recurrenceId);
     const calendarId = patch.calendarId ?? e.calendarId;
     const ownerId = e.ownerUserId;

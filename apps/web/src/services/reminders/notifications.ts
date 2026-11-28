@@ -24,6 +24,9 @@ export function relativeTime(at: Date, now: Date, allDay: boolean, today: Date, 
   return rtf.format(Math.round(diff / DAY), 'day');
 }
 
+/** The first letter in upper case, for lines that can start with Intl's lowercase "yesterday". */
+export const capitalize = (s: string, locale: string): string => s.charAt(0).toLocaleUpperCase(locale) + s.slice(1);
+
 export type NotificationTarget =
   | { to: '/'; search: { view: 'day'; date: string } }
   | { to: '/tasks'; search: { list: 'today' } }

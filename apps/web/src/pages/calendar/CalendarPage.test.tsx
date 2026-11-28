@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { ownCalendar, sharedCalendar } from '@/testing/calendars';
 import { type FakeApi, json, renderApp, signedIn, signedInWith } from '@/testing/renderApp';
 
@@ -229,6 +229,28 @@ describe('calendar page', () => {
     );
     expect(await screen.findByText('Yalda Night')).toBeTruthy();
     expect(screen.getByText('30 Azar')).toBeTruthy();
+  });
+
+  test('travel time shows in the agenda and the day view, and only timed events can have it', async () => {
+    const drive = { ...dentist, travelMinutes: 30 };
+    renderApp(
+      '/?view=agenda',
+      api(() => json([drive])),
+    );
+    expect(await screen.findByText('30 min travel time')).toBeTruthy();
+    fireEvent.click(screen.getByText('Dentist'));
+    const form = await screen.findByRole('dialog', { name: 'Edit event' });
+    expect(within(form).getByDisplayValue('30 min')).toBeTruthy();
+    fireEvent.click(within(form).getByRole('switch', { name: 'All day' }));
+    expect(within(form).queryByDisplayValue('30 min')).toBeNull();
+  });
+
+  test('the day view draws travel time above the event', async () => {
+    renderApp(
+      '/?view=day',
+      api(() => json([{ ...dentist, travelMinutes: 60 }])),
+    );
+    expect(await screen.findByText('1 hr travel time', { selector: 'div > span' })).toBeTruthy();
   });
 
   test("a subscription's event opens as details, not a form", async () => {

@@ -64,6 +64,8 @@ describe('notification bell', () => {
     app({ items: [standup, pills], unread: 1 }, sent);
     const panel = await openPanel('Notifications, 1 unread');
     await waitFor(() => expect(sent[0]?.path).toBe('/api/notifications/read'));
+    // Focus lands on the heading, so no button lights up with a focus ring on open.
+    await waitFor(() => expect(document.activeElement?.textContent).toBe('Notifications'));
     // Read on the server, but still marked new here until the panel closes.
     const fresh = within(panel).getByRole('region', { name: 'New' });
     expect(within(fresh).getByText('Stand-up')).toBeTruthy();

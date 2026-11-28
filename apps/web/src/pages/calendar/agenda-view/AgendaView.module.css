@@ -28,6 +28,11 @@
   color: var(--mantine-color-dimmed);
 }
 
+.travel {
+  display: block;
+  font-size: 12px;
+}
+
 .title {
   font-weight: 500;
 }

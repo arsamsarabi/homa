@@ -13,7 +13,7 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
-import { IconDots, IconTrash } from '@tabler/icons-react';
+import { IconCar, IconDots, IconTrash } from '@tabler/icons-react';
 import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ReminderChips } from '@/components';
@@ -136,6 +136,19 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             searchable
             allowDeselect={false}
             limit={50}
+            comboboxProps={{ withinPortal: false }}
+          />
+        )}
+        {!f.allDay && (
+          <Select
+            label={t('editor.travel')}
+            description={f.synced ? t('editor.travelLocal') : undefined}
+            leftSection={<IconCar size={14} aria-hidden />}
+            data={f.travelOptions}
+            value={f.travelMinutes ? String(f.travelMinutes) : 'none'}
+            onChange={(v: string | null): void => f.setTravelMinutes(v && v !== 'none' ? Number(v) : null)}
+            size="xs"
+            allowDeselect={false}
             comboboxProps={{ withinPortal: false }}
           />
         )}

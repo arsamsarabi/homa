@@ -22,6 +22,10 @@ The tab names down the side of Settings and Admin line up at the start instead o
 
 The notification bell opens a panel under it (a sheet from the bottom on phones) instead of a full-height drawer. Notifications are split into **New** and **Earlier**, with an icon for an event, a task or a reminder and a time such as "Starts in 10 minutes", and the new ones keep their dot until you close the panel. Clicking one opens its day in the calendar, today's tasks or the reminders page. Each has a snooze menu and **Done** (**Complete task** for a task), and **Clear all** empties the panel without completing tasks. A reminder that fires while Homa is open also shows a toast. `POST /api/notifications/clear` is new.
 
+Travel time on events: a timed event can have a **Travel time** before it (5 minutes to 2 hours) in the editor. The day and week views draw it as a dashed block with a car icon above the event, such as "30 min travel time", and the agenda and event details show it too. Travel time counts as busy in availability. It stays in Homa and isn't synced to Google, Microsoft or CalDAV, and all-day events can't have it. Migration `0022_travel_time` adds `events.travel_minutes`; `Event`, `EventInput`, `EventPatch` and `Occurrence` gain `travelMinutes`.
+
+The notification panel starts with "Yesterday" and not "yesterday", and opening it no longer shows a focus ring on **Clear all**.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".

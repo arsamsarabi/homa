@@ -18,7 +18,12 @@ export type EventFields = {
   allDay: boolean;
   tz: string;
   rrule: string | null;
+  /** Minutes of travel before a timed event; null for none. */
+  travelMinutes?: number | null;
 };
+
+/** The longest travel time an event can have: a day. */
+export const MAX_TRAVEL_MINUTES = 1440;
 
 export type EventPatch = Partial<EventFields>;
 
@@ -77,7 +82,13 @@ export function planChange(e: StoredSeries, patch: EventPatch, scope: Scope, rec
 
   const at = requireOccurrence(e, recurrenceId);
   if (scope === 'this') {
-    if (patch.calendarId || patch.rrule !== undefined || patch.allDay !== undefined || patch.tz)
+    if (
+      patch.calendarId ||
+      patch.rrule !== undefined ||
+      patch.allDay !== undefined ||
+      patch.tz ||
+      patch.travelMinutes !== undefined
+    )
       throw new ValidationError('Only the title, details and times of one occurrence can change');
     return { kind: 'occurrence', recurrenceId: at };
   }

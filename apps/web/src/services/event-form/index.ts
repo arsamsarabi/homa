@@ -15,3 +15,4 @@ export {
   rruleOf,
   shownRepeat,
 } from './event-form';
+export { TRAVEL_PRESETS, travelChoices, travelDuration } from './travel';

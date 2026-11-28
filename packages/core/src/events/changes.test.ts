@@ -43,6 +43,9 @@ describe('planChange', () => {
     expect(() => planChange(standup, { summary: 'x' }, 'this')).toThrow('recurrenceId is required');
     expect(() => planChange(standup, { summary: 'x' }, 'this', d('2026-03-24T09:00:00Z'))).toThrow('No occurrence');
     expect(() => planChange(standup, { calendarId: 'c' }, 'this', d('2026-03-30T08:00:00Z'))).toThrow('Only the title');
+    expect(() => planChange(standup, { travelMinutes: 30 }, 'this', d('2026-03-30T08:00:00Z'))).toThrow(
+      'Only the title',
+    );
   });
 
   test('scope=following at the first occurrence changes the whole series', () => {

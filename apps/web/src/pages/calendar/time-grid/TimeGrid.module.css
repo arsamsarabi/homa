@@ -130,6 +130,45 @@
   touch-action: none;
 }
 
+/* Travel time before an event: a fainter, dashed block that reads as "not the event itself". */
+.travel {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  padding: 0 6px;
+  border: 1px dashed color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 60%, transparent);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--mantine-color-dimmed);
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 10%, transparent),
+    color-mix(in srgb, var(--c, var(--mantine-primary-color-filled)) 10%, transparent) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+  cursor: grab;
+  touch-action: none;
+}
+
+.travel span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.travel[data-dragging] {
+  opacity: 0.35;
+}
+
+.travel[data-readonly] {
+  cursor: pointer;
+}
+
 .block[data-readonly] {
   cursor: pointer;
 }

@@ -94,6 +94,43 @@ describe.skipIf(!testDatabaseUrl)('calendars and events', () => {
     expect(String(bad.body.error)).toContain('rrule');
   });
 
+  test('travel time is set, shown on occurrences, cleared, and never on all-day events', async () => {
+    const made = await call('POST', '/events', { ...standup(), travelMinutes: 30 });
+    expect(made.status).toBe(201);
+    expect(made.body.travelMinutes).toBe(30);
+    const occ = (await occurrences(...march)) as unknown as Json[];
+    expect(occ[0]?.travelMinutes).toBe(30);
+    const id = String(made.body.id);
+    // One occurrence can't have its own travel time.
+    expect(
+      (await call('PATCH', `/events/${id}?scope=this&recurrenceId=2026-03-23T09:00:00Z`, { travelMinutes: 15 })).status,
+    ).toBe(400);
+    expect((await call('PATCH', `/events/${id}`, { travelMinutes: 2000 })).status).toBe(400);
+    expect((await call('PATCH', `/events/${id}`, { travelMinutes: null })).body.travelMinutes).toBeNull();
+    expect((await call('PATCH', `/events/${id}`, { travelMinutes: 60 })).body.travelMinutes).toBe(60);
+    // Turning the event all-day drops its travel time; travel on an all-day event is a 400.
+    const allDay = await call('PATCH', `/events/${id}`, {
+      allDay: true,
+      tz: 'UTC',
+      start: '2026-03-16T00:00:00Z',
+      end: '2026-03-17T00:00:00Z',
+    });
+    expect(allDay.body.travelMinutes).toBeNull();
+    expect((await call('PATCH', `/events/${id}`, { travelMinutes: 15 })).status).toBe(400);
+    expect(
+      (
+        await call('POST', '/events', {
+          ...standup(),
+          allDay: true,
+          start: '2026-03-16T00:00:00Z',
+          end: '2026-03-17T00:00:00Z',
+          travelMinutes: 15,
+        })
+      ).status,
+    ).toBe(400);
+    await call('DELETE', `/events/${id}`);
+  });
+
   test('another user cannot see or change your events', async () => {
     const mine = await call('POST', '/events', { ...standup(), rrule: null });
     const bob = await signUp('bob@example.com');
