@@ -23,9 +23,10 @@ test('tasks: reminders, and a time block on the calendar that shows done @smoke'
   // A reminder an hour before a 23:30 due.
   const drawer = page.getByRole('dialog', { name: 'Edit task' });
   await drawer.getByLabel('Time', { exact: true }).fill('23:30');
+  await drawer.getByRole('button', { name: 'Add reminder' }).click();
   await drawer.getByLabel('Amount').fill('1');
   await drawer.getByLabel('Unit').selectOption('hours');
-  await drawer.getByRole('button', { name: 'Add' }).click();
+  await drawer.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(drawer.getByRole('button', { name: 'Remove 1 hour before' })).toBeVisible();
   await drawer.getByRole('button', { name: 'Save' }).click();
   await expect(drawer).toBeHidden();

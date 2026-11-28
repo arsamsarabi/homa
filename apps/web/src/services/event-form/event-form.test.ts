@@ -9,8 +9,6 @@ import {
   formTimes,
   newEventSlot,
   parseFormTimes,
-  repeatOf,
-  rruleOf,
   shownRepeat,
 } from './event-form';
 
@@ -54,12 +52,11 @@ const input = (over: Partial<FormInput>): FormInput => ({
 });
 const ctx = { seriesRrule: 'FREQ=WEEKLY' };
 
-test('repeat choices round-trip to RRULEs', () => {
-  expect(repeatOf('FREQ=WEEKLY')).toBe('weekly');
-  expect(repeatOf('FREQ=WEEKLY;BYDAY=MO,WE')).toBe('custom');
-  expect(rruleOf('daily', null)).toBe('FREQ=DAILY');
-  expect(rruleOf('custom', 'FREQ=WEEKLY;BYDAY=MO')).toBe('FREQ=WEEKLY;BYDAY=MO');
-  expect(rruleOf('none', 'FREQ=DAILY')).toBeNull();
+test('a picked rule that repeats the same way as the series is no change', () => {
+  const same = buildEditorResult(edit, input({ repeat: 'FREQ=WEEKLY;INTERVAL=1' }), ctx);
+  expect(same).toMatchObject({ seriesChanged: false });
+  const other = buildEditorResult(edit, input({ repeat: 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE' }), ctx);
+  expect(other).toMatchObject({ seriesChanged: true, patch: { rrule: 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE' } });
 });
 
 describe('form values', () => {
@@ -80,9 +77,9 @@ describe('form values', () => {
     expect(draftZone(timed, 'Asia/Tehran')).toBe('America/New_York');
   });
   test('a recurring event shows its series repeat until one is picked', () => {
-    expect(shownRepeat(edit, undefined, 'FREQ=WEEKLY')).toBe('weekly');
-    expect(shownRepeat(edit, 'none', 'FREQ=WEEKLY')).toBe('none');
-    expect(shownRepeat(create, undefined, undefined)).toBe('none');
+    expect(shownRepeat(edit, undefined, 'FREQ=WEEKLY')).toBe('FREQ=WEEKLY');
+    expect(shownRepeat(edit, null, 'FREQ=WEEKLY')).toBeNull();
+    expect(shownRepeat(create, undefined, undefined)).toBeNull();
   });
   test('backwards times are rejected', () => {
     expect(parseFormTimes(false, '2026-11-19T10:00', '2026-11-19T09:00', 'UTC')).toBeUndefined();
@@ -100,7 +97,7 @@ describe('buildEditorResult', () => {
   test('a new timed event is saved in the form zone', () => {
     const r = buildEditorResult(
       create,
-      input({ allDay: false, start: '2026-11-19T09:00', end: '2026-11-19T10:00', repeat: 'daily' }),
+      input({ allDay: false, start: '2026-11-19T09:00', end: '2026-11-19T10:00', repeat: 'FREQ=DAILY' }),
       ctx,
     );
     expect(r).toMatchObject({ kind: 'create', body: { tz: 'Europe/London', allDay: false, rrule: 'FREQ=DAILY' } });
@@ -121,7 +118,7 @@ describe('buildEditorResult', () => {
     });
   });
   test('calendar, all-day and repeat changes mark the series as changed', () => {
-    const r = buildEditorResult(edit, input({ calendarId: 'c2', repeat: 'none' }), ctx);
+    const r = buildEditorResult(edit, input({ calendarId: 'c2', repeat: null }), ctx);
     expect(r).toMatchObject({ seriesChanged: true, patch: { calendarId: 'c2', rrule: null } });
   });
   test('moving a timed event to another zone changes the series', () => {

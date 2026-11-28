@@ -1,12 +1,12 @@
-import { Alert, Button, Drawer, Group, NativeSelect, Stack, TextInput } from '@mantine/core';
+import { Alert, Button, Drawer, Group, Stack, TextInput } from '@mantine/core';
 import { type FormEvent, type JSX, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ConfirmCloseModal } from '@/components';
+import { ConfirmCloseModal, RepeatPicker } from '@/components';
 import { useConfirmClose } from '@/hooks/confirm-close';
 import { useReminderMutations } from '@/hooks/reminders';
 import type { Reminder } from '@/schemas';
 import { isoLocal, parseIsoLocal } from '@/services/dates';
-import { type Repeat, repeatOf, rruleOf } from '@/services/event-form';
+import { weekdayOf } from '@/services/repeat';
 import { instantOf, wallOf } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
 
@@ -15,14 +15,13 @@ export type ReminderDraft = { kind: 'create'; at: Date } | { kind: 'edit'; remin
 
 export type ReminderDrawerProps = { draft: ReminderDraft | undefined; tz: string; onClose: () => void };
 
-const REPEATS: readonly Repeat[] = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
-
 /** Create or change a standalone reminder: a title, a time in the home zone, and how it repeats. */
 export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX.Element {
   const { t } = useTranslation();
   const { create, update } = useReminderMutations();
   const announce = useAnnouncer((s) => s.announce);
   const [error, setError] = useState<string>();
+  const [rrule, setRrule] = useState<string | null>(null);
   const busy = create.isPending || update.isPending;
   const editing = draft?.kind === 'edit' ? draft.reminder : undefined;
   // An existing reminder keeps its own zone; a new one is in the home zone.
@@ -35,6 +34,7 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
   const draftKey = draft?.kind === 'edit' ? draft.reminder.id : draft?.kind === 'create' ? 'new' : 'closed';
   useEffect(() => {
     guard.resetDirty();
+    setRrule(editing?.rrule ?? null);
   }, [draftKey]);
 
   const submit = (e: FormEvent<HTMLFormElement>): void => {
@@ -45,12 +45,11 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
       setError(t('reminders.badTime'));
       return;
     }
-    const repeat = String(f.get('repeat') ?? 'none') as Repeat;
     const fields = {
       title: String(f.get('title') ?? '').trim(),
       at: instantOf(wall, zone).toISOString(),
       tz: zone,
-      rrule: rruleOf(repeat, editing?.rrule ?? null),
+      rrule,
     };
     const done = (): void => {
       announce(t('reminders.saved'));
@@ -61,7 +60,6 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
     else create.mutate(fields, { onSuccess: done, onError: fail });
   };
 
-  const repeat = repeatOf(editing?.rrule);
   return (
     <>
       <Drawer
@@ -96,14 +94,13 @@ export function ReminderDrawer({ draft, tz, onClose }: ReminderDrawerProps): JSX
                 defaultValue={isoLocal(wallOf(at, zone))}
                 required
               />
-              <NativeSelect
-                name="repeat"
-                label={t('editor.repeat')}
-                defaultValue={repeat}
-                data={[...REPEATS, ...(repeat === 'custom' ? (['custom'] as const) : [])].map((r) => ({
-                  value: r,
-                  label: t(`repeat.${r}`),
-                }))}
+              <RepeatPicker
+                value={rrule}
+                onChange={(v: string | null): void => {
+                  guard.markDirty();
+                  setRrule(v);
+                }}
+                startDay={weekdayOf(wallOf(at, zone))}
               />
               <Group justify="flex-end">
                 <Button variant="default" onClick={guard.requestClose}>

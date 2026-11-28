@@ -44,7 +44,8 @@ describe('reminders page', () => {
       target: { value: 'Call mum' },
     });
     fireEvent.change(within(drawer).getByLabelText(/^When/), { target: { value: '2030-07-01T17:00' } });
-    fireEvent.change(within(drawer).getByRole('combobox', { name: 'Repeat' }), { target: { value: 'weekly' } });
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Repeat' }));
+    fireEvent.click(await within(drawer).findByRole('button', { name: 'Every week' }));
     fireEvent.click(within(drawer).getByRole('button', { name: 'Save' }));
     await waitFor(() =>
       expect(sent[0]).toEqual({

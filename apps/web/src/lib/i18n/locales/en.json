@@ -142,7 +142,9 @@
     "addedBy": "Added by {{name}}",
     "travel": "Travel time",
     "travelNone": "None",
-    "travelLocal": "Only in Homa, not synced"
+    "travelLocal": "Only in Homa, not synced",
+    "travelMax": "Up to 24 hours.",
+    "travelSet": "Set"
   },
   "repeat": {
     "none": "Does not repeat",
@@ -150,7 +152,20 @@
     "weekly": "Every week",
     "monthly": "Every month",
     "yearly": "Every year",
-    "custom": "Custom rule"
+    "custom": "Custom rule",
+    "every_days_one": "Every day",
+    "every_days_other": "Every {{count}} days",
+    "every_weeks_one": "Every week",
+    "every_weeks_other": "Every {{count}} weeks",
+    "every_months_one": "Every month",
+    "every_months_other": "Every {{count}} months",
+    "every_years_one": "Every year",
+    "every_years_other": "Every {{count}} years",
+    "onDays": "{{rule}} on {{days}}",
+    "every": "Every",
+    "on": "On",
+    "set": "Set",
+    "tooMany": "Up to every {{max}}."
   },
   "scope": {
     "changeTitle": "Change a repeating event",
@@ -489,7 +504,9 @@
     "editLabel": "Edit \"{{title}}\"",
     "delete": "Delete",
     "deleteLabel": "Delete \"{{title}}\"",
-    "loadFailed": "Couldn't load your reminders"
+    "loadFailed": "Couldn't load your reminders",
+    "addReminder": "Add reminder",
+    "before": "before"
   },
   "notifications": {
     "bell": "Notifications",
@@ -879,5 +896,25 @@
       "link": "An .ics or webcal address, from a school, a team or another app. Read-only.",
       "holidays": "Holidays for your country. Read-only."
     }
+  },
+  "amountPicker": {
+    "custom": "Your own",
+    "badAmount": "Enter a whole number of {{min}} or more.",
+    "amount": "Amount",
+    "unit": "Unit"
+  },
+  "units": {
+    "minutes_one": "minute",
+    "minutes_other": "minutes",
+    "hours_one": "hour",
+    "hours_other": "hours",
+    "days_one": "day",
+    "days_other": "days",
+    "weeks_one": "week",
+    "weeks_other": "weeks",
+    "months_one": "month",
+    "months_other": "months",
+    "years_one": "year",
+    "years_other": "years"
   }
 }

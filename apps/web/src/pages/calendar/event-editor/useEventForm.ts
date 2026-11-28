@@ -14,13 +14,10 @@ import {
   draftZone,
   formTimes,
   parseFormTimes,
-  REPEATS,
-  type Repeat,
   shownRepeat,
-  travelChoices,
-  travelDuration,
 } from '@/services/event-form';
 import { DEFAULT_REMINDER } from '@/services/reminders';
+import { type WeekdayCode, weekdayOf } from '@/services/repeat';
 import { timeZones } from '@/services/zones';
 
 export type EventFormModel = {
@@ -33,7 +30,6 @@ export type EventFormModel = {
   /** Free/busy shared occurrence: show the small Busy card (no event fetch). */
   freeBusy: boolean;
   calendarOptions: { group: string; items: { value: string; label: string }[] }[];
-  repeatOptions: { value: Repeat; label: string }[];
   zones: string[];
   /** The event's zone; timed values in the form are in it. */
   tz: string;
@@ -42,8 +38,11 @@ export type EventFormModel = {
   setAllDay: (v: boolean) => void;
   calendarId: string;
   setCalendarId: (v: string) => void;
-  repeat: Repeat;
-  setRepeat: (v: Repeat) => void;
+  /** The RRULE, or null when the event doesn't repeat. */
+  repeat: string | null;
+  setRepeat: (v: string | null) => void;
+  /** The start's weekday, for weekly rules. */
+  startDay: WeekdayCode;
   /** The repeat can't be shown until the series has loaded. */
   repeatLoading: boolean;
   times: { start: string; end: string };
@@ -65,8 +64,6 @@ export type EventFormModel = {
   /** Minutes of travel before the event, or null for none. */
   travelMinutes: number | null;
   setTravelMinutes: (v: number | null) => void;
-  travelOptions: { value: string; label: string }[];
-  /** The chosen calendar syncs with another service, which won't get the travel time. */
   /** The calendar syncs with a provider that has no travel time, so it stays in Homa. */
   travelLocal: boolean;
 };
@@ -74,7 +71,7 @@ export type EventFormModel = {
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 export function useEventForm(draft: Draft): EventFormModel {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const {
     calendars,
     defaultCalendarId,
@@ -103,7 +100,7 @@ export function useEventForm(draft: Draft): EventFormModel {
   const [calendarId, setCalendarId] = useState(
     occurrence?.calendarId ?? (draft.kind === 'create' ? draft.calendarId : undefined) ?? defaultCalendarId ?? '',
   );
-  const [picked, setPicked] = useState<Repeat>();
+  const [picked, setPicked] = useState<string | null>();
   const [pickedReminders, setReminders] = useState<number[]>();
   const [travelMinutes, setTravelMinutes] = useState<number | null>(occurrence?.travelMinutes ?? null);
   const [busy, setBusy] = useState(false);
@@ -123,22 +120,6 @@ export function useEventForm(draft: Draft): EventFormModel {
     () =>
       writableCalendarPickerGroups(calendars, t('calendars.mine'), (name: string) => t('calendars.sharedBy', { name })),
     [calendars, t],
-  );
-  const locale = i18n.language;
-  const travelOptions = useMemo(
-    () => [
-      { value: 'none', label: t('editor.travelNone') },
-      ...travelChoices(occurrence?.travelMinutes ?? null).map((m) => ({
-        value: String(m),
-        label: travelDuration(m, locale),
-      })),
-    ],
-    [occurrence?.travelMinutes, locale, t],
-  );
-  const repeatOptions = useMemo(
-    () =>
-      REPEATS.filter((r) => r !== 'custom' || repeat === 'custom').map((r) => ({ value: r, label: t(`repeat.${r}`) })),
-    [repeat, t],
   );
 
   function syncPreview(nextAllDay: boolean, nextTz: string, nextStart: string, nextEnd: string): void {
@@ -224,7 +205,6 @@ export function useEventForm(draft: Draft): EventFormModel {
     readOnly: occurrence !== undefined && isReadOnly(occurrence.calendarId),
     freeBusy,
     calendarOptions,
-    repeatOptions,
     zones,
     tz,
     setTz,
@@ -237,7 +217,8 @@ export function useEventForm(draft: Draft): EventFormModel {
     },
     color: colors[calendarId],
     repeat,
-    setRepeat: (v: Repeat): void => {
+    startDay: weekdayOf(new Date(`${start.slice(0, 10)}T00:00:00Z`)),
+    setRepeat: (v: string | null): void => {
       editor.markDirty();
       setPicked(v);
     },
@@ -261,7 +242,6 @@ export function useEventForm(draft: Draft): EventFormModel {
     },
     remindersLoading: occurrence !== undefined && series.isPending,
     travelMinutes,
-    travelOptions,
     travelLocal: travelIsLocal(calendars.find((c) => c.id === calendarId)?.connectionId),
     setTravelMinutes: (v: number | null): void => {
       editor.markDirty();

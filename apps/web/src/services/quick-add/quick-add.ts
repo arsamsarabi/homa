@@ -3,7 +3,6 @@
 import type { QuickAdd } from '@homa/core/quick-add';
 import type { EventInput } from '@/api';
 import { addDays, sameDay } from '@/services/dates';
-import { type Repeat, repeatOf } from '@/services/event-form';
 import { wallOf } from '@/services/zones';
 
 export { parseQuickAdd, type QuickAdd, type QuickAddContext } from '@homa/core/quick-add';
@@ -36,7 +35,8 @@ export type QuickAddPreview = {
   when: string;
   /** "45 min", "3 hr"; undefined for all-day events. */
   length: string | undefined;
-  repeat: Repeat;
+  /** The parsed RRULE, or null when the line doesn't repeat. */
+  rrule: string | null;
   /** For a weekly rule on set days: their names. */
   weekdays: string[];
   defaulted: boolean;
@@ -65,7 +65,7 @@ export function previewOf(q: QuickAdd, tz: string, f: QuickAddFormats): QuickAdd
   return {
     when,
     length,
-    repeat: repeatOf(q.rrule),
+    rrule: q.rrule ?? null,
     weekdays:
       q.rrule?.startsWith('FREQ=WEEKLY;BYDAY=') && byDay.length
         ? byDay.map((d) => f.weekday.format(weekdayDate(RRULE_DAYS.indexOf(d))))

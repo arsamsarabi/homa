@@ -9,10 +9,6 @@ export {
   formTimes,
   newEventSlot,
   parseFormTimes,
-  REPEATS,
-  type Repeat,
-  repeatOf,
-  rruleOf,
   shownRepeat,
 } from './event-form';
-export { TRAVEL_PRESETS, travelChoices, travelDuration } from './travel';
+export { MAX_TRAVEL_MINUTES, TRAVEL_PRESETS, travelChoices, travelDuration } from './travel';

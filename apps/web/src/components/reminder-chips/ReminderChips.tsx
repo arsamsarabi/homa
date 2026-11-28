@@ -1,12 +1,14 @@
-import { Button, Group, Input, NativeSelect, NumberInput, Stack, Text } from '@mantine/core';
-import { IconCheck, IconX } from '@tabler/icons-react';
-import { type ChangeEvent, type JSX, useId, useState } from 'react';
+import { Button, Group, Input, Stack, Text } from '@mantine/core';
+import { IconCheck, IconPlus, IconX } from '@tabler/icons-react';
+import { type JSX, useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AmountPicker, type TriggerProps } from '@/components/amount-picker';
 import {
   addReminder,
   MAX_REMINDERS,
   minutesFromParts,
   offsetLabel,
+  REMINDER_PRESETS,
   REMINDER_UNITS,
   type ReminderUnit,
   removeReminder,
@@ -24,7 +26,7 @@ export type ReminderChipsProps = {
   atStartLabel?: string;
 };
 
-/** Chosen reminders as removable pills (check → X on hover), plus a number + unit row to add more. */
+/** Chosen reminders as removable pills (check → X on hover), plus "Add reminder" with presets and your own. */
 export function ReminderChips({
   value,
   onChange,
@@ -34,9 +36,6 @@ export function ReminderChips({
 }: ReminderChipsProps): JSX.Element {
   const { t } = useTranslation();
   const id = useId();
-  const [count, setCount] = useState<number | string>(10);
-  const [unit, setUnit] = useState<ReminderUnit>('minutes');
-  const [error, setError] = useState<string>();
   const atMax = value.length >= MAX_REMINDERS;
 
   const labelFor = (minutes: number): string => {
@@ -44,25 +43,17 @@ export function ReminderChips({
     return l.key === 'atStart' ? (atStartLabel ?? t('reminders.atStart')) : t(`reminders.${l.key}`, { count: l.count });
   };
 
-  const add = (): void => {
-    const n = typeof count === 'number' ? count : Number(count);
-    if (!Number.isInteger(n) || n < 0) {
-      setError(t('reminders.badAmount'));
-      return;
+  const add = (minutes: number): string | undefined => {
+    const result = addReminder(value, minutes);
+    if (result.ok) {
+      onChange(result.value);
+      return undefined;
     }
-    const result = addReminder(value, minutesFromParts(n, unit));
-    if (!result.ok) {
-      setError(
-        result.reason === 'max'
-          ? t('reminders.addMax')
-          : result.reason === 'duplicate'
-            ? t('reminders.addDuplicate')
-            : t('reminders.badAmount'),
-      );
-      return;
-    }
-    setError(undefined);
-    onChange(result.value);
+    return result.reason === 'max'
+      ? t('reminders.addMax')
+      : result.reason === 'duplicate'
+        ? t('reminders.addDuplicate')
+        : t('reminders.badAmount');
   };
 
   return (
@@ -96,38 +87,41 @@ export function ReminderChips({
             })}
           </Group>
         )}
-        <Group gap={6} align="flex-end" wrap="nowrap">
-          <NumberInput
-            size="xs"
-            label={t('reminders.amount')}
-            value={count}
-            onChange={setCount}
-            min={0}
-            max={999}
-            allowDecimal={false}
-            disabled={disabled || atMax}
-            w={88}
-            aria-label={t('reminders.amount')}
-          />
-          <NativeSelect
-            size="xs"
-            label={t('reminders.unit')}
-            value={unit}
-            onChange={(e: ChangeEvent<HTMLSelectElement>): void => setUnit(e.currentTarget.value as ReminderUnit)}
-            data={REMINDER_UNITS.map((u) => ({ value: u, label: t(`reminders.unit_${u}`) }))}
-            disabled={disabled || atMax}
-            aria-label={t('reminders.unit')}
-          />
-          <Button type="button" size="xs" variant="light" disabled={disabled || atMax} onClick={add}>
-            {t('reminders.add')}
-          </Button>
-        </Group>
-        {error && (
-          <Text size="xs" c="red" role="alert">
-            {error}
-          </Text>
-        )}
-        {atMax && !error && (
+        <AmountPicker<ReminderUnit>
+          label={t('reminders.addReminder')}
+          valueText=""
+          trigger={(props: TriggerProps): JSX.Element => (
+            <Button
+              {...props}
+              type="button"
+              size="compact-xs"
+              variant="subtle"
+              leftSection={<IconPlus size={14} aria-hidden />}
+              disabled={disabled || atMax}
+              className={classes.add}
+            >
+              {t('reminders.addReminder')}
+            </Button>
+          )}
+          options={REMINDER_PRESETS.map((m) => {
+            const chosen = value.includes(m);
+            return {
+              key: String(m),
+              label: labelFor(m),
+              selected: chosen,
+              disabled: chosen,
+              onSelect: (): void => void add(m),
+            };
+          })}
+          units={REMINDER_UNITS.map((u) => ({ value: u, label: (count: number) => t(`units.${u}`, { count }) }))}
+          initial={{ amount: 10, unit: 'minutes' }}
+          min={0}
+          suffix={t('reminders.before')}
+          preview={(n: number, u: ReminderUnit): string => labelFor(minutesFromParts(n, u))}
+          onCustom={(n: number, u: ReminderUnit): string | undefined => add(minutesFromParts(n, u))}
+          submitLabel={t('reminders.add')}
+        />
+        {atMax && (
           <Text size="xs" c="dimmed">
             {t('reminders.addMax')}
           </Text>
