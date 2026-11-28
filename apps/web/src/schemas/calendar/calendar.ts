@@ -70,6 +70,8 @@ export const OccurrenceSchema = z.object({
   taskDone: z.boolean().default(false),
   /** Who added the event in Homa; null when unknown. */
   createdBy: CalendarOwnerSchema.nullable().default(null),
+  /** Minutes of travel before the event; null for none. */
+  travelMinutes: z.number().int().nullable().default(null),
 });
 export type Occurrence = z.infer<typeof OccurrenceSchema>;
 export const OccurrenceListSchema = z.array(OccurrenceSchema);
@@ -86,6 +88,7 @@ export const EventSchema = z.object({
   allDay: z.boolean(),
   tz: z.string(),
   rrule: z.string().nullable(),
+  travelMinutes: z.number().int().nullable().default(null),
   exdates: z.array(isoDateTime),
   /** Minutes before each occurrence's start. */
   reminders: z.array(z.number().int()).default([]),

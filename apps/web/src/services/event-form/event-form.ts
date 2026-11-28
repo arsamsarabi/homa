@@ -60,6 +60,8 @@ export type FormInput = {
   repeat: Repeat | undefined;
   /** Reminders (minutes before): what a new event gets, or an edit's change; undefined if untouched. */
   reminders?: number[];
+  /** Minutes of travel before the event, or null for none. Ignored for all-day events. */
+  travelMinutes?: number | null;
 };
 
 /** The simple repeat choice an RRULE matches, or 'custom' for anything else. */
@@ -135,9 +137,17 @@ export function buildEditorResult(
     end: span.end.toISOString(),
   };
   const tz = input.allDay ? 'UTC' : input.tz;
+  const travel = input.allDay ? null : (input.travelMinutes ?? null);
   if (draft.kind === 'create') {
     const rrule = rruleOf(shownRepeat(draft, input.repeat, null), draft.rrule ?? null);
-    const body = { ...common, calendarId: input.calendarId, allDay: input.allDay, tz, rrule };
+    const body = {
+      ...common,
+      calendarId: input.calendarId,
+      allDay: input.allDay,
+      tz,
+      rrule,
+      ...(travel && { travelMinutes: travel }),
+    };
     return { kind: 'create', body: input.reminders ? { ...body, reminders: input.reminders } : body };
   }
   const o = draft.occurrence;
@@ -150,6 +160,11 @@ export function buildEditorResult(
   if (input.allDay !== o.allDay) patch.allDay = input.allDay;
   if (input.allDay !== o.allDay || tz !== o.tz) {
     patch.tz = tz;
+    seriesChanged = true;
+  }
+  // Travel time belongs to the whole series; turning the event all-day clears it on the server.
+  if (!input.allDay && travel !== o.travelMinutes) {
+    patch.travelMinutes = travel;
     seriesChanged = true;
   }
   if (input.repeat !== undefined && input.repeat !== repeatOf(ctx.seriesRrule)) {

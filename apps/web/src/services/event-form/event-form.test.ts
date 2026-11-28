@@ -30,6 +30,7 @@ const occurrence: Occurrence = {
   taskId: null,
   taskDone: false,
   createdBy: null,
+  travelMinutes: null,
 };
 const edit: Draft = { kind: 'edit', occurrence };
 // 09:00–10:00 in Tehran (UTC+3:30).
@@ -131,6 +132,16 @@ describe('buildEditorResult', () => {
       ctx,
     );
     expect(r).toMatchObject({ seriesChanged: true, patch: { tz: 'Europe/London', start: '2026-11-19T09:00:00.000Z' } });
+  });
+  test('travel time goes with a new timed event, and changing it changes the series', () => {
+    const timed = input({ allDay: false, start: '2026-11-19T09:00', end: '2026-11-19T10:00', travelMinutes: 30 });
+    expect(buildEditorResult(create, timed, ctx)).toMatchObject({ kind: 'create', body: { travelMinutes: 30 } });
+    const occ = { ...occurrence, allDay: false, tz: 'Europe/London', travelMinutes: 30 };
+    const same = buildEditorResult({ kind: 'edit', occurrence: occ }, timed, ctx);
+    expect(same).toMatchObject({ seriesChanged: false });
+    expect(same).not.toMatchObject({ patch: { travelMinutes: 30 } });
+    const cleared = buildEditorResult({ kind: 'edit', occurrence: occ }, { ...timed, travelMinutes: null }, ctx);
+    expect(cleared).toMatchObject({ seriesChanged: true, patch: { travelMinutes: null } });
   });
   test('backwards times come back as an error', () => {
     expect(buildEditorResult(edit, input({ start: '2026-11-20', end: '2026-11-19' }), ctx)).toBe('endBeforeStart');

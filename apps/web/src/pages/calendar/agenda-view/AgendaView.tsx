@@ -2,7 +2,7 @@
 import { Stack, Text, Title, UnstyledButton, VisuallyHidden } from '@mantine/core';
 import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCalendarPageModel } from '@/pages/calendar/model';
+import { useCalendarPageModel, useTravelLabel } from '@/pages/calendar/model';
 import { occurrenceTitle } from '@/services/calendar-sharing';
 import { sameDay } from '@/services/dates';
 import classes from './AgendaView.module.css';
@@ -12,6 +12,7 @@ export function AgendaView(): JSX.Element {
   const { t } = useTranslation();
   const { formats, colors, secondary, today, accessOf } = useCalendarPageModel();
   const { groups, open, span, occasions } = useAgendaView();
+  const travelOf = useTravelLabel();
   const labels = { busy: t('calendar.busy'), untitled: t('calendar.untitled') };
 
   if (!groups.length) return <Text c="dimmed">{t('calendar.agendaEmpty')}</Text>;
@@ -35,6 +36,7 @@ export function AgendaView(): JSX.Element {
           <Stack gap={4}>
             {items.map((o) => {
               const access = accessOf(o.calendarId);
+              const travel = travelOf(o);
               return (
                 <UnstyledButton
                   key={`${o.eventId}${o.recurrenceId}`}
@@ -47,6 +49,7 @@ export function AgendaView(): JSX.Element {
                     {o.allDay
                       ? t('calendar.allDay')
                       : `${formats.time.format(span(o).start)} – ${formats.time.format(span(o).end)}`}
+                    {travel && <span className={classes.travel}>{travel}</span>}
                   </span>
                   <span className={classes.title}>
                     {o.taskDone ? (

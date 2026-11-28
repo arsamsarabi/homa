@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "travel_minutes" integer;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_travel_minutes" CHECK ("events"."travel_minutes" is null or ("events"."travel_minutes" between 1 and 1440 and not "events"."all_day"));

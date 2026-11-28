@@ -69,7 +69,8 @@ export function NotificationPanel(p: NotificationPanelProps): JSX.Element {
   return (
     <Stack gap={0}>
       <Group justify="space-between" px="md" py="sm" className={classes.header}>
-        <Title order={2} size="h5" id={p.headingId}>
+        {/* Opening focuses the heading, not Clear all, so no button shows a focus ring on open. */}
+        <Title order={2} size="h5" id={p.headingId} tabIndex={-1} data-autofocus className={classes.heading}>
           {t('notifications.title')}
         </Title>
         <Group gap={4}>

@@ -1,6 +1,6 @@
 // Permission-aware free/busy for a set of people (phase 6c). Reuses the occurrence reader so
 // availability matches the views; all-day events never count (decision 16).
-import { type Interval, mergeBusy, ValidationError } from '@homa/core';
+import { type Interval, MAX_TRAVEL_MINUTES, mergeBusy, ValidationError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 import { accessibleCalendars } from './access';
 import { listOccurrences } from './occurrences-service';
@@ -57,7 +57,9 @@ export async function getAvailability(
   }
 
   const calendarIds = [...new Set([...calendarsByUser.values()].flat())];
-  const occs = calendarIds.length ? await listOccurrences(db, callerId, input.from, input.to, calendarIds) : [];
+  // Read past `to` by the longest travel time, so travel before a later event still counts.
+  const readTo = new Date(input.to.getTime() + MAX_TRAVEL_MINUTES * 60_000);
+  const occs = calendarIds.length ? await listOccurrences(db, callerId, input.from, readTo, calendarIds) : [];
 
   const rawBusy = new Map<string, Interval[]>();
   for (const id of userIds) rawBusy.set(id, []);
@@ -67,7 +69,9 @@ export async function getAvailability(
     if (!owner) continue;
     const bucket = rawBusy.get(owner);
     if (!bucket) continue;
-    bucket.push({ start: o.start, end: o.end });
+    // Travel before the event is busy time too.
+    const travelMs = (o.event.travelMinutes ?? 0) * 60_000;
+    bucket.push({ start: new Date(o.start.getTime() - travelMs), end: o.end });
   }
 
   const people: PersonAvailabilityOut[] = userIds.map((userId) => {

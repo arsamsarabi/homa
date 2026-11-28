@@ -3,6 +3,7 @@ export {
   type DeletePlan,
   type EventFields,
   type EventPatch,
+  MAX_TRAVEL_MINUTES,
   type OverrideDetails,
   type OverrideValues,
   overrideValues,

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ReminderChips } from '@/components';
 import { useSeries } from '@/hooks/calendar';
 import { useSetEventReminders } from '@/hooks/reminders';
-import { useAddedBy, useCalendarPageModel } from '@/pages/calendar/model';
+import { useAddedBy, useCalendarPageModel, useTravelLabel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { wallOf } from '@/services/zones';
 import { useAnnouncer } from '@/stores';
@@ -23,6 +23,7 @@ export function ReadOnlyDetails({ occurrence: o, onClose }: ReadOnlyDetailsProps
   const announce = useAnnouncer((s) => s.announce);
   const { calendarById, colors, formats, tz } = useCalendarPageModel();
   const calendar = calendarById[o.calendarId];
+  const travel = useTravelLabel()(o);
   const shared = calendar !== undefined && calendar.access !== 'owner';
   const addedBy = useAddedBy(o);
   // All-day events are stored at UTC midnights, which are already wall dates; the end is exclusive.
@@ -59,6 +60,11 @@ export function ReadOnlyDetails({ occurrence: o, onClose }: ReadOnlyDetailsProps
         </Text>
       )}
       <Text size="sm">{when}</Text>
+      {travel && (
+        <Text size="sm" c="dimmed">
+          {travel}
+        </Text>
+      )}
       {o.location && <Text size="sm">{o.location}</Text>}
       {o.description && (
         <Text size="sm" className={classes.notes}>

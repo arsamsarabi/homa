@@ -104,7 +104,8 @@
       "deleted": "Event deleted"
     },
     "taskDone": "Task done",
-    "busy": "Busy"
+    "busy": "Busy",
+    "travel": "{{duration}} travel time"
   },
   "common": {
     "cancel": "Cancel",
@@ -138,7 +139,10 @@
     "readOnly": "This event is from a read-only calendar and can't be changed here.",
     "sharedBy": "Shared by {{name}}",
     "readOnlyShared": "This event is shared with you and can't be changed here.",
-    "addedBy": "Added by {{name}}"
+    "addedBy": "Added by {{name}}",
+    "travel": "Travel time",
+    "travelNone": "None",
+    "travelLocal": "Only in Homa, not synced"
   },
   "repeat": {
     "none": "Does not repeat",

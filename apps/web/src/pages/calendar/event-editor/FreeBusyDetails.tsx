@@ -1,7 +1,7 @@
 import { CloseButton, ColorSwatch, Group, Stack, Text, Title } from '@mantine/core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCalendarPageModel } from '@/pages/calendar/model';
+import { useCalendarPageModel, useTravelLabel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
 import { wallOf } from '@/services/zones';
 
@@ -12,6 +12,7 @@ export function FreeBusyDetails({ occurrence: o, onClose }: FreeBusyDetailsProps
   const { t } = useTranslation();
   const { calendarById, colors, formats, tz } = useCalendarPageModel();
   const calendar = calendarById[o.calendarId];
+  const travel = useTravelLabel()(o);
   const start = o.allDay ? new Date(o.start) : wallOf(new Date(o.start), tz);
   const end = o.allDay ? new Date(new Date(o.end).getTime() - 1) : wallOf(new Date(o.end), tz);
   const day = formats.fullDate.format(start);
@@ -40,6 +41,11 @@ export function FreeBusyDetails({ occurrence: o, onClose }: FreeBusyDetailsProps
         </Text>
       )}
       <Text size="sm">{when}</Text>
+      {travel && (
+        <Text size="sm" c="dimmed">
+          {travel}
+        </Text>
+      )}
     </Stack>
   );
 }

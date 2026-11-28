@@ -8,7 +8,15 @@ import { useHomeZone } from '@/hooks/settings';
 import { notifyInfo } from '@/lib/notify';
 import type { Notification } from '@/schemas';
 import { today } from '@/services/dates';
-import { formatWhen, notificationTarget, relativeTime, type Snooze, snoozeUntil, splitNew } from '@/services/reminders';
+import {
+  capitalize,
+  formatWhen,
+  notificationTarget,
+  relativeTime,
+  type Snooze,
+  snoozeUntil,
+  splitNew,
+} from '@/services/reminders';
 import { useAnnouncer } from '@/stores';
 
 /**
@@ -32,7 +40,8 @@ export function HeaderBell(): JSX.Element {
   const when = (n: Notification): string => {
     const at = new Date(n.start);
     const relative = relativeTime(at, new Date(), n.allDay, today(tz), i18n.language);
-    return t(`notifications.when.${n.kind}`, { relative, time: formatWhen(at, n.allDay, i18n.language, tz) });
+    const line = t(`notifications.when.${n.kind}`, { relative, time: formatWhen(at, n.allDay, i18n.language, tz) });
+    return capitalize(line, i18n.language);
   };
 
   useNotificationArrivals(items, (n: Notification): void => {

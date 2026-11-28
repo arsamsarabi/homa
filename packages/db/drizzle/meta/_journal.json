@@ -155,6 +155,13 @@
       "when": 1795791427464,
       "tag": "0021_shortcut_hints",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795825775150,
+      "tag": "0022_travel_time",
+      "breakpoints": true
     }
   ]
 }

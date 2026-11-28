@@ -17,6 +17,13 @@ export type EventMutations = {
   fetchSeries: (id: string) => Promise<HomaEvent>;
 };
 
+/**
+ * Real ids for creates still in flight, by temp id. A drag or delete can start on an event before
+ * its create returns; the request waits for the real id instead of sending the temp one.
+ */
+const pendingIds = new Map<string, { promise: Promise<string>; resolve: (id: string) => void; reject: () => void }>();
+const realId = async (id: string): Promise<string> => (await pendingIds.get(id)?.promise) ?? id;
+
 type OccSnapshot = { entries: [QueryKey, Occurrence[] | undefined][]; tempId?: string };
 
 export function useEventMutations(): EventMutations {
@@ -47,14 +54,30 @@ export function useEventMutations(): EventMutations {
     onMutate: async (body: EventInput): Promise<OccSnapshot> => {
       const snap = await snapshot();
       const tempId = `temp-${crypto.randomUUID()}`;
+      let resolve: (id: string) => void = () => {};
+      let reject: () => void = () => {};
+      const promise = new Promise<string>((res, rej) => {
+        resolve = res;
+        reject = (): void => rej(new Error('The event was not created'));
+      });
+      promise.catch(() => {}); // only a waiting update or delete cares
+      pendingIds.set(tempId, { promise, resolve, reject });
       patchLists((list) => [...list, tempOccurrence(body, tempId)]);
       return { ...snap, tempId };
     },
     onSuccess: (event: HomaEvent, _body: EventInput, snap: OccSnapshot | undefined): void => {
       const tempId = snap?.tempId;
-      if (tempId) patchLists((list) => withRealId(list, tempId, event.id));
+      if (!tempId) return;
+      patchLists((list) => withRealId(list, tempId, event.id));
+      pendingIds.get(tempId)?.resolve(event.id);
+      pendingIds.delete(tempId);
     },
-    onError: (_e: Error, _v: EventInput, snap: OccSnapshot | undefined): void => restore(snap),
+    onError: (_e: Error, _v: EventInput, snap: OccSnapshot | undefined): void => {
+      restore(snap);
+      if (!snap?.tempId) return;
+      pendingIds.get(snap.tempId)?.reject();
+      pendingIds.delete(snap.tempId);
+    },
     onSettled: refresh,
   });
 
@@ -63,7 +86,7 @@ export function useEventMutations(): EventMutations {
       EventSchema.parse(
         await unwrap(
           homaClient.PATCH('/events/{id}', {
-            params: { path: { id: v.id }, query: { scope: v.scope, recurrenceId: v.recurrenceId } },
+            params: { path: { id: await realId(v.id) }, query: { scope: v.scope, recurrenceId: v.recurrenceId } },
             body: v.patch,
           }),
         ),
@@ -81,7 +104,7 @@ export function useEventMutations(): EventMutations {
     mutationFn: async (v: RemoveVars): Promise<void> => {
       await unwrap(
         homaClient.DELETE('/events/{id}', {
-          params: { path: { id: v.id }, query: { scope: v.scope, recurrenceId: v.recurrenceId } },
+          params: { path: { id: await realId(v.id) }, query: { scope: v.scope, recurrenceId: v.recurrenceId } },
         }),
       );
     },

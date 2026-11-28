@@ -19,6 +19,7 @@ const occ = (summary: string, start: string, end: string, allDay = false): Occur
   taskId: null,
   taskDone: false,
   createdBy: null,
+  travelMinutes: null,
 });
 // Shown in Tehran (UTC+3:30), so a UTC-only bug would put things on the wrong day.
 const TZ = 'Asia/Tehran';
@@ -59,6 +60,17 @@ describe('time grid', () => {
       ['Review', 1, 2],
     ]);
     expect(cols[1]).toEqual([]);
+  });
+  test('travel time sits before the event and counts as overlap', () => {
+    const drive = { ...occ('Dentist', '2026-11-19T10:00:00Z', '2026-11-19T11:00:00Z'), travelMinutes: 30 };
+    const before = occ('Call', '2026-11-19T09:00:00Z', '2026-11-19T09:45:00Z');
+    const col = timedColumnItems(days, [before, drive], 'UTC')[0] ?? [];
+    expect(col.map((p) => [p.o.summary, p.col, p.cols])).toEqual([
+      ['Call', 0, 2],
+      ['Dentist', 1, 2],
+    ]);
+    expect(col[1]?.travelStart.toISOString()).toBe('2026-11-19T09:30:00.000Z');
+    expect(col[0]?.travelStart).toEqual(col[0]?.start);
   });
 });
 

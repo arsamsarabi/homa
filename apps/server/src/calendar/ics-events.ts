@@ -35,6 +35,8 @@ export async function writeIcsEvents(
       rrule: e.rrule,
       exdates: e.exdates,
       rdates: e.rdates,
+      // Travel time is Homa-only, so an update keeps it, unless the event became all-day.
+      ...(e.allDay && { travelMinutes: null }),
     };
     let id = existing.get(e.uid);
     if (id) {

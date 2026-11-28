@@ -59,3 +59,7 @@
 .actions {
   flex-shrink: 0;
 }
+
+.heading:focus {
+  outline: none;
+}

@@ -325,6 +325,13 @@
               "null"
             ]
           },
+          "travelMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Minutes of travel before the event; Homa only, not synced"
+          },
           "exdates": {
             "type": "array",
             "items": {
@@ -374,6 +381,7 @@
           "allDay",
           "tz",
           "rrule",
+          "travelMinutes",
           "exdates",
           "rdates",
           "reminders",
@@ -429,6 +437,15 @@
             ],
             "maxLength": 1000,
             "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "travelMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1440,
+            "description": "Minutes of travel before a timed event, or null for none; kept in Homa only"
           },
           "reminders": {
             "type": "array",
@@ -500,6 +517,15 @@
             ],
             "maxLength": 1000,
             "example": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "travelMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1440,
+            "description": "Minutes of travel before a timed event, or null for none; kept in Homa only"
           }
         }
       },
@@ -587,6 +613,13 @@
             "type": "boolean",
             "description": "That task is completed"
           },
+          "travelMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Minutes of travel before the event; busy time too"
+          },
           "createdBy": {
             "allOf": [
               {
@@ -617,6 +650,7 @@
           "overridden",
           "taskId",
           "taskDone",
+          "travelMinutes",
           "createdBy"
         ]
       },

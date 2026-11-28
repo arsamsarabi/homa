@@ -1139,6 +1139,8 @@ export interface components {
             allDay: boolean;
             tz: string;
             rrule: string | null;
+            /** @description Minutes of travel before the event; Homa only, not synced */
+            travelMinutes: number | null;
             exdates: string[];
             rdates: string[];
             /**
@@ -1170,6 +1172,8 @@ export interface components {
             tz: string;
             /** @example FREQ=WEEKLY;BYDAY=MO */
             rrule?: string | null;
+            /** @description Minutes of travel before a timed event, or null for none; kept in Homa only */
+            travelMinutes?: number | null;
             /**
              * @description Minutes before each occurrence's start, at most 5; whole days keep the wall time across clock changes
              * @example [
@@ -1194,6 +1198,8 @@ export interface components {
             tz?: string;
             /** @example FREQ=WEEKLY;BYDAY=MO */
             rrule?: string | null;
+            /** @description Minutes of travel before a timed event, or null for none; kept in Homa only */
+            travelMinutes?: number | null;
         };
         RemindersInput: {
             /**
@@ -1230,6 +1236,8 @@ export interface components {
             taskId: string | null;
             /** @description That task is completed */
             taskDone: boolean;
+            /** @description Minutes of travel before the event; busy time too */
+            travelMinutes: number | null;
             createdBy: components["schemas"]["CalendarOwner"] & (Record<string, never> | null);
         };
         Availability: {

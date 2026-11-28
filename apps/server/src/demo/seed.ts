@@ -56,6 +56,7 @@ export async function seedDemo(db: Db, opts: SeedAuth, now = new Date()): Promis
     rrule?: string;
     where?: string;
     reminders?: number[];
+    travel?: number;
   };
   const events: Ev[] = [
     {
@@ -103,6 +104,7 @@ export async function seedDemo(db: Db, opts: SeedAuth, now = new Date()): Promis
       start: at(4, 10),
       end: at(4, 10, 45),
       where: 'High Street Dental',
+      travel: 30,
       reminders: [60],
     },
     {
@@ -111,6 +113,7 @@ export async function seedDemo(db: Db, opts: SeedAuth, now = new Date()): Promis
       start: at(2, 19, 30),
       end: at(2, 22),
       where: 'Little Lebanon',
+      travel: 15,
     },
     { cal: personal.id, title: 'Book club', start: at(8, 19), end: at(8, 21), rrule: 'FREQ=MONTHLY' },
     { cal: personal.id, title: 'Weekend in Edinburgh', start: day(12), end: day(15), allDay: true },
@@ -147,6 +150,7 @@ export async function seedDemo(db: Db, opts: SeedAuth, now = new Date()): Promis
         allDay: e.allDay ?? false,
         tz: DEMO_TZ,
         rrule: e.rrule ?? null,
+        travelMinutes: e.travel ?? null,
       },
       e.reminders,
     );

@@ -113,7 +113,7 @@ Status: done (#125). These finish phase 6, so they came first.
 
 ### 3. Calendar features (0.4)
 
-- **Travel time on events.** An optional travel time before an event, as in Apple Calendar: a block above the event with a car icon and "1 hr travel time". It counts as busy for availability and in polls. It doesn't sync to Google or CalDAV yet, since neither has a standard field for it. Size M.
+- **Travel time on events.** Done: designed in [travel-time.md](../design/travel-time.md). An optional travel time before an event, as in Apple Calendar: a block above the event with a car icon and "1 hr travel time". It counts as busy for availability and in polls. It doesn't sync to Google or CalDAV yet, since neither has a standard field for it. Size M.
 
 ### 4. Scheduling (with phase 7)
 

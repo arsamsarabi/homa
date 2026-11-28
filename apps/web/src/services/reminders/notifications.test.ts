@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { Notification } from '@/schemas';
-import { arrivals, notificationTarget, relativeTime, splitNew } from './notifications';
+import { arrivals, capitalize, notificationTarget, relativeTime, splitNew } from './notifications';
 
 const base: Notification = {
   id: 'n1',
@@ -61,4 +61,9 @@ test('arrivals are unread and not seen before', () => {
   const read = { ...base, id: 'read', read: true };
   const fresh = { ...base, id: 'fresh' };
   expect(arrivals([seen, read, fresh], new Set(['seen']))).toEqual([fresh]);
+});
+
+test('capitalize starts a line with a capital, and leaves Farsi alone', () => {
+  expect(capitalize('yesterday · 09:00', 'en')).toBe('Yesterday · 09:00');
+  expect(capitalize('دیروز', 'fa')).toBe('دیروز');
 });
