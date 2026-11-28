@@ -6,5 +6,6 @@ export * from './grants';
 export * from './instance';
 export * from './outbox';
 export * from './people';
+export * from './polls';
 export * from './reminders';
 export * from './tasks';

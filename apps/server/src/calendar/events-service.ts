@@ -16,6 +16,7 @@ import {
   ValidationError,
 } from '@homa/core';
 import { type Db, type Executor, repo } from '@homa/db';
+import { assertPollPatch, followOrganizer } from '@/polls/poll-events';
 import { accessAtLeast, calendarAccess } from './access';
 import { requireEditCalendar } from './calendars-service';
 import { reexpand } from './instance-cache';
@@ -109,7 +110,7 @@ export function createEvent(
  * Applies a patch. For recurring events `scope` picks what changes: one occurrence, this and
  * following (the response is then the new series), or the whole series.
  */
-export function updateEvent(
+export async function updateEvent(
   db: Db,
   userId: string,
   id: string,
@@ -117,8 +118,11 @@ export function updateEvent(
   scope: Scope = 'all',
   recurrenceId?: Date,
 ): Promise<EventWithReminders> {
-  return db.transaction(async (tx) => {
+  let pollChange: { link: repo.PollEventRow; before: { summary: string; description: string | null } } | undefined;
+  const result = db.transaction(async (tx) => {
     const e = await editableEvent(tx, userId, id);
+    const link = await assertPollPatch(tx, e, patch);
+    if (link) pollChange = { link, before: { summary: e.summary, description: e.description } };
     if (patch.calendarId) {
       const target = await requireEditCalendar(tx, userId, patch.calendarId);
       if (target.ownerUserId !== e.ownerUserId)
@@ -189,6 +193,13 @@ export function updateEvent(
       }
     }
   });
+  const out = await result;
+  if (pollChange)
+    await followOrganizer(db, pollChange.link, pollChange.before, {
+      summary: out.summary,
+      description: out.description,
+    });
+  return out;
 }
 
 export async function deleteEvent(

@@ -11,6 +11,7 @@ import { demoGuard } from '@/demo';
 import { importExportApi } from '@/import-export';
 import { instanceApi } from '@/instance';
 import { peopleApi } from '@/people';
+import { pollsApi } from '@/polls';
 import { channelsApi, type NotifySettings, type PushSettings, remindersApi } from '@/reminders';
 import { settingsApi } from '@/settings';
 import { tasksApi } from '@/tasks';
@@ -48,6 +49,7 @@ export function createApi(deps?: AppDeps): OpenAPIHono {
   api.route('/', channelsApi(deps));
   api.route('/', tasksApi(deps));
   api.route('/', peopleApi(deps));
+  api.route('/', pollsApi(deps));
   api.doc31('/openapi.json', openApiConfig);
   api.onError(handleError);
   return api;

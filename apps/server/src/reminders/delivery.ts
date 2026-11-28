@@ -23,7 +23,7 @@ export const deliveryBackoffMs = (attempts: number): number => Math.min(2 ** (at
 const isDue = (at: Date, now: Date): boolean => at <= now && at.getTime() > now.getTime() - REMINDER_LIMITS.catchUpMs;
 
 /** Inserts the notifications that are new and queues their deliveries. Returns how many were new. */
-async function notify(tx: Executor, rows: readonly repo.NewNotification[], now: Date): Promise<number> {
+export async function notify(tx: Executor, rows: readonly repo.NewNotification[], now: Date): Promise<number> {
   const unique = [...new Map(rows.map((r) => [r.dedupeKey, r])).values()];
   const created = await repo.insertNotifications(tx, unique);
   await repo.queueDeliveries(tx, await deliveriesFor(tx, created), now);

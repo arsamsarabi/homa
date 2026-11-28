@@ -49,7 +49,7 @@ export const ReminderPatch = ReminderFields.partial()
 export const Notification = z
   .object({
     id: z.uuid(),
-    kind: z.enum(['event', 'standalone', 'task']),
+    kind: z.enum(['event', 'standalone', 'task', 'poll']),
     title: z.string(),
     start: z.iso
       .datetime()
@@ -57,6 +57,7 @@ export const Notification = z
     allDay: z.boolean(),
     eventId: z.uuid().nullable(),
     taskId: z.uuid().nullable(),
+    pollId: z.uuid().nullable(),
     recurrenceId: z.iso.datetime().nullable(),
     fireAt: z.iso.datetime(),
     read: z.boolean(),

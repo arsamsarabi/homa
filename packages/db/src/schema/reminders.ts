@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import { boolean, check, index, integer, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { events } from './calendar';
+import { POLL_NOTICES, polls } from './polls';
 import { tasks } from './tasks';
 
 export const REMINDER_ACTIONS = ['display', 'email'] as const;
@@ -62,6 +63,9 @@ export const notifications = pgTable(
     reminderId: uuid('reminder_id').references(() => reminders.id, { onDelete: 'set null' }),
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'cascade' }),
     taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'cascade' }),
+    pollId: uuid('poll_id').references(() => polls.id, { onDelete: 'cascade' }),
+    /** What happened to the poll: the panel and channels word it in the reader's language. */
+    pollEvent: text('poll_event', { enum: POLL_NOTICES }),
     recurrenceId: timestamp('recurrence_id', { withTimezone: true }),
     title: text('title').notNull(),
     /** The occurrence's start (event reminders), the task's due, or when the standalone reminder was due. */

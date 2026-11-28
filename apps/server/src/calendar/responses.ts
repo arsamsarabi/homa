@@ -60,6 +60,7 @@ export const occurrenceOut = (o: OccurrenceView): z.infer<typeof Occurrence> => 
   taskDone: o.task?.done ?? false,
   createdBy: o.createdBy ?? null,
   travelMinutes: o.event.travelMinutes,
+  pollId: o.pollId ?? null,
 });
 
 /** Free/busy: times only; empty title; no description, location, recurrence flags or task (decision 13). */
@@ -73,6 +74,7 @@ export const freebusyOccurrenceOut = (o: OccurrenceView): z.infer<typeof Occurre
   taskId: null,
   taskDone: false,
   createdBy: null,
+  pollId: null,
 });
 
 export const grantsOut = (

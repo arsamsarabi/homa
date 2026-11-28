@@ -3,12 +3,12 @@
 // POSTs it with fetch, so the send has a timeout and the endpoint's address can be checked first.
 // See docs/design/phase-4a-reminders.md ("Web push and VAPID").
 import { UnavailableError, ValidationError } from '@homa/core';
-import { type Db, type ReminderKind, repo } from '@homa/db';
+import { type Db, repo } from '@homa/db';
 import { assertPublicHost, SyncError } from '@homa/sync';
 import webpush from 'web-push';
 import type { Config } from '@/config';
 import { log } from '@/log';
-import { DeliveryError, notificationKind } from './channels';
+import { DeliveryError, type NotificationKind, notificationKind } from './channels';
 
 export type Vapid = { publicKey: string; privateKey: string; subject: string };
 
@@ -82,7 +82,7 @@ export const unsubscribe = (db: Db, userId: string, endpoint: string): Promise<v
   repo.deletePushSubscription(db, userId, endpoint);
 
 /** What the service worker gets: it formats the time in the browser's locale. */
-export type PushPayload = { id: string; title: string; startAt: string; allDay: boolean; kind: ReminderKind };
+export type PushPayload = { id: string; title: string; startAt: string; allDay: boolean; kind: NotificationKind };
 
 export const payloadOf = (n: repo.NotificationRow): PushPayload => ({
   id: n.id,

@@ -43,7 +43,9 @@ export function reminderMessage(n: repo.NotificationRow, r: repo.Recipient): Mes
   const w = words(r.language);
   const title = n.title || w.untitled;
   const when = whenText(n, r);
-  return { title, body: when, subject: `${w.subject}: ${title}`, path: pathOf(n, r) };
+  // A poll notification's title is already the whole sentence ("Book club is set: …").
+  const subject = n.pollId ? title : `${w.subject}: ${title}`;
+  return { title, body: when, subject, path: pathOf(n, r) };
 }
 
 /** Events open on their day in the calendar (in the home zone, as the calendar shows it); tasks and standalone reminders on their pages. */
@@ -51,6 +53,7 @@ function pathOf(n: repo.NotificationRow, r: repo.Recipient): string {
   const kind = notificationKind(n);
   if (kind === 'task') return '/tasks';
   if (kind === 'standalone') return '/reminders';
+  if (kind === 'poll') return `/polls/${n.pollId}`;
   const date = new Intl.DateTimeFormat('en-CA', {
     timeZone: n.allDay ? 'UTC' : (r.homeTz ?? 'UTC'),
     year: 'numeric',
