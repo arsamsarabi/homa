@@ -17,10 +17,13 @@ const eventsIn = (page: Page, view: string, text: string) =>
 
 /**
  * Waits for the bottom-right toasts to close. The grid scrolls "now" to mid-viewport, so in the
- * morning a toast can cover the event a test is about to drag.
+ * morning a toast can cover the event a test is about to drag. The mouse moves off first: a toast
+ * that opens under the pointer after a drag pauses its auto-close while hovered.
  */
-const toastsGone = (page: Page) =>
-  expect(page.locator('.mantine-Notification-root')).toHaveCount(0, { timeout: 10_000 });
+const toastsGone = async (page: Page) => {
+  await page.mouse.move(0, 0);
+  await expect(page.locator('.mantine-Notification-root')).toHaveCount(0, { timeout: 10_000 });
+};
 
 async function newEvent(page: Page, title: string, start: string, end: string, repeat?: string) {
   await page.getByRole('button', { name: 'New event' }).click();
