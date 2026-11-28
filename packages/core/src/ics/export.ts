@@ -5,8 +5,9 @@
 // shortcut: no VTIMEZONE is written (RFC 5545 asks for one per TZID); Radicale, Nextcloud and
 // Fastmail accept IANA TZIDs without it. Generate one from Temporal transitions if a server refuses.
 import ICAL from 'ical.js';
+import type { IcsExtension, IcsExtras } from './extension';
 
-export type SerializableEvent = {
+export type SerializableEvent = IcsExtras & {
   uid: string;
   summary: string;
   description: string | null;
@@ -93,6 +94,8 @@ export function serializeEvent(
   overrides: readonly SerializableOverride[] = [],
   now = new Date(),
   reminders: readonly SerializableReminder[] = [],
+  /** The provider's own properties to write (its adaptor), if it has any. */
+  extension?: IcsExtension,
 ): string {
   const cal = new ICAL.Component('vcalendar');
   cal.addPropertyWithValue('version', '2.0');
@@ -109,6 +112,7 @@ export function serializeEvent(
   for (const d of e.exdates) addTime(master, 'exdate', d, e);
   for (const d of e.rdates) addTime(master, 'rdate', d, e);
   addAlarms(master, reminders, e.summary);
+  extension?.write(master, { travelMinutes: e.travelMinutes ?? null });
   cal.addSubcomponent(master);
 
   for (const o of overrides) {

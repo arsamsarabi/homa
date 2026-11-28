@@ -2,7 +2,7 @@
 
 Status: built, 2026-11-28. Roadmap item 3 (0.4), size M.
 
-An optional travel time before a timed event, as in Apple Calendar. The views draw it as a block above the event with a car icon and "1 hr travel time". It counts as busy for availability, and so for polls in phase 7. It stays in Homa: it isn't synced to Google, Microsoft or CalDAV.
+An optional travel time before a timed event, as in Apple Calendar. The views draw it as a block above the event with a car icon and "1 hr travel time". It counts as busy for availability, and so for polls in phase 7. It syncs both ways with iCloud. On Google, Microsoft and other CalDAV servers it stays in Homa.
 
 ## Data
 
@@ -15,12 +15,19 @@ An optional travel time before a timed event, as in Apple Calendar. The views dr
 
 ### Synced events
 
-The sync writes only the columns it reads from the remote copy (`updateEventColumns`), so travel time set on a Google, Microsoft or CalDAV event survives every pull. A pull that turns the event all-day clears it, to keep the check constraint. Saving travel time queues the usual push, which carries no travel time, so the remote copy doesn't change. If the remote copy is deleted, its travel time goes with it. Subscribed (read-only) calendars can't have travel time, because their events can't be edited.
+Provider-specific fields go through provider adaptors, not the shared sync code. `IcsExtension` (`packages/core/src/ics/extension.ts`) is the hook: `read` takes a series' VEVENT on pull, `write` adds to it on push, and `carries` names the fields the provider has. Adaptors live in `packages/sync/src/providers/`, one file per provider. `caldavProvider(serverUrl)` picks one for a CalDAV connection; the CalDAV adapter passes it to `parseIcs`, and exposes it as `SyncAdapter.extension` so the outbox passes it to `serializeEvent`.
+
+- **iCloud** (`icloud.ts`, servers on `*.icloud.com`) reads and writes `X-APPLE-TRAVEL-DURATION;VALUE=DURATION:PT30M` on the series. A value that isn't a whole 1 to 1440 minutes, or one on an all-day event, reads as none. A missing property means the event has none, so removing travel time in Apple Calendar clears it in Homa. Apple's `X-APPLE-TRAVEL-START` and `X-APPLE-TRAVEL-ADVISORY-BEHAVIOR` (its route-based travel) aren't kept.
+- **Everyone else** (Google, Microsoft, other CalDAV servers) has no adaptor yet. Their pulls leave `travelMinutes` undefined, and the sync writes only the columns it reads (`updateEventColumns`), so travel time set in Homa survives every pull. The push carries no travel time, so the remote copy doesn't change. Google and Microsoft have no travel-time field.
+
+A pull that turns the event all-day clears travel time, to keep the check constraint. If the remote copy is deleted, its travel time goes with it. Subscribed (read-only) calendars can't have travel time, because their events can't be edited.
+
+`Connection.syncsTravel` tells the web which connections carry travel time. The CalDAV host comes from the connection's label, since the server URL is encrypted. Migration `0023_icloud_travel_repull` clears the sync token of iCloud calendars and the ETags of their events (except those with a pending push), so the next sync downloads them again with their travel time.
 
 ## Editor
 
 - A "Travel time" select under the times, shown only for timed events. The options are None, 5 min, 15 min, 30 min, 1 hr, 1 hr 30 min and 2 hr, as in Apple Calendar. A value outside the list, such as one set through the API, shows as an extra option so it isn't lost.
-- For synced calendars the field's hint says "Only in Homa, not synced".
+- For synced calendars whose provider has no travel time (`Connection.syncsTravel` false), the field's hint says "Only in Homa, not synced".
 - Read-only and free/busy details show a "1 hr travel time" line when the event has one.
 
 ## Views
@@ -73,7 +80,7 @@ One additive migration adds the nullable column and the check constraint, with n
 
 ## Not in scope (follow-ups)
 
-- **Reading and writing `X-APPLE-TRAVEL-DURATION`.** iCloud and Apple Calendar store travel time in this property. Reading it on CalDAV pulls and ICS import, and writing it on push, would give iCloud users two-way travel time. Google and Microsoft have no equivalent.
+- `X-APPLE-TRAVEL-DURATION` in .ics file import and export, and on CalDAV servers other than iCloud (not checked: Fastmail and Nextcloud may keep the property when Apple Calendar writes it, and an adaptor for them would be small).
 - A "time to leave" reminder, set relative to the travel start.
 - Travel time worked out from the location and a maps service.
 - Quick add phrases such as "30 min drive".

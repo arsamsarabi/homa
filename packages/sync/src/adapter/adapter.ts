@@ -1,7 +1,7 @@
 // The interface every provider implements (ICS, CalDAV, Google and Microsoft).
 // The worker drives it: listCalendars when a connection is added, pullChanges on every sync, and
 // pushChange for each outbox entry of a writable calendar. See docs/product/architecture.md ("Sync").
-import type { IcsEvent } from '@homa/core';
+import type { IcsEvent, IcsExtension } from '@homa/core';
 
 /** Where a calendar's last pull left off. Each provider uses the fields it needs. */
 export type SyncCursor = {
@@ -85,4 +85,6 @@ export interface SyncAdapter {
    * can't duplicate it). For Microsoft it's a placeholder until the push returns the real href.
    */
   newHref(calendarRemoteId: string, uid: string): string;
+  /** The provider's own iCalendar fields: read on pull, and written into each pushed `ics`. */
+  extension?: IcsExtension;
 }

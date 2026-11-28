@@ -12,6 +12,9 @@ export const Connection = z
       description:
         'The account, such as "ada on caldav.fastmail.com" or a Google or Microsoft email; null for ICS feeds',
     }),
+    syncsTravel: z
+      .boolean()
+      .openapi({ description: "Travel time syncs with the provider (iCloud); elsewhere it's kept only in Homa" }),
     status: z.enum(CONNECTION_STATUSES),
     lastError: z.string().nullable().openapi({ description: 'Why the last sync failed; null after a good one' }),
     lastSyncedAt: z.iso

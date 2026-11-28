@@ -1575,6 +1575,8 @@ export interface components {
             provider: "ics" | "caldav" | "google" | "microsoft";
             /** @description The account, such as "ada on caldav.fastmail.com" or a Google or Microsoft email; null for ICS feeds */
             label: string | null;
+            /** @description Travel time syncs with the provider (iCloud); elsewhere it's kept only in Homa */
+            syncsTravel: boolean;
             /** @enum {string} */
             status: "pending" | "syncing" | "ok" | "error";
             /** @description Why the last sync failed; null after a good one */

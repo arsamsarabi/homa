@@ -6,3 +6,4 @@ export * from './google';
 export * from './holidays';
 export * from './ics';
 export * from './microsoft';
+export * from './providers';

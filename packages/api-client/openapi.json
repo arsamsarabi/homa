@@ -1577,6 +1577,10 @@
             ],
             "description": "The account, such as \"ada on caldav.fastmail.com\" or a Google or Microsoft email; null for ICS feeds"
           },
+          "syncsTravel": {
+            "type": "boolean",
+            "description": "Travel time syncs with the provider (iCloud); elsewhere it's kept only in Homa"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -1630,6 +1634,7 @@
           "id",
           "provider",
           "label",
+          "syncsTravel",
           "status",
           "lastError",
           "lastSyncedAt",

@@ -1,7 +1,7 @@
 // REST routes for connected calendars. Every route needs a signed-in user and only sees their own
 // connections; handlers validate, call the service and map the result.
 import type { Db } from '@homa/db';
-import { HOLIDAY_CATALOG } from '@homa/sync';
+import { caldavProvider, HOLIDAY_CATALOG } from '@homa/sync';
 import { createRoute, type OpenAPIHono, z } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
@@ -184,6 +184,11 @@ const connectionOut = ({ connection: c, calendars }: service.ConnectionView): z.
   id: c.id,
   provider: c.provider,
   label: c.label,
+  // shortcut: the CalDAV host is read from the label ("ada on caldav.icloud.com"), since the server
+  // URL is encrypted; store the host in its own column if a provider needs more than the host.
+  syncsTravel:
+    c.provider === 'caldav' &&
+    Boolean(caldavProvider(`https://${c.label?.split(' ').pop() ?? ''}`)?.carries.includes('travelMinutes')),
   status: c.status,
   lastError: c.lastError,
   lastSyncedAt: c.lastSyncedAt?.toISOString() ?? null,

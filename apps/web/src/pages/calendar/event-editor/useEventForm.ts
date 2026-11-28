@@ -2,6 +2,7 @@
 import { type FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSeries } from '@/hooks/calendar';
+import { useConnections } from '@/hooks/connections';
 import { useSettings } from '@/hooks/settings';
 import { useCalendarPageModel } from '@/pages/calendar/model';
 import type { Occurrence } from '@/schemas';
@@ -66,7 +67,8 @@ export type EventFormModel = {
   setTravelMinutes: (v: number | null) => void;
   travelOptions: { value: string; label: string }[];
   /** The chosen calendar syncs with another service, which won't get the travel time. */
-  synced: boolean;
+  /** The calendar syncs with a provider that has no travel time, so it stays in Homa. */
+  travelLocal: boolean;
 };
 
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
@@ -89,6 +91,9 @@ export function useEventForm(draft: Draft): EventFormModel {
   // Free/busy has no event detail (404); skip the fetch.
   const series = useSeries(freeBusy ? undefined : occurrence?.eventId);
   const defaultReminder = useSettings().data?.defaultReminderMinutes;
+  const connections = useConnections().data;
+  const travelIsLocal = (connectionId: string | null | undefined): boolean =>
+    Boolean(connectionId) && !connections?.find((c) => c.id === connectionId)?.syncsTravel;
 
   const [allDay, setAllDayState] = useState(draftAllDay(draft));
   const [tz, setTzState] = useState(draftZone(draft, viewTz));
@@ -257,7 +262,7 @@ export function useEventForm(draft: Draft): EventFormModel {
     remindersLoading: occurrence !== undefined && series.isPending,
     travelMinutes,
     travelOptions,
-    synced: Boolean(calendars.find((c) => c.id === calendarId)?.connectionId),
+    travelLocal: travelIsLocal(calendars.find((c) => c.id === calendarId)?.connectionId),
     setTravelMinutes: (v: number | null): void => {
       editor.markDirty();
       setTravelMinutes(v);

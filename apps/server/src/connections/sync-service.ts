@@ -8,6 +8,7 @@ import {
   type CaldavCredentials,
   CalendarGoneError,
   caldavAdapter,
+  caldavProvider,
   decryptCredentials,
   encryptCredentials,
   type GoogleCredentials,
@@ -84,8 +85,10 @@ export function adapterFor(
   settings: SyncSettings,
   floatingTz: string,
 ): SyncAdapter {
-  if (connection.provider === 'caldav')
-    return caldavAdapter(caldavCredentials(credentials), { floatingTz, policy: settings.policy });
+  if (connection.provider === 'caldav') {
+    const c = caldavCredentials(credentials);
+    return caldavAdapter(c, { floatingTz, policy: settings.policy, provider: caldavProvider(c.serverUrl) });
+  }
   if (connection.provider === 'google') {
     const client = settings.google;
     if (!client) throw new SyncError(GOOGLE_MISSING);
