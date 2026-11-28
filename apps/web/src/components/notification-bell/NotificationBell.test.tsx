@@ -13,6 +13,7 @@ const standup: Notification = {
   allDay: false,
   eventId: 'e1',
   taskId: null,
+  pollId: null,
   recurrenceId: '2026-11-20T09:00:00Z',
   fireAt: '2026-11-20T08:50:00Z',
   read: false,

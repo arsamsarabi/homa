@@ -20,8 +20,14 @@ export type Sender = (db: Db, n: repo.NotificationRow, channel: string) => Promi
 export type Senders = Readonly<Record<string, Sender>>;
 
 /** Which kind of reminder fired a notification: an event's, a task's, or a standalone one. */
-export const notificationKind = (n: Pick<repo.NotificationRow, 'eventId' | 'taskId'>): ReminderKind =>
-  n.taskId ? 'task' : n.eventId ? 'event' : 'standalone';
+/** What a notification is about: a reminder's kind, or a poll. */
+export type NotificationKind = ReminderKind | 'poll';
+
+export const notificationKind = (n: Pick<repo.NotificationRow, 'eventId' | 'taskId' | 'pollId'>): NotificationKind =>
+  n.pollId ? 'poll' : n.taskId ? 'task' : n.eventId ? 'event' : 'standalone';
+
+/** The channel setting that covers a kind: polls go where event reminders go. */
+const channelKind = (k: NotificationKind): ReminderKind => (k === 'poll' ? 'event' : k);
 
 export const senderFor = (senders: Senders, channel: string): Sender | undefined =>
   senders[channel.split(':')[0] ?? channel];
@@ -29,13 +35,13 @@ export const senderFor = (senders: Senders, channel: string): Sender | undefined
 /** The deliveries to queue for these notifications (beside in-app). */
 export async function deliveriesFor(
   db: Executor,
-  list: readonly Pick<repo.NotificationRow, 'id' | 'ownerUserId' | 'eventId' | 'taskId'>[],
+  list: readonly Pick<repo.NotificationRow, 'id' | 'ownerUserId' | 'eventId' | 'taskId' | 'pollId'>[],
 ): Promise<{ notificationId: string; channel: string }[]> {
   const owners = [...new Set(list.map((n) => n.ownerUserId))];
   const withPush = await repo.usersWithPush(db, owners);
   const channels = await repo.listEnabledChannels(db, owners);
   return list.flatMap((n) => {
-    const kind = notificationKind(n);
+    const kind = channelKind(notificationKind(n));
     return [
       ...(withPush.has(n.ownerUserId) ? ['push'] : []),
       ...channels

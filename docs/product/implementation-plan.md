@@ -125,6 +125,8 @@ Resizing events, the toolbar and date navigator redesign, editing an event movin
 
 ## Phase 7: group date-finding
 
+Status: designed in [phase-7-polls.md](../design/phase-7-polls.md); 7a (slot polls with auto-suggest and holds) is built.
+
 - Subscribe to a person's availability (see the backlog above), explored here.
 - Polls: slots, ranges and window modes; constraints; required and optional people; quorum.
 - Link guests with scoped tokens.

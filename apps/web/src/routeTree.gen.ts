@@ -22,6 +22,8 @@ import { Route as AppOnboardingRouteImport } from './routes/_app/onboarding'
 import { Route as AppRemindersRouteImport } from './routes/_app/reminders'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppTasksRouteImport } from './routes/_app/tasks'
+import { Route as AppPollsIndexRouteImport } from './routes/_app/polls.index'
+import { Route as AppPollsPollIdRouteImport } from './routes/_app/polls.$pollId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -87,6 +89,16 @@ const AppTasksRoute = AppTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPollsIndexRoute = AppPollsIndexRouteImport.update({
+  id: '/polls/',
+  path: '/polls/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPollsPollIdRoute = AppPollsPollIdRouteImport.update({
+  id: '/polls/$pollId',
+  path: '/polls/$pollId',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -101,6 +113,8 @@ export interface FileRoutesByFullPath {
   '/reminders': typeof AppRemindersRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
+  '/polls/$pollId': typeof AppPollsPollIdRoute
+  '/polls/': typeof AppPollsIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
@@ -115,6 +129,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
   '/': typeof AppIndexRoute
+  '/polls/$pollId': typeof AppPollsPollIdRoute
+  '/polls': typeof AppPollsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +147,8 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/polls/$pollId': typeof AppPollsPollIdRoute
+  '/_app/polls/': typeof AppPollsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +165,8 @@ export interface FileRouteTypes {
     | '/reminders'
     | '/settings'
     | '/tasks'
+    | '/polls/$pollId'
+    | '/polls/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -161,6 +181,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/'
+    | '/polls/$pollId'
+    | '/polls'
   id:
     | '__root__'
     | '/_app'
@@ -176,6 +198,8 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/tasks'
     | '/_app/'
+    | '/_app/polls/$pollId'
+    | '/_app/polls/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,6 +305,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/polls/': {
+      id: '/_app/polls/'
+      path: '/polls'
+      fullPath: '/polls/'
+      preLoaderRoute: typeof AppPollsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/polls/$pollId': {
+      id: '/_app/polls/$pollId'
+      path: '/polls/$pollId'
+      fullPath: '/polls/$pollId'
+      preLoaderRoute: typeof AppPollsPollIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -291,6 +329,8 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppPollsPollIdRoute: typeof AppPollsPollIdRoute
+  AppPollsIndexRoute: typeof AppPollsIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -300,6 +340,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRoute,
   AppIndexRoute: AppIndexRoute,
+  AppPollsPollIdRoute: AppPollsPollIdRoute,
+  AppPollsIndexRoute: AppPollsIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

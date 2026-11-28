@@ -1042,6 +1042,179 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/polls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Polls you organize (mine), open ones you are asked to answer (answer), or finished ones (past) */
+        get: operations["listPolls"];
+        put?: never;
+        /** Create a draft poll; you are always in it, and required */
+        post: operations["createPoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Up to 10 times when the required people are free, most others free first */
+        post: operations["suggestPollSlots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A poll with its times, people, everyone’s answers and the results */
+        get: operations["getPoll"];
+        put?: never;
+        post?: never;
+        /** Delete a draft or finished poll, or cancel one that is out */
+        delete: operations["deletePoll"];
+        options?: never;
+        head?: never;
+        /** Change a poll (organizer); the length only while it is a draft */
+        patch: operations["updatePoll"];
+        trace?: never;
+    };
+    "/polls/{id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send the poll to its people */
+        post: operations["openPoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop taking answers */
+        post: operations["closePoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Take answers again, with a new deadline */
+        post: operations["reopenPoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/{id}/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set the time: your event in calendarId and a copy for each person who ranked it */
+        post: operations["finalizePoll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/{id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Your answer: the times you can make, best first, and the ones you can’t */
+        put: operations["answerPoll"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/polls/{id}/prefill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The times that clash with your calendars: where your answer starts them */
+        get: operations["getPollPrefill"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/holds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your tentative holds from open polls in a range */
+        get: operations["listHolds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1238,6 +1411,11 @@ export interface components {
             taskDone: boolean;
             /** @description Minutes of travel before the event; busy time too */
             travelMinutes: number | null;
+            /**
+             * Format: uuid
+             * @description The poll that set this event; its time and place can’t change
+             */
+            pollId: string | null;
             createdBy: components["schemas"]["CalendarOwner"] & (Record<string, never> | null);
         };
         Availability: {
@@ -1662,7 +1840,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "event" | "standalone" | "task";
+            kind: "event" | "standalone" | "task" | "poll";
             title: string;
             /**
              * Format: date-time
@@ -1674,6 +1852,8 @@ export interface components {
             eventId: string | null;
             /** Format: uuid */
             taskId: string | null;
+            /** Format: uuid */
+            pollId: string | null;
             /** Format: date-time */
             recurrenceId: string | null;
             /** Format: date-time */
@@ -1958,6 +2138,222 @@ export interface components {
         };
         CircleMembers: {
             memberIds: string[];
+        };
+        PollSummary: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** @enum {string} */
+            status: "draft" | "open" | "closed" | "finalized" | "cancelled";
+            /** Format: date-time */
+            deadline: string | null;
+            organizer: {
+                id: string;
+                name: string;
+            };
+            slots: number;
+            participants: number;
+            responded: number;
+            /** @description Whether you answered (false for the organizer who has not) */
+            meResponded: boolean;
+            organizing: boolean;
+            /** Format: date-time */
+            finalStart: string | null;
+        };
+        Poll: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string | null;
+            location: string | null;
+            durationMinutes: number;
+            tz: string;
+            /** @enum {string} */
+            status: "draft" | "open" | "closed" | "finalized" | "cancelled";
+            /** Format: date-time */
+            deadline: string | null;
+            quorum: number | null;
+            holds: boolean;
+            /** Format: uuid */
+            calendarId: string | null;
+            /** Format: uuid */
+            finalSlotId: string | null;
+            organizer: {
+                id: string;
+                name: string;
+            };
+            slots: components["schemas"]["PollSlot"][];
+            participants: components["schemas"]["PollParticipant"][];
+            answers: components["schemas"]["PollAnswer"][];
+            /** @description Best first */
+            results: components["schemas"]["PollResult"][];
+            /** @description For the organizer: slots that clash with each person’s busy time, as far as the organizer can see */
+            busy: {
+                /** Format: uuid */
+                participantId: string;
+                slotIds: string[];
+            }[] | null;
+            me: {
+                /** Format: uuid */
+                participantId: string | null;
+                organizer: boolean;
+            };
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PollSlot: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+        };
+        PollParticipant: {
+            /**
+             * Format: uuid
+             * @description The participant id answers and results refer to
+             */
+            id: string;
+            userId: string;
+            name: string;
+            required: boolean;
+            responded: boolean;
+            holds: boolean;
+        };
+        PollAnswer: {
+            /** Format: uuid */
+            participantId: string;
+            /** @description Slot ids, best first */
+            ranked: string[];
+            cannot: string[];
+        };
+        PollResult: {
+            /** Format: uuid */
+            slotId: string;
+            points: number;
+            canMake: string[];
+            cannot: string[];
+            unranked: string[];
+            eligible: boolean;
+            /** @description Required participants who can't make it */
+            requiredCannot: string[];
+            /** @description People needed (the quorum, or everyone) */
+            needed: number;
+        };
+        PollInput: {
+            title: string;
+            /** @default null */
+            description: string | null;
+            /** @default null */
+            location: string | null;
+            durationMinutes: number;
+            /** @example Europe/London */
+            tz: string;
+            /** @description Slot starts; each lasts durationMinutes */
+            slots: string[];
+            /** @description Everyone but you; you are always in, and required */
+            people: {
+                userId: string;
+                /** @default false */
+                required: boolean;
+            }[];
+            /**
+             * Format: date-time
+             * @default null
+             */
+            deadline: string | null;
+            /** @default null */
+            quorum: number | null;
+            /** @default false */
+            holds: boolean;
+            /**
+             * Format: uuid
+             * @default null
+             */
+            calendarId: string | null;
+        };
+        PollSuggestion: {
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            /** @description User ids busy then */
+            busy: string[];
+        };
+        PollSuggestInput: {
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            durationMinutes: number;
+            /** @example Europe/London */
+            tz: string;
+            people: {
+                userId: string;
+                /** @default false */
+                required: boolean;
+            }[];
+            /**
+             * @default any
+             * @enum {string}
+             */
+            days: "any" | "weekdays" | "weekends";
+            /** @default null */
+            between: {
+                from: string;
+                to: string;
+            } | null;
+        };
+        PollPatch: {
+            title?: string;
+            description?: string | null;
+            location?: string | null;
+            durationMinutes?: number;
+            /** @example Europe/London */
+            tz?: string;
+            /** @description Slot starts; each lasts durationMinutes */
+            slots?: string[];
+            /** @description Everyone but you; you are always in, and required */
+            people?: {
+                userId: string;
+                /** @default false */
+                required: boolean;
+            }[];
+            /** Format: date-time */
+            deadline?: string | null;
+            quorum?: number | null;
+            holds?: boolean;
+            /** Format: uuid */
+            calendarId?: string | null;
+        };
+        PollReopenInput: {
+            /** Format: date-time */
+            deadline: string | null;
+        };
+        PollFinalizeInput: {
+            /** Format: uuid */
+            slotId: string;
+            /** Format: uuid */
+            calendarId: string;
+        };
+        PollAnswerInput: {
+            ranked: string[];
+            cannot: string[];
+            /** @default false */
+            holds: boolean;
+        };
+        PollPrefill: {
+            cannot: string[];
+        };
+        Hold: {
+            /** Format: uuid */
+            pollId: string;
+            title: string;
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
         };
     };
     responses: never;
@@ -5287,6 +5683,662 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listPolls: {
+        parameters: {
+            query?: {
+                view?: "mine" | "answer" | "past";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Polls */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollSummary"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    createPoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    suggestPollSlots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollSuggestInput"];
+            };
+        };
+        responses: {
+            /** @description Suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollSuggestion"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getPoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    deletePoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted or cancelled */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    updatePoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollPatch"];
+            };
+        };
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    openPoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    closePoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    reopenPoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollReopenInput"];
+            };
+        };
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    finalizePoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollFinalizeInput"];
+            };
+        };
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    answerPoll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PollAnswerInput"];
+            };
+        };
+        responses: {
+            /** @description The poll */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Poll"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not allowed (or a read-only calendar) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getPollPrefill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Clashing times */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PollPrefill"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listHolds: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Holds */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Hold"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

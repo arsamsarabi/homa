@@ -19,6 +19,7 @@ export const notificationOut = (n: repo.NotificationRow): z.infer<typeof Notific
   id: n.id,
   kind: notificationKind(n),
   taskId: n.taskId,
+  pollId: n.pollId,
   title: n.title,
   start: n.occurrenceStart.toISOString(),
   allDay: n.allDay,

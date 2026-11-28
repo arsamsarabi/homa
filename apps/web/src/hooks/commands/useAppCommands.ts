@@ -42,6 +42,7 @@ export function useAppCommands(h: AppCommandHandlers): SpotlightActionGroupData[
     {
       group: t('palette.app'),
       actions: [
+        { id: 'polls', label: t('nav.polls'), onClick: (): void => void navigate({ to: '/polls' }) },
         { id: 'settings', label: t('nav.settings'), onClick: (): void => void navigate({ to: '/settings' }) },
         { id: 'shortcuts', label: t('nav.shortcuts'), onClick: h.onShowShortcuts },
         { id: 'theme', label: t(h.dark ? 'nav.lightTheme' : 'nav.darkTheme'), onClick: h.onToggleColorScheme },

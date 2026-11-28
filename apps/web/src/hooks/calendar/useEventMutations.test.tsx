@@ -20,6 +20,7 @@ const event = {
   tz: 'UTC',
   rrule: null,
   travelMinutes: null,
+  pollId: null,
   exdates: [],
   rdates: [],
   reminders: [],

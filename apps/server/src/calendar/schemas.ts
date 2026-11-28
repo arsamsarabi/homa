@@ -160,6 +160,10 @@ export const Occurrence = z
     taskId: z.uuid().nullable().openapi({ description: 'The task this event is a time block for' }),
     taskDone: z.boolean().openapi({ description: 'That task is completed' }),
     travelMinutes: z.int().nullable().openapi({ description: 'Minutes of travel before the event; busy time too' }),
+    pollId: z
+      .uuid()
+      .nullable()
+      .openapi({ description: 'The poll that set this event; its time and place can’t change' }),
     createdBy: CalendarOwner.nullable().openapi({
       description: 'Who added the event in Homa; null when unknown (synced, imported or older events, or free/busy)',
     }),

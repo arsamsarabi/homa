@@ -277,3 +277,23 @@
     display: none;
   }
 }
+
+/* A tentative hold from an open poll: dashed and hatched, behind events, at the inline end. */
+.hold {
+  position: absolute;
+  inset-inline-end: 4px;
+  inline-size: 60%;
+  z-index: 0;
+  overflow: hidden;
+  padding: 2px 4px;
+  border: 1px dashed var(--mantine-primary-color-filled);
+  border-radius: var(--mantine-radius-sm);
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    color-mix(in srgb, var(--mantine-color-default-border) 70%, transparent) 6px 8px
+  );
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-xs);
+  text-decoration: none;
+}

@@ -1,5 +1,6 @@
 // Permission-aware free/busy for a set of people (phase 6c). Reuses the occurrence reader so
-// availability matches the views; all-day events never count (decision 16).
+// availability matches the views; all-day events never count (decision 16). Tentative poll holds
+// count as busy (phase 7).
 import { type Interval, MAX_TRAVEL_MINUTES, mergeBusy, ValidationError } from '@homa/core';
 import { type Db, repo } from '@homa/db';
 import { accessibleCalendars } from './access';
@@ -29,7 +30,7 @@ function uniqueIds(ids: readonly string[]): string[] {
 export async function getAvailability(
   db: Db,
   callerId: string,
-  input: { from: Date; to: Date; userIds: readonly string[] },
+  input: { from: Date; to: Date; userIds: readonly string[]; exceptPollId?: string },
 ): Promise<AvailabilityOut> {
   const userIds = uniqueIds(input.userIds);
   const found = await repo.existingUserIds(db, userIds);
@@ -72,6 +73,12 @@ export async function getAvailability(
     // Travel before the event is busy time too.
     const travelMs = (o.event.travelMinutes ?? 0) * 60_000;
     bucket.push({ start: new Date(o.start.getTime() - travelMs), end: o.end });
+  }
+
+  // Tentative holds from open polls are busy time too (a poll's own holds don't count against it).
+  const shares = (id: string): boolean => id === callerId || (calendarsByUser.get(id) ?? []).length > 0;
+  for (const h of await repo.listHolds(db, userIds.filter(shares), input.from, input.to)) {
+    if (h.pollId !== input.exceptPollId) rawBusy.get(h.userId)?.push({ start: h.start, end: h.end });
   }
 
   const people: PersonAvailabilityOut[] = userIds.map((userId) => {

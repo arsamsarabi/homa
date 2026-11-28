@@ -167,6 +167,7 @@ export {
   setInviteUsedByToken,
   updateOwnedCircle,
 } from './people';
+export * from './polls';
 export {
   countProjects,
   countTags,

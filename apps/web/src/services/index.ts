@@ -6,6 +6,7 @@ export * from './jalali';
 export * from './locale';
 export * from './month-drag';
 export * from './people';
+export * from './polls';
 export * from './popover';
 export * from './quick-add';
 export * from './reminders';

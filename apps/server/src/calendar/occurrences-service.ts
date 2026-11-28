@@ -11,6 +11,8 @@ export type OccurrenceView = ResolvedOccurrence<repo.EventRow> & {
   access: Exclude<AccessLevel, 'none'>;
   /** Who added the event in Homa, when known. */
   createdBy?: { id: string; name: string };
+  /** The poll that set this event's time and place, which then can't change. */
+  pollId?: string;
 };
 
 /** Every accessible occurrence overlapping [from, to), sorted by start. */
@@ -30,10 +32,11 @@ export async function listOccurrences(
   const late = await repo.listEventsPastCacheForCalendars(db, ids, from, to);
   const eventIds = [...new Set([...cached.map((c) => c.eventId), ...late.map((e) => e.id)])];
   if (!eventIds.length) return [];
-  const [events, overrides, blocks] = await Promise.all([
+  const [events, overrides, blocks, polls] = await Promise.all([
     repo.listEventsByIds(db, eventIds),
     repo.listOverrides(db, eventIds),
     repo.tasksByBlock(db, eventIds),
+    repo.pollIdsByEvent(db, eventIds),
   ]);
   const creatorIds = [...new Set(events.flatMap((e) => (e.createdByUserId ? [e.createdByUserId] : [])))];
   const names = await repo.userNames(db, creatorIds);
@@ -49,6 +52,6 @@ export async function listOccurrences(
     }
     // Task blocks are owner-only (path rules table).
     const task = level === 'owner' ? blocks.get(o.event.id) : undefined;
-    return { ...o, access: level, task, createdBy: creatorOf(o.event) };
+    return { ...o, access: level, task, createdBy: creatorOf(o.event), pollId: polls.get(o.event.id) };
   });
 }

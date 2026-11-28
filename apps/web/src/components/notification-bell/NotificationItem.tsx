@@ -9,7 +9,14 @@ import {
   UnstyledButton,
   VisuallyHidden,
 } from '@mantine/core';
-import { IconAlarm, IconCalendarEvent, IconCheck, IconChecklist, IconClockPause } from '@tabler/icons-react';
+import {
+  IconAlarm,
+  IconCalendarEvent,
+  IconCalendarQuestion,
+  IconCheck,
+  IconChecklist,
+  IconClockPause,
+} from '@tabler/icons-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Notification } from '@/schemas';
@@ -20,6 +27,7 @@ const KIND = {
   event: { Icon: IconCalendarEvent, color: 'blue' },
   task: { Icon: IconChecklist, color: 'teal' },
   standalone: { Icon: IconAlarm, color: 'grape' },
+  poll: { Icon: IconCalendarQuestion, color: 'orange' },
 } as const;
 
 export type NotificationItemProps = {

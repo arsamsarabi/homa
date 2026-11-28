@@ -17,6 +17,7 @@ const occ = (over: Partial<Occurrence> & Pick<Occurrence, 'eventId' | 'recurrenc
   taskDone: false,
   createdBy: null,
   travelMinutes: null,
+  pollId: null,
   ...over,
 });
 

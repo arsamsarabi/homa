@@ -5,13 +5,14 @@ const isoDateTime = z.iso.datetime({ offset: true });
 
 export const NotificationSchema = z.object({
   id: z.string(),
-  kind: z.enum(['event', 'standalone', 'task']),
+  kind: z.enum(['event', 'standalone', 'task', 'poll']),
   title: z.string(),
   /** The occurrence's start, the task's due, or when a standalone reminder was due. */
   start: isoDateTime,
   allDay: z.boolean(),
   eventId: z.string().nullable(),
   taskId: z.string().nullable().default(null),
+  pollId: z.string().nullable().default(null),
   recurrenceId: isoDateTime.nullable(),
   fireAt: isoDateTime,
   read: z.boolean(),

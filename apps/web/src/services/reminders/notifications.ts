@@ -30,9 +30,10 @@ export const capitalize = (s: string, locale: string): string => s.charAt(0).toL
 export type NotificationTarget =
   | { to: '/'; search: { view: 'day'; date: string } }
   | { to: '/tasks'; search: { list: 'today' } }
-  | { to: '/reminders' };
+  | { to: '/reminders' }
+  | { to: '/polls/$pollId'; params: { pollId: string } };
 
-/** Where clicking a notification goes: its event's day, today's tasks, or the reminders page. */
+/** Where clicking a notification goes: its event's day, today's tasks, its poll, or the reminders page. */
 export function notificationTarget(n: Notification, tz: string): NotificationTarget {
   if (n.kind === 'event') {
     const start = new Date(n.start);
@@ -40,6 +41,7 @@ export function notificationTarget(n: Notification, tz: string): NotificationTar
     return { to: '/', search: { view: 'day', date: isoDate(n.allDay ? start : wallOf(start, tz)) } };
   }
   if (n.kind === 'task') return { to: '/tasks', search: { list: 'today' } };
+  if (n.kind === 'poll' && n.pollId) return { to: '/polls/$pollId', params: { pollId: n.pollId } };
   return { to: '/reminders' };
 }
 

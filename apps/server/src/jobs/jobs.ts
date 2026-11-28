@@ -5,6 +5,7 @@ import { purgeExpiredAuth } from '@/auth';
 import { extendHorizon } from '@/calendar';
 import { pushDueOutboxes, type SyncSettings, syncDueConnections } from '@/connections';
 import { errorFields, log } from '@/log';
+import { closeDuePolls } from '@/polls';
 import { deliverReminders, type NotifySettings, type PushSettings, reminderSenders } from '@/reminders';
 
 export const PURGE_AUTH = 'maintenance.purge-auth';
@@ -12,6 +13,7 @@ export const EXTEND_HORIZON = 'calendar.extend-horizon';
 export const SYNC_CONNECTIONS = 'sync.connections';
 export const SYNC_OUTBOX = 'sync.outbox';
 export const DELIVER_REMINDERS = 'reminders.deliver';
+export const CLOSE_POLLS = 'polls.close-due';
 
 type Schedule = { name: string; cron: string; run: (db: Db) => Promise<unknown> };
 
@@ -32,6 +34,8 @@ const schedules = (sync: SyncSettings, push: PushSettings, notify: NotifySetting
     cron: '* * * * *',
     run: (db: Db): Promise<unknown> => deliverReminders(db, reminderSenders(push, notify)),
   },
+  // Every minute, closes polls past their deadline and tells people answers close within a day.
+  { name: CLOSE_POLLS, cron: '* * * * *', run: (db: Db): Promise<unknown> => closeDuePolls(db) },
 ];
 
 export async function startWorker(

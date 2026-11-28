@@ -3,6 +3,7 @@ export * from './calendar';
 export * from './connections';
 export * from './instance';
 export * from './people';
+export * from './polls';
 export * from './reminders';
 export * from './settings';
 export * from './tasks';
