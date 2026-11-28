@@ -18,22 +18,26 @@ An organizer asks a group "when can we all do this?". Homa already knows much of
 
 The data model below is shaped for all of them, so 7b, 7c and 7f add tables and columns without reworking 7a's.
 
-Not in phase 7a: guests (7b), ranges and windows (7c), the calendar and Gantt poll views (7f), following availability (7g), updating members' copies after the organizer edits the final event, comments on polls, and recurring polls.
+Not in phase 7a: guests (7b), ranges and windows (7c), the calendar and Gantt poll views (7f), following availability (7g), comments on polls, and recurring polls.
 
 ## Decisions
 
-Arsam chose 1 to 5 on 2026-11-28. The rest are calls made without him; any can be overturned.
+Arsam chose 1 to 5 and 11 to 14 on 2026-11-28. The rest are calls made without him; any can be overturned.
 
 1. **Ranked answers.** Each person puts the slots they can make in order, best first. The rest go under **Can't make it**. There is no "if need be".
 2. **Free/busy pre-fills the ballot.** A slot that clashes with someone's busy time starts under Can't make it; the rest start unranked. Nothing is saved until the person presses **Save**. The organizer sees "busy" marks for people who haven't answered.
 3. **Finalizing makes one event plus copies.** The event goes in the organizer's chosen calendar. Each Homa participant who ranked the winning slot gets a copy in their own first Homa calendar, linked to the poll, which they can move or delete.
-4. **Holds are organizer-only and optional.** A switch on the poll, off by default.
+4. **Holds are optional.** The organizer's switch on the poll (off by default) holds every slot for them; each participant can switch on holds for the slots they ranked.
 5. **Holds are derived, not stored as events.** They come from the open polls' slots, so they can never sync to Google, iCloud or Outlook, and there's nothing to clean up.
 6. **Borda points.** In a list of n ranked slots, the first gets n points, the next n − 1, and so on; Can't and unranked get 0. Simple to explain ("higher in more lists wins") and robust to people ranking different numbers of slots.
 7. **The organizer decides.** Homa recommends the top eligible slot but never finalizes by itself, even at the deadline. The deadline closes answering and notifies the organizer.
-8. **Visibility.** A poll is visible to its organizer and participants only; everyone else gets a 404. Participants see everyone's answers by name. Anonymous polls can come later.
+8. **Visibility.** A poll is visible to its organizer and participants only; everyone else gets a 404. Anonymous polls can come later.
 9. **Copies land in the participant's first Homa calendar** (the oldest native one, normally "Personal"). There is no per-user default calendar yet; when one exists, copies use it.
 10. **Drag needs a library, and isn't the only way to rank.** `@hello-pangea/dnd` (keyboard dragging built in, works with touch) for drag, plus move-up, move-down and "Can't" buttons on every row, as WCAG 2.2 asks for dragging movements.
+11. **Answers are visible by name** to everyone in the poll while it's open, as in Doodle.
+12. **The organizer always picks.** Nothing finalizes by itself; at the deadline the organizer is told the recommended time.
+13. **The poll decides time and place.** On the organizer's event and every copy, the time, time zone, all-day flag, repeat and location can't be changed (the API answers 400 "Set by the poll"). Title and description can: the organizer's changes are copied to every copy still linked to the poll. To change the time, run a new poll.
+14. **Participants can hold their ranked slots.** A "Hold my ranked times" switch on the ballot.
 
 ## Data model
 
@@ -47,7 +51,7 @@ polls
   status                    -- 'draft' | 'open' | 'closed' | 'finalized' | 'cancelled'
   deadline                  -- timestamptz, null for no deadline
   quorum                    -- int, null means everyone
-  holds                     -- bool, default false
+  holds                     -- bool, default false: hold every slot for the organizer
   calendar_id → calendars   -- where the organizer's event goes (set null; finalize asks again)
   final_slot_id → poll_slots, final_event_id → events (set null)
   opened_at, closed_at, finalized_at, created_at, updated_at
@@ -60,6 +64,7 @@ poll_participants
   id, poll_id (cascade)
   user_id → users (cascade)  -- 7b adds guest_name and token_hash, with a check that one is set
   required                   -- bool, default false
+  holds                      -- bool, default false: hold the slots this person ranked
   responded_at               -- null until they first save
   unique (poll_id, user_id)
 
@@ -103,7 +108,7 @@ draft ──open──▶ open ──close / deadline──▶ closed ──fina
 | `POST /api/polls/{id}/open` | organizer | Needs at least 2 slots and 1 other participant |
 | `POST /api/polls/{id}/close`, `/reopen` | organizer | `reopen` takes a new deadline |
 | `POST /api/polls/{id}/finalize` | organizer | `{ slotId, calendarId }` |
-| `PUT /api/polls/{id}/answers` | participants | `{ ranked: slotId[], cannot: slotId[] }` for the caller; while open |
+| `PUT /api/polls/{id}/answers` | participants | `{ ranked: slotId[], cannot: slotId[], holds: boolean }` for the caller; while open |
 | `POST /api/polls/suggest` | signed in | `{ from, to, durationMinutes, userIds, requiredIds, days?, between? }` → up to 10 slots |
 | `GET /api/polls/{id}/prefill` | participants | The caller's slots that clash with their busy time |
 
@@ -122,9 +127,9 @@ Pure functions in `@homa/core/polls`, with unit tests:
 
 ## Holds
 
-- When `holds` is on and the poll is open, each slot is a hold for the organizer.
-- `GET /api/occurrences` gains `holds: { pollId, title, start, end }[]` for the caller's own open polls in range. A separate list, not occurrences, so nothing that reads occurrences (sync, reminders, export) sees them.
-- `/api/availability` adds the organizer's holds to their busy times, only when the organizer is the person being asked about.
+- While a poll is open, the organizer holds every slot when the poll's `holds` is on, and a participant with `holds` on holds the slots they ranked.
+- `GET /api/holds?from&to` lists the caller's holds in range: `{ pollId, title, start, end }[]`. A separate route, not occurrences, so nothing that reads occurrences (sync, reminders, export) sees them.
+- `/api/availability` adds each person's holds to their busy times. Holds reveal no title there, as with any busy time.
 - Holds stop when the poll is closed, finalized or cancelled.
 
 ## Notifications
@@ -135,6 +140,7 @@ Pure functions in `@homa/core/polls`, with unit tests:
 | 24 hours before the deadline | participants who haven't answered | "{title}: answers close tomorrow" |
 | Deadline passes | organizer | "{title}: answers are in. Pick a time" |
 | Finalized | participants | "{title} is set: {when}" |
+| Title changed after finalizing | participants with a copy | "{old} is now {title}" |
 | Cancelled | participants | "{title} was cancelled" |
 
 They use the existing notifications table and the person's channels (push, email, ntfy and so on), with dedupe keys `poll:{id}:{kind}`. Clicking one opens the poll.
@@ -240,6 +246,7 @@ A right drawer (`size="lg"`, full screen on phones), like the event editor, with
 - Rank numbers sit in a filled circle with the primary colour. Moving announces the new position through the existing announcer ("Fri 5 Dec moved to 1 of 3").
 - Pre-filled rows say why: "Busy in your calendar". The person can move them anyway.
 - Times show in the viewer's home zone, with the poll's zone in a hint if it differs ("19:00 in London").
+- **Hold my ranked times** (a switch above Save) shows the ranked slots as holds in your calendar while the poll is open.
 - A sticky **Save my answer** bar on phones. Leaving with unsaved changes asks first (the dirty guard).
 - Rows are 48 px tall with 8 px between targets, and full width on phones.
 
@@ -332,7 +339,4 @@ The organizer's view of `/polls/{id}` (and what participants see under their bal
 
 ## Open questions
 
-1. Should participants see each other's answers by name, or only totals until the poll is finalized?
-2. Should the deadline finalize automatically to the recommended slot when every participant has answered?
-3. Should a copy follow the organizer's event when the organizer moves it after finalizing (7a: it doesn't)?
-4. Should holds also block the slot for members who opt in (left out of 7a)?
+1. A finalized event on a synced calendar can still be moved in Google, iCloud or Outlook, and the pull takes the remote copy. Should Homa push the poll's time back, or let the remote move stand (7a: it stands, and copies don't follow a remote time change)?
