@@ -26,6 +26,8 @@ Travel time on events: a timed event can have a **Travel time** before it (5 min
 
 The notification panel starts with "Yesterday" and not "yesterday", and opening it no longer shows a focus ring on **Clear all**.
 
+Moving or deleting an event right after creating it, before the save has finished, no longer fails with an error. The change waits for the new event's id.
+
 ## [0.3.0] - 2026-11-27
 
 Settings → Security explains when adding or removing a passkey needs a recent sign-in (Better Auth's `SESSION_NOT_FRESH`), with a button to sign out and back in, instead of showing "Session is not fresh".
