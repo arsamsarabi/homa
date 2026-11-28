@@ -14,6 +14,8 @@ export {
 export {
   assertOccurrence,
   type CachedInstance,
+  cacheWindow,
+  DENSE_CACHE_SIZE,
   extendBefore,
   HORIZON_DAYS,
   horizonFrom,

@@ -17,7 +17,11 @@ import { ConfirmCloseModal, ReminderChips, RepeatPicker } from '@/components';
 import { useConfirmClose } from '@/hooks/confirm-close';
 import { useTaskMutations } from '@/hooks/tasks';
 import type { Task } from '@/schemas';
-import { weekdayOf } from '@/services/repeat';
+import { isSubDaily, REPEAT_UNITS, weekdayOf } from '@/services/repeat';
+
+/** Dues are days (with an optional time), so tasks repeat by the day or longer. */
+const TASK_UNITS = REPEAT_UNITS.filter((u) => !isSubDaily(u));
+
 import { useAnnouncer } from '@/stores';
 import { useTasksPageModel } from './model';
 import { TaskBlock } from './TaskBlock';
@@ -157,6 +161,7 @@ function TaskForm({
               setRrule(v);
             }}
             startDay={dueDate ? weekdayOf(new Date(`${dueDate}T00:00:00Z`)) : undefined}
+            units={TASK_UNITS}
             disabled={!dueDate}
             description={dueDate ? undefined : t('tasks.repeatNeedsDate')}
           />

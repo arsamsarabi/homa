@@ -144,7 +144,8 @@
     "travelNone": "None",
     "travelLocal": "Only in Homa, not synced",
     "travelMax": "Up to 24 hours.",
-    "travelSet": "Set"
+    "travelSet": "Set",
+    "repeatLocal": "Outlook can't repeat by the minute or hour, so this repeat stays in Homa"
   },
   "repeat": {
     "none": "Does not repeat",
@@ -153,6 +154,10 @@
     "monthly": "Every month",
     "yearly": "Every year",
     "custom": "Custom rule",
+    "every_minutes_one": "Every minute",
+    "every_minutes_other": "Every {{count}} minutes",
+    "every_hours_one": "Every hour",
+    "every_hours_other": "Every {{count}} hours",
     "every_days_one": "Every day",
     "every_days_other": "Every {{count}} days",
     "every_weeks_one": "Every week",
@@ -454,7 +459,6 @@
     "hintNoCalendar": "Enter to pick a calendar and add",
     "noCalendar": "No calendar you can add to",
     "noDate": "No date found: the next hour",
-    "weeklyOn": "Every week on {{days}}",
     "announce": "Will add: {{preview}}"
   },
   "reminders": {

@@ -29,6 +29,25 @@ export const horizonFrom = (now: Date): Date => shift(now, HORIZON_DAYS * DAY_MS
 /** Recurring events whose cache ends before this need re-expanding (a month of slack). */
 export const extendBefore = (now: Date): Date => shift(horizonFrom(now), -30 * DAY_MS);
 
+/** Most occurrences cached for a rule too dense to cache from its start. */
+export const DENSE_CACHE_SIZE = 5_000;
+
+/**
+ * What the cache holds for a recurring event: everything from its start to the horizon, or, when
+ * that is more than DENSE_CACHE_SIZE occurrences (hourly, minutely, daily for decades), at most
+ * DENSE_CACHE_SIZE from a day before `now`. Reads outside it expand on the fly.
+ */
+export function cacheWindow(e: StoredSeries, now: Date): { from: Date | null; until: Date } {
+  const until = horizonFrom(now);
+  const series = { ...seriesOf(e), exdates: [] };
+  // Twice the size: clock changes merge a few local times, so the count can fall short of the limit.
+  if (expand(series, new Date(0), until, 2 * DENSE_CACHE_SIZE).length <= DENSE_CACHE_SIZE) return { from: null, until };
+  // shortcut: a dense rule with BY* parts (only from imports) walks from its start and can still hit the limit; fine until such rules show up.
+  const from = shift(now, -DAY_MS);
+  const next = expand(series, from, until)[DENSE_CACHE_SIZE];
+  return { from, until: next ? next.recurrenceId : until };
+}
+
 export const seriesOf = (e: StoredSeries): Series => ({
   start: e.startAt,
   end: e.endAt,
@@ -85,6 +104,8 @@ export type StoredEvent = StoredSeries & {
   description: string | null;
   location: string | null;
   expandedUntil: Date | null;
+  /** Where the cache starts, for rules too dense to cache from their start; null means from the start. */
+  expandedFrom?: Date | null;
 };
 
 export type ResolvedOccurrence<E extends StoredEvent> = {
@@ -102,7 +123,7 @@ const key = (eventId: string, recurrenceId: Date): string => `${eventId}|${recur
 
 /**
  * Every occurrence overlapping [from, to), sorted by start: the cached instances plus, for
- * `late` events (recurring ones whose cache stops before `to`), occurrences past their cache.
+ * `late` events (recurring ones whose cache doesn't cover the range), occurrences outside their cache.
  * `events` and `overrides` must cover every event in `cached` and `late`.
  */
 export function resolveOccurrences<E extends StoredEvent>(args: {
@@ -120,10 +141,12 @@ export function resolveOccurrences<E extends StoredEvent>(args: {
   for (const c of args.cached) found.set(key(c.eventId, c.recurrenceId), c);
   for (const e of args.late) {
     const own = args.overrides.filter((o) => o.eventId === e.id);
-    // The cache already has every occurrence whose original start is before expanded_until.
+    // The cache already has every occurrence whose original start is in [expanded_from, expanded_until).
     const after = e.expandedUntil ?? args.from;
+    const before = e.expandedFrom ?? null;
     for (const o of occurrencesWithOverrides(e, own, args.from, args.to)) {
-      if (o.recurrenceId >= after) found.set(key(e.id, o.recurrenceId), { eventId: e.id, ...o });
+      if (o.recurrenceId >= after || (before && o.recurrenceId < before))
+        found.set(key(e.id, o.recurrenceId), { eventId: e.id, ...o });
     }
   }
 

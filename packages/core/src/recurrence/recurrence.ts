@@ -26,7 +26,7 @@ export type Occurrence = {
   end: Date;
 };
 
-/** Upper bound on occurrences produced for one series in one call. */
+/** Upper bound on occurrences produced for one series in one call, counted from near `from` for rules that step a fixed amount. */
 export const MAX_OCCURRENCES = 10_000;
 
 /** Throws if `rrule` isn't a usable RRULE value. */
@@ -66,6 +66,34 @@ const toInstant = (t: ICAL.Time, tz: string): Date =>
 const floating = (p: Temporal.PlainDateTime): ICAL.Time =>
   ICAL.Time.fromData({ year: p.year, month: p.month, day: p.day, hour: p.hour, minute: p.minute, second: p.second });
 
+/** Wall-clock minutes between occurrences of a FREQ that steps a fixed amount. */
+const STEP_MINUTES: Partial<Record<string, number>> = { MINUTELY: 1, HOURLY: 60, DAILY: 1440, WEEKLY: 10_080 };
+/** Clock changes can move a local time by an hour, so stop short of `before` by more than that. */
+const SKIP_MARGIN_MINUTES = 120;
+
+/**
+ * Where to start iterating so the rule's occurrences before `before` (local) are skipped: the
+ * series' start moved on by whole steps, with COUNT reduced to match. Only rules with no BY* parts
+ * step a fixed amount; the rest start at the series' start. Null when COUNT runs out first.
+ */
+function skipTo(
+  recur: ICAL.Recur,
+  start: Temporal.PlainDateTime,
+  before: Temporal.PlainDateTime,
+): Temporal.PlainDateTime | null {
+  const unit = STEP_MINUTES[recur.freq];
+  if (!unit || Object.keys(recur.parts).length) return start;
+  const step = unit * (recur.interval || 1);
+  const minutes = start.until(before, { largestUnit: 'minutes' }).minutes;
+  const steps = Math.floor((minutes - SKIP_MARGIN_MINUTES) / step);
+  if (steps <= 0) return start;
+  if (recur.count) {
+    if (steps >= recur.count) return null;
+    recur.count -= steps;
+  }
+  return start.add({ minutes: steps * step });
+}
+
 /** Occurrences of `series` that overlap [from, to), oldest first, without cancelled ones. */
 export function expand(series: Series, from: Date, to: Date, limit = MAX_OCCURRENCES): Occurrence[] {
   const duration = series.end.getTime() - series.start.getTime();
@@ -82,8 +110,15 @@ export function expand(series: Series, from: Date, to: Date, limit = MAX_OCCURRE
       const until = recur.until.isDate ? recur.until : floating(toLocal(recur.until.toJSDate(), series.tz));
       recur.until = until;
     }
-    const it = recur.iterator(floating(toLocal(series.start, series.tz)));
-    for (let next = it.next(), seen = 0; next && seen < limit; next = it.next(), seen++) {
+    // Start near `from`, so an hourly or minutely rule (or a daily one from decades ago) doesn't
+    // spend the limit before the range.
+    const first = skipTo(
+      recur,
+      toLocal(series.start, series.tz),
+      toLocal(new Date(from.getTime() - duration), series.tz),
+    );
+    const it = first && recur.iterator(floating(first));
+    for (let next = it?.next(), seen = 0; it && next && seen < limit; next = it.next(), seen++) {
       const start = toInstant(next, series.tz);
       if (start >= to) break;
       starts.set(start.getTime(), start);

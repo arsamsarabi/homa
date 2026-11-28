@@ -1,8 +1,8 @@
-// Repeat rules the picker can show and build: every N days, weeks (on some weekdays), months or
-// years. Anything else (COUNT, UNTIL, BYMONTHDAY, hourly rules and the like) is a "custom" rule the
-// picker keeps as it is. Rules are RRULE values without the "RRULE:" prefix.
+// Repeat rules the picker can show and build: every N minutes, hours, days, weeks (on some
+// weekdays), months or years. Anything else (COUNT, UNTIL, BYMONTHDAY and the like) is a "custom"
+// rule the picker keeps as it is. Rules are RRULE values without the "RRULE:" prefix.
 
-export const REPEAT_UNITS = ['days', 'weeks', 'months', 'years'] as const;
+export const REPEAT_UNITS = ['minutes', 'hours', 'days', 'weeks', 'months', 'years'] as const;
 export type RepeatUnit = (typeof REPEAT_UNITS)[number];
 
 /** RRULE weekday codes, Sunday first, matching Date#getUTCDay. */
@@ -15,8 +15,20 @@ export const MAX_REPEAT_EVERY = 999;
 /** A rule the picker can show: every `every` `unit`s, and for weeks on `days` (empty: the start's weekday). */
 export type SimpleRepeat = { every: number; unit: RepeatUnit; days: WeekdayCode[] };
 
-const FREQ: Record<RepeatUnit, string> = { days: 'DAILY', weeks: 'WEEKLY', months: 'MONTHLY', years: 'YEARLY' };
-const UNIT_OF: Record<string, RepeatUnit> = { DAILY: 'days', WEEKLY: 'weeks', MONTHLY: 'months', YEARLY: 'years' };
+const FREQ: Record<RepeatUnit, string> = {
+  minutes: 'MINUTELY',
+  hours: 'HOURLY',
+  days: 'DAILY',
+  weeks: 'WEEKLY',
+  months: 'MONTHLY',
+  years: 'YEARLY',
+};
+const UNIT_OF: Record<string, RepeatUnit> = Object.fromEntries(
+  Object.entries(FREQ).map(([unit, freq]) => [freq, unit as RepeatUnit]),
+);
+
+/** Units under a day: Outlook can't store them, and tasks repeat by the day. */
+export const isSubDaily = (unit: RepeatUnit): boolean => unit === 'minutes' || unit === 'hours';
 
 const isWeekday = (d: string): d is WeekdayCode => (WEEKDAY_CODES as readonly string[]).includes(d);
 const sortDays = (days: readonly WeekdayCode[]): WeekdayCode[] => WEEKDAY_CODES.filter((d) => days.includes(d));

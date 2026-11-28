@@ -7,7 +7,6 @@ const f = (o: Intl.DateTimeFormatOptions): Intl.DateTimeFormat =>
 const formats = {
   date: f({ weekday: 'short', day: 'numeric', month: 'short' }),
   time: f({ hour: 'numeric', minute: '2-digit' }),
-  weekday: f({ weekday: 'short' }),
   locale: 'en-GB',
 };
 
@@ -46,7 +45,6 @@ describe('previewOf', () => {
     expect(p.length).toMatch(/^45 mins?$/); // ICU versions differ on the unit name
     expect(p).toMatchObject({
       rrule: null,
-      weekdays: [],
       defaulted: false,
     });
   });
@@ -57,10 +55,9 @@ describe('previewOf', () => {
     expect(p.length).toBeUndefined();
   });
 
-  test('a weekly rule on set days names them', () => {
+  test('a weekly rule on set days keeps them', () => {
     const p = previewOf(parseQuickAdd('Gym every mon, wed and fri 7am', ctx), ctx.tz, formats);
     expect(p.rrule).toBe('FREQ=WEEKLY;BYDAY=MO,WE,FR');
-    expect(p.weekdays).toEqual(['Mon', 'Wed', 'Fri']);
   });
 
   test('an event across midnight shows both days', () => {

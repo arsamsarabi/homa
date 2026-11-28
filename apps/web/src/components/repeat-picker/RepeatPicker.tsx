@@ -26,6 +26,8 @@ export type RepeatPickerProps = {
   onChange: (rrule: string | null) => void;
   /** The start's weekday: weekly rules default to it, and a rule on just it leaves BYDAY out. */
   startDay?: WeekdayCode;
+  /** The units the custom row offers; all of REPEAT_UNITS by default. */
+  units?: readonly RepeatUnit[];
   label?: string;
   description?: ReactNode;
   disabled?: boolean;
@@ -36,6 +38,7 @@ export function RepeatPicker({
   value,
   onChange,
   startDay,
+  units = REPEAT_UNITS,
   label,
   description,
   disabled,
@@ -81,7 +84,7 @@ export function RepeatPicker({
       valueText={repeatLabel(value, t, locale, weekStart)}
       disabled={disabled}
       options={options}
-      units={REPEAT_UNITS.map((u) => ({ value: u, label: (count: number) => t(`units.${u}`, { count }) }))}
+      units={units.map((u) => ({ value: u, label: (count: number) => t(`units.${u}`, { count }) }))}
       initial={{ amount: simple?.every ?? 1, unit: simple?.unit ?? 'weeks' }}
       onOpen={(): void => setDays(ownDays(simple))}
       prefix={t('repeat.every')}

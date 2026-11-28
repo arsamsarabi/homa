@@ -1,4 +1,5 @@
 export {
+  isSubDaily,
   MAX_REPEAT_EVERY,
   parseRepeat,
   REPEAT_PRESETS,

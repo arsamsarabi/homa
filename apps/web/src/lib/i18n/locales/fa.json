@@ -144,7 +144,8 @@
     "travelNone": "هیچ",
     "travelLocal": "فقط در هما، همگام نمی‌شود",
     "travelMax": "حداکثر ۲۴ ساعت.",
-    "travelSet": "تنظیم"
+    "travelSet": "تنظیم",
+    "repeatLocal": "اوت‌لوک نمی‌تواند هر دقیقه یا ساعت تکرار کند، پس این تکرار فقط در هما می‌ماند"
   },
   "repeat": {
     "none": "تکرار نمی‌شود",
@@ -153,6 +154,10 @@
     "monthly": "هر ماه",
     "yearly": "هر سال",
     "custom": "قاعدهٔ سفارشی",
+    "every_minutes_one": "هر دقیقه",
+    "every_minutes_other": "هر {{count}} دقیقه",
+    "every_hours_one": "هر ساعت",
+    "every_hours_other": "هر {{count}} ساعت",
     "every_days_one": "هر روز",
     "every_days_other": "هر {{count}} روز",
     "every_weeks_one": "هر هفته",
@@ -454,7 +459,6 @@
     "hintNoCalendar": "Enter برای انتخاب تقویم و افزودن",
     "noCalendar": "تقویمی برای افزودن رویداد ندارید",
     "noDate": "تاریخی پیدا نشد: ساعت بعد",
-    "weeklyOn": "هر هفته، {{days}}",
     "announce": "افزوده می‌شود: {{preview}}"
   },
   "reminders": {

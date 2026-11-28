@@ -147,7 +147,13 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             description={f.travelLocal ? t('editor.travelLocal') : undefined}
           />
         )}
-        <RepeatPicker value={f.repeat} onChange={f.setRepeat} startDay={f.startDay} disabled={f.repeatLoading} />
+        <RepeatPicker
+          value={f.repeat}
+          onChange={f.setRepeat}
+          startDay={f.startDay}
+          disabled={f.repeatLoading}
+          description={f.repeatLocal ? t('editor.repeatLocal') : undefined}
+        />
         <ReminderChips value={f.reminders} onChange={f.setReminders} disabled={f.remindersLoading} />
         <TextInput name="location" label={t('editor.location')} size="xs" defaultValue={f.occurrence?.location ?? ''} />
         <Textarea

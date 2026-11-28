@@ -17,7 +17,7 @@ import {
   shownRepeat,
 } from '@/services/event-form';
 import { DEFAULT_REMINDER } from '@/services/reminders';
-import { type WeekdayCode, weekdayOf } from '@/services/repeat';
+import { isSubDaily, parseRepeat, type WeekdayCode, weekdayOf } from '@/services/repeat';
 import { timeZones } from '@/services/zones';
 
 export type EventFormModel = {
@@ -66,6 +66,8 @@ export type EventFormModel = {
   setTravelMinutes: (v: number | null) => void;
   /** The calendar syncs with a provider that has no travel time, so it stays in Homa. */
   travelLocal: boolean;
+  /** The repeat is by the minute or hour on an Outlook calendar, which can't store it: it stays in Homa. */
+  repeatLocal: boolean;
 };
 
 const message = (err: unknown): string => (err instanceof Error ? err.message : String(err));
@@ -91,6 +93,8 @@ export function useEventForm(draft: Draft): EventFormModel {
   const connections = useConnections().data;
   const travelIsLocal = (connectionId: string | null | undefined): boolean =>
     Boolean(connectionId) && !connections?.find((c) => c.id === connectionId)?.syncsTravel;
+  const onOutlook = (connectionId: string | null | undefined): boolean =>
+    Boolean(connectionId) && connections?.find((c) => c.id === connectionId)?.provider === 'microsoft';
 
   const [allDay, setAllDayState] = useState(draftAllDay(draft));
   const [tz, setTzState] = useState(draftZone(draft, viewTz));
@@ -243,6 +247,13 @@ export function useEventForm(draft: Draft): EventFormModel {
     remindersLoading: occurrence !== undefined && series.isPending,
     travelMinutes,
     travelLocal: travelIsLocal(calendars.find((c) => c.id === calendarId)?.connectionId),
+    repeatLocal: (() => {
+      const r = parseRepeat(repeat);
+      return (
+        Boolean(r && r !== 'custom' && isSubDaily(r.unit)) &&
+        onOutlook(calendars.find((c) => c.id === calendarId)?.connectionId)
+      );
+    })(),
     setTravelMinutes: (v: number | null): void => {
       editor.markDirty();
       setTravelMinutes(v);

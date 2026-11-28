@@ -76,7 +76,6 @@ export function useQuickAdd(): QuickAddModel {
     (): QuickAddFormats => ({
       date: new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }),
       time: formats.time,
-      weekday: formats.weekdayShort,
       locale,
     }),
     [locale, formats],
@@ -85,18 +84,14 @@ export function useQuickAdd(): QuickAddModel {
     if (!parsed) return undefined;
     const p = previewOf(parsed, homeTz, previewFormats);
     const day = parsed.allDay ? parsed.start : wallOf(parsed.start, homeTz);
-    const repeatText = !p.rrule
-      ? undefined
-      : p.weekdays.length
-        ? t('quickAdd.weeklyOn', { days: p.weekdays.join(', ') })
-        : repeatLabel(p.rrule, t, locale);
+    const repeatText = p.rrule ? repeatLabel(p.rrule, t, locale, weekStart) : undefined;
     return {
       ...p,
       title: parsed.title,
       jalali: secondary === 'jalali' ? formats.jalaliDayMonth.format(day) : undefined,
       repeatText,
     };
-  }, [parsed, homeTz, previewFormats, secondary, formats, t, locale]);
+  }, [parsed, homeTz, previewFormats, secondary, formats, t, locale, weekStart]);
 
   const calendar = writableCalendars.find((c) => c.id === defaultCalendarId);
   const summary = preview

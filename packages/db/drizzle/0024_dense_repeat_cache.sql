@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "expanded_from" timestamp with time zone;

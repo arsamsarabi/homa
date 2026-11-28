@@ -1,5 +1,5 @@
 // Events (single ones and recurring series), always filtered by owner where a user asks.
-import { and, asc, eq, inArray, isNotNull, lt, notInArray } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, isNotNull, lt, notInArray, or, type SQL } from 'drizzle-orm';
 import type { Executor } from '../client';
 import { events } from '../schema';
 
@@ -51,10 +51,15 @@ export const listEventsToExtend = (db: Executor, before: Date): Promise<{ id: st
     .from(events)
     .where(and(isNotNull(events.rrule), lt(events.expandedUntil, before)));
 
-/** The owner's recurring events that start before `to` but whose cache stops before it. */
+/** The cache doesn't cover all of [from, to): it stops before `to` or starts after `from`. */
+const pastCache = (from: Date, to: Date): SQL | undefined =>
+  or(lt(events.expandedUntil, to), gt(events.expandedFrom, from));
+
+/** The owner's recurring events that start before `to` but whose cache doesn't cover [from, to). */
 export const listEventsPastCache = (
   db: Executor,
   ownerUserId: string,
+  from: Date,
   to: Date,
   calendarIds?: readonly string[],
 ): Promise<EventRow[]> =>
@@ -65,16 +70,17 @@ export const listEventsPastCache = (
       and(
         eq(events.ownerUserId, ownerUserId),
         isNotNull(events.rrule),
-        lt(events.expandedUntil, to),
+        pastCache(from, to),
         lt(events.startAt, to),
         calendarIds?.length ? inArray(events.calendarId, [...calendarIds]) : undefined,
       ),
     );
 
-/** Recurring events in these calendars (any owner) that start before `to` but whose cache stops before it. */
+/** Recurring events in these calendars (any owner) that start before `to` but whose cache doesn't cover [from, to). */
 export const listEventsPastCacheForCalendars = (
   db: Executor,
   calendarIds: readonly string[],
+  from: Date,
   to: Date,
 ): Promise<EventRow[]> =>
   calendarIds.length
@@ -85,7 +91,7 @@ export const listEventsPastCacheForCalendars = (
           and(
             inArray(events.calendarId, [...calendarIds]),
             isNotNull(events.rrule),
-            lt(events.expandedUntil, to),
+            pastCache(from, to),
             lt(events.startAt, to),
           ),
         )

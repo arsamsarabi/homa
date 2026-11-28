@@ -55,7 +55,7 @@ Reminders (several values)
 |---|---|---|---|---|
 | Reminders | minutes, hours, days, weeks | At start, 5/10/15/30 min, 1 hr, 1 day | 0 to 4 weeks, 5 per event, no duplicates | minutes before (as now) |
 | Travel time | minutes, hours | None, 5, 15, 30 min, 1 hr, 1 hr 30 min, 2 hr | 1 min to 24 hr | `travelMinutes` (as now) |
-| Repeat | days, weeks, months, years; weekdays for weeks | Does not repeat, every day, week, 2 weeks, month, year | every 1 to 999 | RRULE `FREQ`, `INTERVAL`, `BYDAY` |
+| Repeat | minutes, hours, days, weeks, months, years (tasks: days and up); weekdays for weeks | Does not repeat, every day, week, 2 weeks, month, year | every 1 to 999 | RRULE `FREQ`, `INTERVAL`, `BYDAY` |
 
 - Repeat gains `INTERVAL`, for example `FREQ=WEEKLY;INTERVAL=2`. Expansion and sync already read it.
   - A rule the picker can't express, with BYDAY, COUNT, UNTIL and the like, shows as a checked, read-only "Custom rule" option. It is kept untouched unless you pick something else, as now.
@@ -68,6 +68,11 @@ Reminders (several values)
 - `components/repeat-picker/RepeatPicker` works on RRULE strings; the forms keep the RRULE itself instead of a repeat enum. `services/repeat` parses, builds and names rules. A weekly rule on just the start's weekday leaves `BYDAY` out.
 - `pages/calendar/event-editor/TravelPicker` covers minutes and hours, up to `MAX_TRAVEL_MINUTES`.
 - `ReminderChips` keeps its chips; the old number + unit + Add row is gone.
+- Repeat by minutes and hours needed two changes underneath, since expansion stopped after 10,000 occurrences counted from the series' start (an every-minute rule would vanish after about a week):
+  - `expand` starts near the requested range for rules that step a fixed amount.
+  - Rules with more than 5,000 occurrences cache a window from a day ago (`events.expanded_from`), and reads outside it expand on the fly. See architecture.md, "Recurrence and the expansion cache".
+- Outlook can't store a repeat by the minute or hour. The push is refused with the usual connection notice, the event keeps its rule in Homa, and the field says "Outlook can't repeat by the minute or hour, so this repeat stays in Homa". Google takes RRULEs as they are; not checked against a real account.
+- Tasks offer days and up only: a date-only due can't move by the hour.
 
 ## Component (proposal)
 
@@ -112,7 +117,6 @@ type AmountPickerProps<U extends string> = {
 
 - Monthly by weekday ("the 2nd Tuesday").
 - Ends after N times or on a date (COUNT and UNTIL).
-- Hours and minutes in repeat (HOURLY, MINUTELY). Expansion stops after 10,000 occurrences counted from the series' start (`MAX_OCCURRENCES`), and the cache and standalone reminders expand from the start, so an every-minute rule would stop after about 7 days and an hourly one after about 14 months. Microsoft Graph can't express them either, so pushes would be refused. They need expansion that starts near the requested range first.
 - Travel time after the event.
 
 ## Tests

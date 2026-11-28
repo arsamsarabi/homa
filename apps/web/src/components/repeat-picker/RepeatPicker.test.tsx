@@ -42,6 +42,16 @@ describe('RepeatPicker', () => {
     expect(onChange).toHaveBeenCalledWith('FREQ=WEEKLY;INTERVAL=3;BYDAY=MO,WE');
   });
 
+  test('every N hours, from the unit select', async () => {
+    const onChange = show(null);
+    fireEvent.click(field());
+    fireEvent.change(await screen.findByLabelText('Amount'), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText('Unit'), { target: { value: 'hours' } });
+    expect(screen.getByText('Every 4 hours')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Set' }));
+    expect(onChange).toHaveBeenCalledWith('FREQ=HOURLY;INTERVAL=4');
+  });
+
   test('a bad amount shows an error and stays open', async () => {
     const onChange = show(null);
     fireEvent.click(field());

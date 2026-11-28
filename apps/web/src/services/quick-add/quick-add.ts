@@ -24,8 +24,6 @@ export type QuickAddFormats = {
   /** A date, like "Tuesday 24 November". */
   date: Intl.DateTimeFormat;
   time: Intl.DateTimeFormat;
-  /** A weekday name, for "every Mon, Wed". */
-  weekday: Intl.DateTimeFormat;
   locale: string;
 };
 
@@ -37,14 +35,8 @@ export type QuickAddPreview = {
   length: string | undefined;
   /** The parsed RRULE, or null when the line doesn't repeat. */
   rrule: string | null;
-  /** For a weekly rule on set days: their names. */
-  weekdays: string[];
   defaulted: boolean;
 };
-
-const RRULE_DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-// 4 January 2026 was a Sunday: a wall date for each weekday, to name them.
-const weekdayDate = (i: number): Date => new Date(Date.UTC(2026, 0, 4 + i));
 
 /** The preview of a parsed line, with times shown in `tz` (the zone it was read in). */
 export function previewOf(q: QuickAdd, tz: string, f: QuickAddFormats): QuickAddPreview {
@@ -61,15 +53,10 @@ export function previewOf(q: QuickAdd, tz: string, f: QuickAddFormats): QuickAdd
       : `${f.date.format(s)}, ${f.time.format(s)} – ${f.date.format(e)}, ${f.time.format(e)}`;
     length = lengthOf(Math.round((q.end.getTime() - q.start.getTime()) / 60_000), f.locale);
   }
-  const byDay = q.rrule?.match(/BYDAY=([A-Z,]+)/)?.[1]?.split(',') ?? [];
   return {
     when,
     length,
     rrule: q.rrule ?? null,
-    weekdays:
-      q.rrule?.startsWith('FREQ=WEEKLY;BYDAY=') && byDay.length
-        ? byDay.map((d) => f.weekday.format(weekdayDate(RRULE_DAYS.indexOf(d))))
-        : [],
     defaulted: q.defaulted,
   };
 }
