@@ -207,7 +207,8 @@ describe.skipIf(!testDatabaseUrl)('ICS import and JSON export', () => {
       'RRULE:FREQ=MINUTELY',
       'END:VEVENT',
     ];
-    const ics = ['BEGIN:VCALENDAR', ...Array.from({ length: 21 }, (_, i) => minutely(i)).flat(), 'END:VCALENDAR'];
+    // Each minutely rule caches DENSE_CACHE_SIZE (5,000) occurrences, so 41 pass the 200,000 limit.
+    const ics = ['BEGIN:VCALENDAR', ...Array.from({ length: 41 }, (_, i) => minutely(i)).flat(), 'END:VCALENDAR'];
     const res = await importInto(bobCalendar, ics.join('\r\n'), bob);
     expect(res.status).toBe(400);
     expect(String(res.body.error)).toContain('occurrences');

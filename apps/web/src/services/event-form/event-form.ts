@@ -4,10 +4,8 @@
 import type { EventInput, EventPatch } from '@/api';
 import type { Occurrence } from '@/schemas';
 import { addDays, isoDate, isoLocal, parseIsoDate, parseIsoLocal, type Span, wallSpan } from '@/services/dates';
+import { sameRepeat } from '@/services/repeat';
 import { instantOf, wallOf } from '@/services/zones';
-
-export const REPEATS = ['none', 'daily', 'weekly', 'monthly', 'yearly', 'custom'] as const;
-export type Repeat = (typeof REPEATS)[number];
 
 /** What the drawer is open for. Create times are instants; quick add can prefill a title and RRULE. */
 export type Draft =
@@ -56,24 +54,13 @@ export type FormInput = {
   /** The event's zone, for timed events. */
   tz: string;
   calendarId: string;
-  /** The repeat picked in the form, or undefined if untouched. */
-  repeat: Repeat | undefined;
+  /** The RRULE picked in the form (null for none), or undefined if untouched. */
+  repeat: string | null | undefined;
   /** Reminders (minutes before): what a new event gets, or an edit's change; undefined if untouched. */
   reminders?: number[];
   /** Minutes of travel before the event, or null for none. Ignored for all-day events. */
   travelMinutes?: number | null;
 };
-
-/** The simple repeat choice an RRULE matches, or 'custom' for anything else. */
-export function repeatOf(rrule: string | null | undefined): Repeat {
-  if (!rrule) return 'none';
-  const m = rrule.match(/^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)$/);
-  return m?.[1] ? (m[1].toLowerCase() as Repeat) : 'custom';
-}
-
-/** The RRULE for a repeat choice; 'custom' keeps the series' current rule. */
-export const rruleOf = (repeat: Repeat, current: string | null): string | null =>
-  repeat === 'none' ? null : repeat === 'custom' ? current : `FREQ=${repeat.toUpperCase()}`;
 
 /** The draft's times as wall times in `tz` (all-day dates stay as they are). */
 function draftSpan(draft: Draft, tz: string): Span {
@@ -97,10 +84,19 @@ export function formTimes(draft: Draft, allDay: boolean, tz: string): { start: s
   };
 }
 
-/** The repeat shown in the form: what was picked, else the series' (or prefilled) rule, else none. */
-export const shownRepeat = (draft: Draft, picked: Repeat | undefined, seriesRrule: string | null | undefined): Repeat =>
-  picked ??
-  (draft.kind === 'create' ? repeatOf(draft.rrule) : draft.occurrence.recurring ? repeatOf(seriesRrule) : 'none');
+/** The RRULE shown in the form: what was picked, else the series' (or prefilled) rule, else none. */
+export const shownRepeat = (
+  draft: Draft,
+  picked: string | null | undefined,
+  seriesRrule: string | null | undefined,
+): string | null =>
+  picked !== undefined
+    ? picked
+    : draft.kind === 'create'
+      ? (draft.rrule ?? null)
+      : draft.occurrence.recurring
+        ? (seriesRrule ?? null)
+        : null;
 
 const INVALID = new Date(Number.NaN);
 
@@ -139,7 +135,7 @@ export function buildEditorResult(
   const tz = input.allDay ? 'UTC' : input.tz;
   const travel = input.allDay ? null : (input.travelMinutes ?? null);
   if (draft.kind === 'create') {
-    const rrule = rruleOf(shownRepeat(draft, input.repeat, null), draft.rrule ?? null);
+    const rrule = shownRepeat(draft, input.repeat, null);
     const body = {
       ...common,
       calendarId: input.calendarId,
@@ -167,8 +163,8 @@ export function buildEditorResult(
     patch.travelMinutes = travel;
     seriesChanged = true;
   }
-  if (input.repeat !== undefined && input.repeat !== repeatOf(ctx.seriesRrule)) {
-    patch.rrule = rruleOf(input.repeat, ctx.seriesRrule ?? null);
+  if (input.repeat !== undefined && !sameRepeat(input.repeat, ctx.seriesRrule)) {
+    patch.rrule = input.repeat;
     seriesChanged = true;
   }
   return { kind: 'edit', occurrence: o, patch, seriesChanged, ...(input.reminders && { reminders: input.reminders }) };

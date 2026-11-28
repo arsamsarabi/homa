@@ -1,4 +1,4 @@
-// Reading a time range: cached occurrences plus on-the-fly expansion past the cache horizon.
+// Reading a time range: cached occurrences plus on-the-fly expansion outside the cached window.
 // Includes calendars shared at freebusy+; freebusy rows are stripped in the response mapper.
 import { type AccessLevel, type ResolvedOccurrence, resolveOccurrences } from '@homa/core';
 import { type Db, repo } from '@homa/db';
@@ -27,7 +27,7 @@ export async function listOccurrences(
   const byAccess = new Map(access.map((a) => [a.calendar.id, a.access]));
 
   const cached = await repo.listCachedOccurrencesForCalendars(db, ids, from, to);
-  const late = await repo.listEventsPastCacheForCalendars(db, ids, to);
+  const late = await repo.listEventsPastCacheForCalendars(db, ids, from, to);
   const eventIds = [...new Set([...cached.map((c) => c.eventId), ...late.map((e) => e.id)])];
   if (!eventIds.length) return [];
   const [events, overrides, blocks] = await Promise.all([

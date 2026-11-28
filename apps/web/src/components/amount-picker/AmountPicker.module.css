@@ -1,0 +1,75 @@
+.list,
+.custom {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+}
+
+.list {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.option:hover:not(:disabled),
+.option:focus-visible {
+  background: var(--mantine-color-default-hover);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.option[aria-pressed="true"] {
+  font-weight: 500;
+}
+
+.option:disabled {
+  cursor: default;
+  color: var(--mantine-color-dimmed);
+}
+
+.check {
+  flex-shrink: 0;
+  color: var(--mantine-primary-color-filled);
+}
+
+.legend {
+  padding: 0;
+}
+
+.custom {
+  margin-top: 4px;
+  padding: 8px 10px 6px;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.preview {
+  min-height: 1.4em;
+}
+
+@media (pointer: coarse) {
+  .option {
+    min-height: 44px;
+  }
+}

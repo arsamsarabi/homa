@@ -6,8 +6,8 @@ import { PageBreadcrumbs, QueryErrorAlert } from '@/components';
 import { useReminderMutations, useReminders } from '@/hooks/reminders';
 import { useHomeZone } from '@/hooks/settings';
 import type { Reminder } from '@/schemas';
-import { repeatOf } from '@/services/event-form';
 import { formatWhen } from '@/services/reminders';
+import { repeatLabel } from '@/services/repeat';
 import { useAnnouncer } from '@/stores';
 import { type ReminderDraft, ReminderDrawer } from './ReminderDrawer';
 import classes from './RemindersPage.module.css';
@@ -62,7 +62,7 @@ export function RemindersPage(): JSX.Element {
               <Stack gap={0}>
                 <Text fw={600}>{r.title}</Text>
                 <Text size="xs" c="dimmed">
-                  {when(r)} · {t(`repeat.${repeatOf(r.rrule)}`)}
+                  {when(r)} · {repeatLabel(r.rrule, t, i18n.language)}
                 </Text>
               </Stack>
               <Group gap="xs" wrap="nowrap">

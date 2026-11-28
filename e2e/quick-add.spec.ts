@@ -33,7 +33,7 @@ test('quick add creates an event and opens the editor prefilled @smoke', async (
   const dialog = page.getByRole('dialog', { name: 'New event' });
   await expect(dialog).toBeVisible();
   await expect(page.getByPlaceholder('Add a title')).toHaveValue('Team sync');
-  await expect(page.getByRole('combobox', { name: 'Repeat' })).toHaveValue('Every week');
+  await expect(dialog.getByRole('button', { name: 'Repeat', exact: true })).toHaveText('Every week');
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
   // The next Monday may be in the next week; the agenda shows the coming 30 days.

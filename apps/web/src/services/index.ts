@@ -9,6 +9,7 @@ export * from './people';
 export * from './popover';
 export * from './quick-add';
 export * from './reminders';
+export * from './repeat';
 export * from './series-change';
 export * from './shortcuts';
 export * from './tasks';

@@ -15,6 +15,56 @@ const standup: Series = {
 const all = [d('2020-01-01T00:00:00Z'), d('2030-01-01T00:00:00Z')] as const;
 
 describe('expand', () => {
+  describe('starts near the range for rules that step a fixed amount', () => {
+    const hourly = (rrule: string): Series => ({
+      start: d('2020-01-01T00:00:00Z'),
+      end: d('2020-01-01T00:30:00Z'),
+      tz: 'Europe/London',
+      rrule,
+      exdates: [],
+    });
+
+    test('an hourly rule from years ago still reaches today', () => {
+      const occ = expand(hourly('FREQ=HOURLY'), d('2026-11-28T10:00:00Z'), d('2026-11-28T13:00:00Z'));
+      expect(iso(occ)).toEqual(['2026-11-28T10:00:00.000Z', '2026-11-28T11:00:00.000Z', '2026-11-28T12:00:00.000Z']);
+    });
+
+    test('matches walking from the start, across the clock change', () => {
+      // BYMINUTE=0 changes nothing here but keeps the walk from the series' start.
+      const range = [d('2026-03-28T22:00:00Z'), d('2026-03-29T04:00:00Z')] as const;
+      const walked = expand(hourly('FREQ=HOURLY;INTERVAL=1;BYMINUTE=0'), ...range, 100_000);
+      expect(walked.length).toBeGreaterThan(0);
+      expect(iso(expand(hourly('FREQ=HOURLY'), ...range))).toEqual(iso(walked));
+    });
+
+    test('an every-15-minutes rule keeps its grid', () => {
+      const occ = expand(hourly('FREQ=MINUTELY;INTERVAL=15'), d('2026-11-28T10:05:00Z'), d('2026-11-28T10:50:00Z'));
+      expect(iso(occ)).toEqual([
+        '2026-11-28T09:45:00.000Z',
+        '2026-11-28T10:00:00.000Z',
+        '2026-11-28T10:15:00.000Z',
+        '2026-11-28T10:30:00.000Z',
+        '2026-11-28T10:45:00.000Z',
+      ]);
+    });
+
+    test('COUNT still ends the rule', () => {
+      const s = hourly('FREQ=HOURLY;COUNT=48');
+      expect(iso(expand(s, d('2020-01-02T22:15:00Z'), d('2020-01-03T03:00:00Z')))).toEqual([
+        '2020-01-02T22:00:00.000Z',
+        '2020-01-02T23:00:00.000Z',
+      ]);
+      expect(expand(s, d('2021-01-01T00:00:00Z'), d('2021-01-02T00:00:00Z'))).toEqual([]);
+    });
+
+    test('a daily rule from decades ago reaches today', () => {
+      const s: Series = { ...hourly('FREQ=DAILY'), start: d('1990-01-01T09:00:00Z'), end: d('1990-01-01T10:00:00Z') };
+      expect(iso(expand(s, d('2026-11-28T00:00:00Z'), d('2026-11-29T00:00:00Z')))).toEqual([
+        '2026-11-28T09:00:00.000Z',
+      ]);
+    });
+  });
+
   test('keeps local time across the clock change', () => {
     expect(iso(expand(standup, ...all))).toEqual([
       '2026-03-16T09:00:00.000Z',

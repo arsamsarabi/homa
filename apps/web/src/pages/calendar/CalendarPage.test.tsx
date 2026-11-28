@@ -240,9 +240,9 @@ describe('calendar page', () => {
     expect(await screen.findByText('30 min travel time')).toBeTruthy();
     fireEvent.click(screen.getByText('Dentist'));
     const form = await screen.findByRole('dialog', { name: 'Edit event' });
-    expect(within(form).getByDisplayValue('30 min')).toBeTruthy();
+    expect(within(form).getByRole('button', { name: 'Travel time' }).textContent).toBe('30 min travel time');
     fireEvent.click(within(form).getByRole('switch', { name: 'All day' }));
-    expect(within(form).queryByDisplayValue('30 min')).toBeNull();
+    expect(within(form).queryByRole('button', { name: 'Travel time' })).toBeNull();
   });
 
   test('the travel time hint shows only on calendars whose provider has no travel time', async () => {

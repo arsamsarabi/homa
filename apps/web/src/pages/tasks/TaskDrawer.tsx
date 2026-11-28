@@ -13,16 +13,19 @@ import {
 } from '@mantine/core';
 import { type ChangeEvent, type FormEvent, type JSX, type KeyboardEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ConfirmCloseModal, ReminderChips } from '@/components';
+import { ConfirmCloseModal, ReminderChips, RepeatPicker } from '@/components';
 import { useConfirmClose } from '@/hooks/confirm-close';
 import { useTaskMutations } from '@/hooks/tasks';
 import type { Task } from '@/schemas';
-import { type Repeat, repeatOf, rruleOf } from '@/services/event-form';
+import { isSubDaily, REPEAT_UNITS, weekdayOf } from '@/services/repeat';
+
+/** Dues are days (with an optional time), so tasks repeat by the day or longer. */
+const TASK_UNITS = REPEAT_UNITS.filter((u) => !isSubDaily(u));
+
 import { useAnnouncer } from '@/stores';
 import { useTasksPageModel } from './model';
 import { TaskBlock } from './TaskBlock';
 
-const REPEATS: readonly Repeat[] = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
 const PRIORITIES = ['0', '1', '2', '3'] as const;
 
 function TaskForm({
@@ -46,7 +49,7 @@ function TaskForm({
   const [reminders, setReminders] = useState<number[]>(task.reminders);
   const [subtask, setSubtask] = useState('');
   const subtasks = task.parentId ? [] : m.subtasksOf(task.id);
-  const repeat = repeatOf(task.rrule);
+  const [rrule, setRrule] = useState<string | null>(task.rrule);
   // Inline Alert owns failure feedback; do not also toast.
   const fail = (err: Error): void => setError(err.message);
 
@@ -54,7 +57,6 @@ function TaskForm({
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const time = String(f.get('dueTime') ?? '');
-    const picked = String(f.get('repeat') ?? 'none') as Repeat;
     update.mutate(
       {
         id: task.id,
@@ -65,7 +67,7 @@ function TaskForm({
         tags,
         dueDate: dueDate || null,
         dueTime: dueDate && time ? time : null,
-        rrule: dueDate ? rruleOf(picked, task.rrule) : null,
+        rrule: dueDate ? rrule : null,
         reminders: dueDate ? reminders : [],
       },
       {
@@ -152,16 +154,16 @@ function TaskForm({
               description={t('tasks.dueTimeHint', { tz: task.tz })}
             />
           </Group>
-          <NativeSelect
-            name="repeat"
-            label={t('editor.repeat')}
-            defaultValue={repeat}
+          <RepeatPicker
+            value={rrule}
+            onChange={(v: string | null): void => {
+              onDirty();
+              setRrule(v);
+            }}
+            startDay={dueDate ? weekdayOf(new Date(`${dueDate}T00:00:00Z`)) : undefined}
+            units={TASK_UNITS}
             disabled={!dueDate}
             description={dueDate ? undefined : t('tasks.repeatNeedsDate')}
-            data={[...REPEATS, ...(repeat === 'custom' ? (['custom'] as const) : [])].map((r) => ({
-              value: r,
-              label: t(`repeat.${r}`),
-            }))}
           />
           <ReminderChips
             value={reminders}

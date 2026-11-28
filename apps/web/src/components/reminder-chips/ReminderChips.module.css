@@ -59,3 +59,7 @@
 .pill:focus-visible:not(:disabled) .remove {
   display: inline-flex;
 }
+
+.add {
+  align-self: flex-start;
+}

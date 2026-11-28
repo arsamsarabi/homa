@@ -142,7 +142,10 @@
     "addedBy": "افزوده‌شده توسط {{name}}",
     "travel": "زمان رفت‌وآمد",
     "travelNone": "هیچ",
-    "travelLocal": "فقط در هما، همگام نمی‌شود"
+    "travelLocal": "فقط در هما، همگام نمی‌شود",
+    "travelMax": "حداکثر ۲۴ ساعت.",
+    "travelSet": "تنظیم",
+    "repeatLocal": "اوت‌لوک نمی‌تواند هر دقیقه یا ساعت تکرار کند، پس این تکرار فقط در هما می‌ماند"
   },
   "repeat": {
     "none": "تکرار نمی‌شود",
@@ -150,7 +153,24 @@
     "weekly": "هر هفته",
     "monthly": "هر ماه",
     "yearly": "هر سال",
-    "custom": "قاعدهٔ سفارشی"
+    "custom": "قاعدهٔ سفارشی",
+    "every_minutes_one": "هر دقیقه",
+    "every_minutes_other": "هر {{count}} دقیقه",
+    "every_hours_one": "هر ساعت",
+    "every_hours_other": "هر {{count}} ساعت",
+    "every_days_one": "هر روز",
+    "every_days_other": "هر {{count}} روز",
+    "every_weeks_one": "هر هفته",
+    "every_weeks_other": "هر {{count}} هفته",
+    "every_months_one": "هر ماه",
+    "every_months_other": "هر {{count}} ماه",
+    "every_years_one": "هر سال",
+    "every_years_other": "هر {{count}} سال",
+    "onDays": "{{rule}} در {{days}}",
+    "every": "هر",
+    "on": "روزها",
+    "set": "تنظیم",
+    "tooMany": "حداکثر هر {{max}}."
   },
   "scope": {
     "changeTitle": "تغییر رویداد تکراری",
@@ -439,7 +459,6 @@
     "hintNoCalendar": "Enter برای انتخاب تقویم و افزودن",
     "noCalendar": "تقویمی برای افزودن رویداد ندارید",
     "noDate": "تاریخی پیدا نشد: ساعت بعد",
-    "weeklyOn": "هر هفته، {{days}}",
     "announce": "افزوده می‌شود: {{preview}}"
   },
   "reminders": {
@@ -489,7 +508,9 @@
     "editLabel": "ویرایش «{{title}}»",
     "delete": "حذف",
     "deleteLabel": "حذف «{{title}}»",
-    "loadFailed": "یادآوری‌ها بارگذاری نشدند"
+    "loadFailed": "یادآوری‌ها بارگذاری نشدند",
+    "addReminder": "افزودن یادآوری",
+    "before": "قبل"
   },
   "notifications": {
     "bell": "اعلان‌ها",
@@ -879,5 +900,25 @@
       "link": "یک نشانی .ics یا webcal، از مدرسه، تیم یا برنامه‌ای دیگر. فقط‌خواندنی.",
       "holidays": "تعطیلات کشورتان. فقط‌خواندنی."
     }
+  },
+  "amountPicker": {
+    "custom": "مقدار دلخواه",
+    "badAmount": "یک عدد صحیح {{min}} یا بیشتر وارد کنید.",
+    "amount": "مقدار",
+    "unit": "واحد"
+  },
+  "units": {
+    "minutes_one": "دقیقه",
+    "minutes_other": "دقیقه",
+    "hours_one": "ساعت",
+    "hours_other": "ساعت",
+    "days_one": "روز",
+    "days_other": "روز",
+    "weeks_one": "هفته",
+    "weeks_other": "هفته",
+    "months_one": "ماه",
+    "months_other": "ماه",
+    "years_one": "سال",
+    "years_other": "سال"
   }
 }

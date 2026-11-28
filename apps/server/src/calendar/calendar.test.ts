@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
-import { HORIZON_DAYS } from '@homa/core';
+import { DENSE_CACHE_SIZE, HORIZON_DAYS } from '@homa/core';
 import { schema } from '@homa/db';
 import { createApp } from '@/http';
 import { freshDb, testAuth, testDatabaseUrl } from '@/testing';
@@ -234,6 +234,25 @@ describe.skipIf(!testDatabaseUrl)('calendars and events', () => {
     const cached = await t.db.$count(schema.eventInstances);
     expect(cached).toBeGreaterThan(HORIZON_DAYS + 300);
     expect(await occurrences(from, far.toISOString())).toHaveLength(5);
+    await call('DELETE', `/events/${e.id}`);
+  });
+
+  test('a minutely rule from long ago caches a window and expands the rest on the fly', async () => {
+    const { body: e } = await call('POST', '/events', {
+      ...standup(),
+      start: '2025-01-01T00:00:00Z',
+      end: '2025-01-01T00:00:30Z',
+      rrule: 'FREQ=MINUTELY;INTERVAL=30',
+    });
+    const cached = await t.db.$count(schema.eventInstances);
+    expect(cached).toBeGreaterThan(0);
+    expect(cached).toBeLessThanOrEqual(DENSE_CACHE_SIZE + 1);
+    const hour = (at: number): [string, string] => [new Date(at).toISOString(), new Date(at + 3_600_000).toISOString()];
+    const now = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+    // Today (cached), a year back and over a year ahead (both on the fly): two each hour.
+    expect(await occurrences(...hour(now))).toHaveLength(2);
+    expect(await occurrences(...hour(now - 365 * 86_400_000))).toHaveLength(2);
+    expect(await occurrences(...hour(now + 400 * 86_400_000))).toHaveLength(2);
     await call('DELETE', `/events/${e.id}`);
   });
 

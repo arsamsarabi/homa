@@ -13,15 +13,16 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
-import { IconCar, IconDots, IconTrash } from '@tabler/icons-react';
+import { IconDots, IconTrash } from '@tabler/icons-react';
 import type { ChangeEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ReminderChips } from '@/components';
+import { ReminderChips, RepeatPicker } from '@/components';
 import { useAddedBy } from '@/pages/calendar/model';
-import type { Draft, Repeat } from '@/services/event-form';
+import type { Draft } from '@/services/event-form';
 import classes from './EventEditor.module.css';
 import { FreeBusyDetails } from './FreeBusyDetails';
 import { ReadOnlyDetails } from './ReadOnlyDetails';
+import { TravelPicker } from './TravelPicker';
 import { useEventForm } from './useEventForm';
 
 /** Header (calendar, type, more, close), an inline title, then times, repeat, location and notes. */
@@ -140,29 +141,18 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           />
         )}
         {!f.allDay && (
-          <Select
-            label={t('editor.travel')}
+          <TravelPicker
+            value={f.travelMinutes}
+            onChange={f.setTravelMinutes}
             description={f.travelLocal ? t('editor.travelLocal') : undefined}
-            leftSection={<IconCar size={14} aria-hidden />}
-            data={f.travelOptions}
-            value={f.travelMinutes ? String(f.travelMinutes) : 'none'}
-            onChange={(v: string | null): void => f.setTravelMinutes(v && v !== 'none' ? Number(v) : null)}
-            size="xs"
-            allowDeselect={false}
-            comboboxProps={{ withinPortal: false }}
           />
         )}
-        <Select
-          label={t('editor.repeat')}
-          data={f.repeatOptions}
+        <RepeatPicker
           value={f.repeat}
-          onChange={(v: string | null): void => {
-            if (v) f.setRepeat(v as Repeat);
-          }}
-          size="xs"
-          allowDeselect={false}
+          onChange={f.setRepeat}
+          startDay={f.startDay}
           disabled={f.repeatLoading}
-          comboboxProps={{ withinPortal: false }}
+          description={f.repeatLocal ? t('editor.repeatLocal') : undefined}
         />
         <ReminderChips value={f.reminders} onChange={f.setReminders} disabled={f.remindersLoading} />
         <TextInput name="location" label={t('editor.location')} size="xs" defaultValue={f.occurrence?.location ?? ''} />

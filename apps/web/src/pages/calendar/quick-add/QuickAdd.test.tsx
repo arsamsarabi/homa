@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { useLastCalendar } from '@/stores';
 import { ownCalendar } from '@/testing/calendars';
 import { json, renderApp, signedInWith } from '@/testing/renderApp';
@@ -121,7 +121,7 @@ describe('quick add', () => {
     expect((screen.getByRole('textbox', { name: 'Title' }) as HTMLInputElement).value).toBe('Team sync');
     expect(dialog.querySelector<HTMLInputElement>('input[name="start"]')?.value).toMatch(/T10:00$/);
     expect(dialog.textContent).toContain('Personal');
-    expect((screen.getAllByDisplayValue('Every week')[0] as HTMLInputElement).value).toBe('Every week');
+    expect(within(dialog).getByRole('button', { name: 'Repeat' }).textContent).toBe('Every week');
     expect(box.value).toBe('');
     expect(posted).toHaveLength(0);
   });

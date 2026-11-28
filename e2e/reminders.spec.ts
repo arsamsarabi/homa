@@ -22,9 +22,10 @@ test('event reminders, standalone reminders and the bell @smoke', async ({ page 
   await page.getByLabel('Ends').fill(`${today}T11:00`);
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('button', { name: 'Remove 10 minutes before' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Add reminder' }).click();
   await dialog.getByLabel('Amount').fill('1');
   await dialog.getByLabel('Unit').selectOption('hours');
-  await dialog.getByRole('button', { name: 'Add' }).click();
+  await dialog.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(dialog.getByRole('button', { name: 'Remove 1 hour before' })).toBeVisible();
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
@@ -57,7 +58,8 @@ test('event reminders, standalone reminders and the bell @smoke', async ({ page 
   const drawer = page.getByRole('dialog', { name: 'New reminder' });
   await drawer.getByLabel('What to remind you of').fill('Pills');
   await drawer.getByLabel(/^When/).fill('2030-01-01T09:00');
-  await drawer.getByLabel('Repeat').selectOption('daily');
+  await drawer.getByRole('button', { name: 'Repeat', exact: true }).click();
+  await drawer.getByRole('button', { name: 'Every day', exact: true }).click();
   await drawer.getByRole('button', { name: 'Save' }).click();
   await expect(drawer).toBeHidden();
   const list = page.getByRole('list', { name: 'Reminders' });

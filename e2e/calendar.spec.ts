@@ -31,8 +31,8 @@ async function newEvent(page: Page, title: string, start: string, end: string, r
   await page.getByLabel('Starts').fill(start);
   await page.getByLabel('Ends').fill(end);
   if (repeat) {
-    await page.getByRole('combobox', { name: 'Repeat' }).click();
-    await page.getByRole('option', { name: repeat }).click();
+    await page.getByRole('button', { name: 'Repeat', exact: true }).click();
+    await page.getByRole('button', { name: repeat, exact: true }).click();
   }
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByRole('dialog')).toBeHidden();

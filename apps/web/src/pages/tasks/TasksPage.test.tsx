@@ -167,7 +167,8 @@ describe('tasks page', () => {
     const drawer = await screen.findByRole('dialog', { name: 'Edit task' });
     fireEvent.change(within(drawer).getByRole('textbox', { name: 'Task' }), { target: { value: 'Mow the lawn' } });
     fireEvent.change(within(drawer).getByLabelText('Time'), { target: { value: '17:30' } });
-    fireEvent.change(within(drawer).getByRole('combobox', { name: 'Repeat' }), { target: { value: 'weekly' } });
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Repeat' }));
+    fireEvent.click(await within(drawer).findByRole('button', { name: 'Every week' }));
     fireEvent.change(within(drawer).getByRole('combobox', { name: 'Project' }), { target: { value: 'p1' } });
     fireEvent.click(within(drawer).getByRole('button', { name: 'Save' }));
     await waitFor(() =>
@@ -194,9 +195,10 @@ describe('tasks page', () => {
     renderApp('/tasks?list=upcoming', api);
     fireEvent.click(await screen.findByRole('button', { name: /Report/ }));
     const drawer = await screen.findByRole('dialog', { name: 'Edit task' });
-    fireEvent.change(within(drawer).getByLabelText('Amount'), { target: { value: '1' } });
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add reminder' }));
+    fireEvent.change(await within(drawer).findByLabelText('Amount'), { target: { value: '1' } });
     fireEvent.change(within(drawer).getByLabelText('Unit'), { target: { value: 'hours' } });
-    fireEvent.click(within(drawer).getByRole('button', { name: 'Add' }));
+    fireEvent.click(await within(drawer).findByRole('button', { name: 'Add' }));
     fireEvent.click(within(drawer).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(sent[0]?.body).toMatchObject({ reminders: [60] }));
 

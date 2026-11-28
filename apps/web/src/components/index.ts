@@ -1,4 +1,5 @@
 export * from './account-fields';
+export * from './amount-picker';
 export * from './app-header';
 export * from './command-palette';
 export * from './confirm-close';
@@ -12,6 +13,7 @@ export * from './page-breadcrumbs';
 export * from './page-tabs';
 export * from './query-error-alert';
 export * from './reminder-chips';
+export * from './repeat-picker';
 export * from './settings-fields';
 export * from './shortcut-hint';
 export * from './shortcuts-help';

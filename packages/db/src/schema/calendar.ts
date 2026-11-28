@@ -97,6 +97,8 @@ export const events = pgTable(
     remoteEtag: text('remote_etag'),
     /** How far ahead event_instances holds this event's occurrences; null for single events. */
     expandedUntil: timestamp('expanded_until', { withTimezone: true }),
+    /** Where event_instances starts for rules too dense to cache from their start (hourly, minutely); null means from the start. */
+    expandedFrom: timestamp('expanded_from', { withTimezone: true }),
     ...timestamps,
   },
   (t) => [

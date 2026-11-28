@@ -1,5 +1,8 @@
 // Travel time before an event: the choices the editor offers and how a length reads ("1 hr 30 min").
 
+/** The longest travel time the API takes: 24 hours. */
+export const MAX_TRAVEL_MINUTES = 1440;
+
 /** The editor's choices in minutes, as in Apple Calendar. */
 export const TRAVEL_PRESETS: readonly number[] = [5, 15, 30, 60, 90, 120];
 
