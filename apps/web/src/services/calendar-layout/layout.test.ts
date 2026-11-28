@@ -20,6 +20,7 @@ const occ = (summary: string, start: string, end: string, allDay = false): Occur
   taskDone: false,
   createdBy: null,
   travelMinutes: null,
+  pollId: null,
 });
 // Shown in Tehran (UTC+3:30), so a UTC-only bug would put things on the wrong day.
 const TZ = 'Asia/Tehran';

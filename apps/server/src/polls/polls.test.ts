@@ -106,6 +106,13 @@ describe.skipIf(!testDatabaseUrl)('polls', () => {
     expect(bell.map((n) => n.title)).toEqual(['ada asks: when can you do Book club?']);
   });
 
+  test('a patch changes only what it names', async () => {
+    const p = await create({ location: 'Library', holds: true });
+    const res = await call('PATCH', `/polls/${p.id}`, { title: 'Book club: Middlemarch' });
+    expect(res.status).toBe(200);
+    expect([res.body.title, res.body.location, res.body.holds]).toEqual(['Book club: Middlemarch', 'Library', true]);
+  });
+
   test('sending needs two times and another person', async () => {
     const one = await create({ slots: [slots[0]] });
     expect((await call('POST', `/polls/${one.id}/open`)).status).toBe(400);

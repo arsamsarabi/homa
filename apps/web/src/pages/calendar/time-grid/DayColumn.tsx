@@ -1,5 +1,6 @@
 import { VisuallyHidden } from '@mantine/core';
 import { IconCar } from '@tabler/icons-react';
+import { Link } from '@tanstack/react-router';
 import { type CSSProperties, Fragment, type JSX, type MouseEvent, type PointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { addedByName, useCalendarPageModel, useMyId, useTravelLabel } from '@/pages/calendar/model';
@@ -37,11 +38,31 @@ export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, c
   const labels = { busy: t('calendar.busy'), untitled: t('calendar.untitled') };
   return (
     <div className={classes.col} onPointerDown={(e: PointerEvent<HTMLDivElement>): void => grid.beginCreate(e, index)}>
+      {grid.holds[index]?.map((h) => {
+        const label = t('polls.hold', { title: h.title });
+        return (
+          <Link
+            key={`${h.pollId}${h.start.toISOString()}`}
+            to="/polls/$pollId"
+            params={{ pollId: h.pollId }}
+            className={classes.hold}
+            style={blockBox(minutesFrom(day, h.start), minutesFrom(day, h.end))}
+            aria-label={t('polls.holdLabel', {
+              title: h.title,
+              time: `${time.format(h.start)} – ${time.format(h.end)}`,
+            })}
+            onPointerDown={(e: PointerEvent<HTMLAnchorElement>): void => e.stopPropagation()}
+          >
+            {label}
+          </Link>
+        );
+      })}
       {items.map((p) => {
         const box = blockBox(minutesFrom(day, p.start), minutesFrom(day, p.end));
         const dragging = drag !== undefined && drag.kind !== 'create' && drag.moved && drag.o === p.o;
         const access = accessOf(p.o.calendarId);
         const readOnly = isReadOnly(p.o.calendarId);
+        const fixed = readOnly || Boolean(p.o.pollId);
         const by = addedByName(p.o, me);
         const travel = travelOf(p.o);
         // Travel sits right above the event, cut at the top of the day.
@@ -104,7 +125,7 @@ export function DayColumn({ grid, day, index, items, ghost, draft, draftTitle, c
               </span>
               {by && <span className={classes.end}>{t('editor.addedBy', { name: by })}</span>}
               {travel && <VisuallyHidden>{travel}</VisuallyHidden>}
-              {!readOnly && (
+              {!fixed && (
                 <span
                   aria-hidden="true"
                   className={classes.resize}

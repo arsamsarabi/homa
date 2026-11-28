@@ -3640,16 +3640,14 @@
               "string",
               "null"
             ],
-            "maxLength": 5000,
-            "default": null
+            "maxLength": 5000
           },
           "location": {
             "type": [
               "string",
               "null"
             ],
-            "maxLength": 500,
-            "default": null
+            "maxLength": 500
           },
           "durationMinutes": {
             "type": "integer",
@@ -3695,28 +3693,24 @@
               "string",
               "null"
             ],
-            "format": "date-time",
-            "default": null
+            "format": "date-time"
           },
           "quorum": {
             "type": [
               "integer",
               "null"
             ],
-            "minimum": 1,
-            "default": null
+            "minimum": 1
           },
           "holds": {
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           },
           "calendarId": {
             "type": [
               "string",
               "null"
             ],
-            "format": "uuid",
-            "default": null
+            "format": "uuid"
           }
         }
       },

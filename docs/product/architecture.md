@@ -155,6 +155,10 @@ Events have the same fields as `GET /api/events/{id}`. `version` goes up when a 
 
 One function in `packages/core` answers "when is this set of people busy between A and B?". It merges each person's `event_instances` (only calendars they share at `freebusy` or higher with the asker), routine blocks they marked busy, and tentative holds. Auto-suggest, polls, the planning wizard and booking pages all call it. It returns busy intervals only, never titles, unless the grant allows details.
 
+### Polls
+
+`apps/server/src/polls` runs a poll from draft to a set time ([phase-7-polls.md](../design/phase-7-polls.md)). Scoring is pure (`@homa/core/polls`: Borda points, required people and quorum decide what's eligible; `suggestSlots` walks the availability engine's busy time). Finalizing makes the organizer's event and a copy in each participant's first Homa calendar, linked through `poll_events`; the events service refuses time or place changes on them and passes the organizer's title and description to the copies. Holds are never stored as events: `repo.listHolds` derives them from open polls' slots, and availability counts them as busy. Poll notices are worded once per reader at insert, so the bell, push and channels show them unchanged. The `polls.close-due` job closes polls at their deadline.
+
 ### Sync
 
 Each provider implements one adapter interface in `packages/sync`: `listCalendars`, `pullChanges(calendar, since)`, `pushChange(op)`. Pulls are incremental (Google `syncToken`, CalDAV `sync-collection` with ETag fallback, ICS conditional GET with a content hash) or, for Microsoft, a full listing that only reads events whose `changeKey` changed. Local writes to a connected calendar go to an outbox processed by the worker, with ETag or `If-Match` conflict detection; on conflict the remote wins and the user sees a notice. ICS calendars are read-only and have no outbox.

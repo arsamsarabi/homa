@@ -98,10 +98,11 @@ export const PollListQuery = z.object({ view: z.enum(['mine', 'answer', 'past'])
 
 const PersonInput = z.object({ userId: z.string().min(1), required: z.boolean().default(false) });
 
+// No defaults here: zod applies a default inside .partial() too, so a patch would reset fields.
 const PollFields = z.object({
   title: z.string().trim().min(1).max(POLL_LIMITS.title),
-  description: z.string().max(POLL_LIMITS.description).nullable().default(null),
-  location: z.string().max(POLL_LIMITS.location).nullable().default(null),
+  description: z.string().max(POLL_LIMITS.description).nullable(),
+  location: z.string().max(POLL_LIMITS.location).nullable(),
   durationMinutes: z.int().min(POLL_LIMITS.minMinutes).max(POLL_LIMITS.maxMinutes),
   tz: Tz,
   slots: z.array(When).max(POLL_LIMITS.slots).openapi({ description: 'Slot starts; each lasts durationMinutes' }),
@@ -109,13 +110,20 @@ const PollFields = z.object({
     .array(PersonInput)
     .max(POLL_LIMITS.participants)
     .openapi({ description: 'Everyone but you; you are always in, and required' }),
-  deadline: When.nullable().default(null),
-  quorum: z.int().min(1).nullable().default(null),
-  holds: z.boolean().default(false),
-  calendarId: z.uuid().nullable().default(null),
+  deadline: When.nullable(),
+  quorum: z.int().min(1).nullable(),
+  holds: z.boolean(),
+  calendarId: z.uuid().nullable(),
 });
 
-export const PollInput = PollFields.openapi('PollInput');
+export const PollInput = PollFields.extend({
+  description: PollFields.shape.description.default(null),
+  location: PollFields.shape.location.default(null),
+  deadline: PollFields.shape.deadline.default(null),
+  quorum: PollFields.shape.quorum.default(null),
+  holds: PollFields.shape.holds.default(false),
+  calendarId: PollFields.shape.calendarId.default(null),
+}).openapi('PollInput');
 export const PollPatch = PollFields.partial()
   .refine((v) => Object.values(v).some((x) => x !== undefined), 'nothing to change')
   .openapi('PollPatch');

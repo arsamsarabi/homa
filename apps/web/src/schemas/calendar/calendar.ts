@@ -72,6 +72,8 @@ export const OccurrenceSchema = z.object({
   createdBy: CalendarOwnerSchema.nullable().default(null),
   /** Minutes of travel before the event; null for none. */
   travelMinutes: z.number().int().nullable().default(null),
+  /** The poll that set this event: its time and place can't change. */
+  pollId: z.string().nullable().default(null),
 });
 export type Occurrence = z.infer<typeof OccurrenceSchema>;
 export const OccurrenceListSchema = z.array(OccurrenceSchema);

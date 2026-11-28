@@ -31,6 +31,8 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
   const f = useEventForm(draft);
   const input = f.allDay ? 'date' : 'datetime-local';
   const addedBy = useAddedBy(f.occurrence);
+  // A poll decided the time and place; inputs stay in the form (read-only) so they're sent unchanged.
+  const locked = Boolean(f.occurrence?.pollId);
   if (f.freeBusy && f.occurrence) return <FreeBusyDetails occurrence={f.occurrence} onClose={f.close} />;
   if (f.readOnly && f.occurrence) return <ReadOnlyDetails occurrence={f.occurrence} onClose={f.close} />;
 
@@ -97,6 +99,11 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             {f.error}
           </Alert>
         )}
+        {f.occurrence?.pollId && (
+          <Text size="xs" c="dimmed">
+            {t('editor.pollLocked')}
+          </Text>
+        )}
         <Group grow>
           <TextInput
             key={`s${f.allDay}`}
@@ -106,6 +113,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             value={f.times.start}
             onChange={(e: ChangeEvent<HTMLInputElement>): void => f.setStart(e.currentTarget.value)}
             size="xs"
+            readOnly={locked}
             required
           />
           <TextInput
@@ -116,6 +124,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
             value={f.times.end}
             onChange={(e: ChangeEvent<HTMLInputElement>): void => f.setEnd(e.currentTarget.value)}
             size="xs"
+            readOnly={locked}
             required
           />
         </Group>
@@ -123,6 +132,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           label={t('editor.allDay')}
           size="xs"
           checked={f.allDay}
+          disabled={locked}
           onChange={(e: ChangeEvent<HTMLInputElement>): void => f.setAllDay(e.currentTarget.checked)}
         />
         {!f.allDay && (
@@ -134,6 +144,7 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
               if (v) f.setTz(v);
             }}
             size="xs"
+            disabled={locked}
             searchable
             allowDeselect={false}
             limit={50}
@@ -151,11 +162,17 @@ export function EventForm({ draft }: { draft: Draft }): JSX.Element {
           value={f.repeat}
           onChange={f.setRepeat}
           startDay={f.startDay}
-          disabled={f.repeatLoading}
+          disabled={f.repeatLoading || locked}
           description={f.repeatLocal ? t('editor.repeatLocal') : undefined}
         />
         <ReminderChips value={f.reminders} onChange={f.setReminders} disabled={f.remindersLoading} />
-        <TextInput name="location" label={t('editor.location')} size="xs" defaultValue={f.occurrence?.location ?? ''} />
+        <TextInput
+          name="location"
+          label={t('editor.location')}
+          size="xs"
+          readOnly={locked}
+          defaultValue={f.occurrence?.location ?? ''}
+        />
         <Textarea
           name="description"
           label={t('editor.description')}

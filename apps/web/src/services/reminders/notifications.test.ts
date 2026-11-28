@@ -10,6 +10,7 @@ const base: Notification = {
   allDay: false,
   eventId: 'e1',
   taskId: null,
+  pollId: null,
   recurrenceId: null,
   fireAt: '2026-11-20T23:20:00Z',
   read: false,

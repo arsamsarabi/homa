@@ -52,8 +52,8 @@ export function useMonthView(): MonthViewModel {
   function beginDrag(e: ReactPointerEvent, o: Occurrence, day: Date): void {
     if (e.button !== 0 || e.pointerType === 'touch') return;
     e.stopPropagation();
-    // A subscription's events don't move: a press opens their details instead.
-    if (isReadOnly(o.calendarId)) {
+    // A subscription's events don't move, nor do a poll's: a press opens their details instead.
+    if (isReadOnly(o.calendarId) || o.pollId) {
       editor.openEdit(o);
       return;
     }

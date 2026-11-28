@@ -2307,10 +2307,8 @@ export interface components {
         };
         PollPatch: {
             title?: string;
-            /** @default null */
-            description: string | null;
-            /** @default null */
-            location: string | null;
+            description?: string | null;
+            location?: string | null;
             durationMinutes?: number;
             /** @example Europe/London */
             tz?: string;
@@ -2322,20 +2320,12 @@ export interface components {
                 /** @default false */
                 required: boolean;
             }[];
-            /**
-             * Format: date-time
-             * @default null
-             */
-            deadline: string | null;
-            /** @default null */
-            quorum: number | null;
-            /** @default false */
-            holds: boolean;
-            /**
-             * Format: uuid
-             * @default null
-             */
-            calendarId: string | null;
+            /** Format: date-time */
+            deadline?: string | null;
+            quorum?: number | null;
+            holds?: boolean;
+            /** Format: uuid */
+            calendarId?: string | null;
         };
         PollReopenInput: {
             /** Format: date-time */

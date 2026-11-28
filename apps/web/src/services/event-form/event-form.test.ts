@@ -29,6 +29,7 @@ const occurrence: Occurrence = {
   taskDone: false,
   createdBy: null,
   travelMinutes: null,
+  pollId: null,
 };
 const edit: Draft = { kind: 'edit', occurrence };
 // 09:00–10:00 in Tehran (UTC+3:30).

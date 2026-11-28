@@ -67,6 +67,7 @@ export function tempOccurrence(body: EventInput, tempId: string): Occurrence {
     taskDone: false,
     createdBy: null,
     travelMinutes: body.allDay ? null : (body.travelMinutes ?? null),
+    pollId: null,
   };
 }
 
